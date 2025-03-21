@@ -4,14 +4,14 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: resources.null.template.upbound.io
+  name: resources.null.infisical.upbound.io
 spec:
-  group: null.template.upbound.io
+  group: null.infisical.upbound.io
   names:
     categories:
     - crossplane
     - managed
-    - template
+    - infisical
     kind: Resource
     listKind: ResourceList
     plural: resources

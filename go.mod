@@ -1,4 +1,4 @@
-module github.com/upbound/upjet-provider-template
+module github.com/infisical/provider-infisical
 
 go 1.21
 
