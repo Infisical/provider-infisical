@@ -4,7 +4,7 @@ import "github.com/crossplane/upjet/pkg/config"
 
 func Configure(p *config.Provider) {
 	p.AddResourceConfigurator("infisical_project", func(r *config.Resource) {
-		// r.Kind = "Project"
-		// r.ShortGroup = "project"
+		r.Kind = "Project"
+		r.ShortGroup = "project"
 	})
 }

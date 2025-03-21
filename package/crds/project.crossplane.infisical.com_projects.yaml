@@ -4,18 +4,18 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: resources.null.infisical.upbound.io
+  name: projects.project.crossplane.infisical.com
 spec:
-  group: null.infisical.upbound.io
+  group: project.crossplane.infisical.com
   names:
     categories:
     - crossplane
     - managed
     - infisical
-    kind: Resource
-    listKind: ResourceList
-    plural: resources
-    singular: resource
+    kind: Project
+    listKind: ProjectList
+    plural: projects
+    singular: project
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -34,10 +34,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Resource is the Schema for the Resources API. The null_resource
-          resource implements the standard resource lifecycle but takes no further
-          action.hashicorp. The triggers argument allows specifying an arbitrary set
-          of values that, when changed, will cause the resource to be replaced.
+        description: Project is the Schema for the Projects API. Create projects &
+          save to Infisical. Only Machine Identity authentication is supported for
+          this data source.
         properties:
           apiVersion:
             description: |-
@@ -57,7 +56,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: ResourceSpec defines the desired state of Resource
+            description: ProjectSpec defines the desired state of Project
             properties:
               deletionPolicy:
                 default: Delete
@@ -75,14 +74,26 @@ spec:
                 type: string
               forProvider:
                 properties:
-                  triggers:
-                    additionalProperties:
-                      type: string
+                  description:
                     description: |-
-                      running any associated provisioners.
-                      A map of arbitrary strings that, when changed, will force the null resource to be replaced, re-running any associated provisioners.
-                    type: object
-                    x-kubernetes-map-type: granular
+                      (String) The description of the project
+                      The description of the project
+                    type: string
+                  name:
+                    description: |-
+                      (String) The name of the project
+                      The name of the project
+                    type: string
+                  slug:
+                    description: |-
+                      (String) The slug of the project
+                      The slug of the project
+                    type: string
+                  templateName:
+                    description: |-
+                      (String) The name of the template to use for the project
+                      The name of the template to use for the project
+                    type: string
                 type: object
               initProvider:
                 description: |-
@@ -97,14 +108,26 @@ spec:
                   for example because of an external controller is managing them, like an
                   autoscaler.
                 properties:
-                  triggers:
-                    additionalProperties:
-                      type: string
+                  description:
                     description: |-
-                      running any associated provisioners.
-                      A map of arbitrary strings that, when changed, will force the null resource to be replaced, re-running any associated provisioners.
-                    type: object
-                    x-kubernetes-map-type: granular
+                      (String) The description of the project
+                      The description of the project
+                    type: string
+                  name:
+                    description: |-
+                      (String) The name of the project
+                      The name of the project
+                    type: string
+                  slug:
+                    description: |-
+                      (String) The slug of the project
+                      The slug of the project
+                    type: string
+                  templateName:
+                    description: |-
+                      (String) The name of the template to use for the project
+                      The name of the template to use for the project
+                    type: string
                 type: object
               managementPolicies:
                 default:
@@ -273,23 +296,46 @@ spec:
             required:
             - forProvider
             type: object
+            x-kubernetes-validations:
+            - message: spec.forProvider.name is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.name)
+                || (has(self.initProvider) && has(self.initProvider.name))'
+            - message: spec.forProvider.slug is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.slug)
+                || (has(self.initProvider) && has(self.initProvider.slug))'
           status:
-            description: ResourceStatus defines the observed state of Resource.
+            description: ProjectStatus defines the observed state of Project.
             properties:
               atProvider:
                 properties:
-                  id:
-                    description: (String) This is set to a random value at create
-                      time.
-                    type: string
-                  triggers:
-                    additionalProperties:
-                      type: string
+                  description:
                     description: |-
-                      running any associated provisioners.
-                      A map of arbitrary strings that, when changed, will force the null resource to be replaced, re-running any associated provisioners.
-                    type: object
-                    x-kubernetes-map-type: granular
+                      (String) The description of the project
+                      The description of the project
+                    type: string
+                  id:
+                    description: (String) The ID of the project
+                    type: string
+                  lastUpdated:
+                    description: (String)
+                    type: string
+                  name:
+                    description: |-
+                      (String) The name of the project
+                      The name of the project
+                    type: string
+                  slug:
+                    description: |-
+                      (String) The slug of the project
+                      The slug of the project
+                    type: string
+                  templateName:
+                    description: |-
+                      (String) The name of the template to use for the project
+                      The name of the template to use for the project
+                    type: string
                 type: object
               conditions:
                 description: Conditions of the resource.

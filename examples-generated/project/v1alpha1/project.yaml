@@ -1,0 +1,13 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: Project
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/project
+  labels:
+    testing.upbound.io/example-name: gcp-project
+  name: gcp-project
+spec:
+  forProvider:
+    description: This is a GCP project
+    name: GCP Project
+    slug: gcp-project

@@ -1,40 +1,1396 @@
-name: hashicorp/null
+name: Infisical/infisical
 resources:
-    null_resource:
+    infisical_access_approval_policy:
         subCategory: ""
-        description: The null_resource resource implements the standard resource lifecycle but takes no further action. On Terraform 1.4 and later, use the terraform_data resource type https://developer.hashicorp.com/terraform/language/resources/terraform-data instead. The triggers argument allows specifying an arbitrary set of values that, when changed, will cause the resource to be replaced.
-        name: null_resource
-        title: null_resource Resource - terraform-provider-null
+        description: Create access approval policy for your projects
+        name: infisical_access_approval_policy
+        title: infisical_access_approval_policy Resource - terraform-provider-infisical
         examples:
-            - name: cluster
+            - name: prod-policy
               manifest: |-
                 {
-                  "connection": [
+                  "approvers": [
                     {
-                      "host": "${element(aws_instance.cluster[*].public_ip, 0)}"
+                      "id": "52c70c28-9504-4b88-b5af-ca2495dd277d",
+                      "type": "group"
+                    },
+                    {
+                      "type": "user",
+                      "username": "name@infisical.com"
                     }
                   ],
-                  "provisioner": {
-                    "remote-exec": [
-                      {
-                        "inline": [
-                          "bootstrap-cluster.sh ${join(\" \",\n      aws_instance.cluster[*].private_ip)}"
-                        ]
-                      }
-                    ]
-                  },
-                  "triggers": {
-                    "cluster_instance_ids": "${join(\",\", aws_instance.cluster[*].id)}"
-                  }
+                  "enforcement_level": "soft",
+                  "environment_slug": "prod",
+                  "name": "my-approval-policy",
+                  "project_id": "${infisical_project.example.id}",
+                  "required_approvals": 1,
+                  "secret_path": "/"
                 }
+              references:
+                project_id: infisical_project.example.id
               dependencies:
-                aws_instance.cluster: |-
+                infisical_project.example: |-
                     {
-                      "ami": "ami-0dcc1e21636832c5d",
-                      "count": 3,
-                      "instance_type": "m5.large"
+                      "name": "example",
+                      "slug": "example"
                     }
         argumentDocs:
-            id: (String) This is set to a random value at create time.
-            triggers: (Map of String) A map of arbitrary strings that, when changed, will force the null resource to be replaced, re-running any associated provisioners.
+            approvers: (Attributes Set) The required approvers (see below for nested schema)
+            enforcement_level: (String) The enforcement level of the policy. This can either be hard or soft
+            environment_slug: (String) The environment to apply the access approval policy to
+            id: (String) The ID of the access approval policy
+            name: (String) The name of the access approval policy
+            project_id: (String) The ID of the project to add the access approval policy
+            required_approvals: (Number) The number of required approvers
+            secret_path: (String) The secret path to apply the access approval policy to
+            type: (String) The type of approver. Either group or user
+            username: (String) The username of the approver. By default, this is the email
+        importStatements: []
+    infisical_app_connection_gcp:
+        subCategory: ""
+        description: Create and manage GCP App Connection
+        name: infisical_app_connection_gcp
+        title: infisical_app_connection_gcp Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-gcp
+              manifest: |-
+                {
+                  "credentials": {
+                    "service_account_email": "service-account-df92581a-0fe9@my-duplicate-project.iam.gserviceaccount.com"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "service-account-impersonation",
+                  "name": "gcp-app-connection"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the GCP App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the GCP App Connection credentials
+            description: (String) An optional description for the GCP App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with GCP. Possible values are: service-account-impersonation'
+            name: (String) The name of the GCP App Connection to create. Must be slug-friendly
+            service_account_email: (String, Sensitive) The service account email to connect with GCP. The service account ID (the part of the email before '@') must be suffixed with the first two sections of your organization ID e.g. service-account-df92581a-0fe9@my-project.iam.gserviceaccount.com. For more details, refer to the documentation here https://infisical.com/docs/integrations/app-connections/gcp#configure-service-account-for-infisical
+        importStatements: []
+    infisical_identity:
+        subCategory: ""
+        description: Create and manage identity in Infisical.
+        name: infisical_identity
+        title: infisical_identity Resource - terraform-provider-infisical
+        examples:
+            - name: universal-auth
+              manifest: |-
+                {
+                  "name": "universal-auth",
+                  "org_id": "\u003corg_id\u003e",
+                  "role": "member"
+                }
+              dependencies:
+                infisical_identity_aws_auth.aws-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "allowed_account_ids": [
+                        "123456789012",
+                        "123456789013"
+                      ],
+                      "allowed_principal_arns": [
+                        "arn:aws:iam::123456789012:user/MyUserName"
+                      ],
+                      "identity_id": "${infisical_identity.aws-auth.id}"
+                    }
+                infisical_identity_azure_auth.azure-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.azure-auth.id}",
+                      "tenant_id": "TENANT_ID"
+                    }
+                infisical_identity_gcp_auth.gcp-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.gcp-auth.id}",
+                      "type": "gce"
+                    }
+                infisical_identity_kubernetes_auth.k8-auth: |-
+                    {
+                      "allowed_namespaces": [
+                        "namespace-a",
+                        "namespace-b"
+                      ],
+                      "identity_id": "${infisical_identity.k8-auth.id}",
+                      "kubernetes_host": "http://example.com",
+                      "token_reviewer_jwt": "ey\u003cexample\u003e"
+                    }
+                infisical_identity_universal_auth.ua-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+                infisical_identity_universal_auth_client_secret.client-secret: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_universal_auth.ua-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+            - name: aws-auth
+              manifest: |-
+                {
+                  "name": "aws-auth",
+                  "org_id": "\u003corg_id\u003e",
+                  "role": "member"
+                }
+              dependencies:
+                infisical_identity_aws_auth.aws-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "allowed_account_ids": [
+                        "123456789012",
+                        "123456789013"
+                      ],
+                      "allowed_principal_arns": [
+                        "arn:aws:iam::123456789012:user/MyUserName"
+                      ],
+                      "identity_id": "${infisical_identity.aws-auth.id}"
+                    }
+                infisical_identity_azure_auth.azure-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.azure-auth.id}",
+                      "tenant_id": "TENANT_ID"
+                    }
+                infisical_identity_gcp_auth.gcp-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.gcp-auth.id}",
+                      "type": "gce"
+                    }
+                infisical_identity_kubernetes_auth.k8-auth: |-
+                    {
+                      "allowed_namespaces": [
+                        "namespace-a",
+                        "namespace-b"
+                      ],
+                      "identity_id": "${infisical_identity.k8-auth.id}",
+                      "kubernetes_host": "http://example.com",
+                      "token_reviewer_jwt": "ey\u003cexample\u003e"
+                    }
+                infisical_identity_universal_auth.ua-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+                infisical_identity_universal_auth_client_secret.client-secret: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_universal_auth.ua-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+            - name: azure-auth
+              manifest: |-
+                {
+                  "name": "azure-auth",
+                  "org_id": "\u003corg_id\u003e",
+                  "role": "member"
+                }
+              dependencies:
+                infisical_identity_aws_auth.aws-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "allowed_account_ids": [
+                        "123456789012",
+                        "123456789013"
+                      ],
+                      "allowed_principal_arns": [
+                        "arn:aws:iam::123456789012:user/MyUserName"
+                      ],
+                      "identity_id": "${infisical_identity.aws-auth.id}"
+                    }
+                infisical_identity_azure_auth.azure-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.azure-auth.id}",
+                      "tenant_id": "TENANT_ID"
+                    }
+                infisical_identity_gcp_auth.gcp-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.gcp-auth.id}",
+                      "type": "gce"
+                    }
+                infisical_identity_kubernetes_auth.k8-auth: |-
+                    {
+                      "allowed_namespaces": [
+                        "namespace-a",
+                        "namespace-b"
+                      ],
+                      "identity_id": "${infisical_identity.k8-auth.id}",
+                      "kubernetes_host": "http://example.com",
+                      "token_reviewer_jwt": "ey\u003cexample\u003e"
+                    }
+                infisical_identity_universal_auth.ua-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+                infisical_identity_universal_auth_client_secret.client-secret: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_universal_auth.ua-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+            - name: gcp-auth
+              manifest: |-
+                {
+                  "name": "gcp-auth",
+                  "org_id": "\u003corg_id\u003e",
+                  "role": "member"
+                }
+              dependencies:
+                infisical_identity_aws_auth.aws-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "allowed_account_ids": [
+                        "123456789012",
+                        "123456789013"
+                      ],
+                      "allowed_principal_arns": [
+                        "arn:aws:iam::123456789012:user/MyUserName"
+                      ],
+                      "identity_id": "${infisical_identity.aws-auth.id}"
+                    }
+                infisical_identity_azure_auth.azure-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.azure-auth.id}",
+                      "tenant_id": "TENANT_ID"
+                    }
+                infisical_identity_gcp_auth.gcp-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.gcp-auth.id}",
+                      "type": "gce"
+                    }
+                infisical_identity_kubernetes_auth.k8-auth: |-
+                    {
+                      "allowed_namespaces": [
+                        "namespace-a",
+                        "namespace-b"
+                      ],
+                      "identity_id": "${infisical_identity.k8-auth.id}",
+                      "kubernetes_host": "http://example.com",
+                      "token_reviewer_jwt": "ey\u003cexample\u003e"
+                    }
+                infisical_identity_universal_auth.ua-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+                infisical_identity_universal_auth_client_secret.client-secret: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_universal_auth.ua-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+            - name: k8-auth
+              manifest: |-
+                {
+                  "name": "k8-auth",
+                  "org_id": "\u003corg_id\u003e",
+                  "role": "member"
+                }
+              dependencies:
+                infisical_identity_aws_auth.aws-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "allowed_account_ids": [
+                        "123456789012",
+                        "123456789013"
+                      ],
+                      "allowed_principal_arns": [
+                        "arn:aws:iam::123456789012:user/MyUserName"
+                      ],
+                      "identity_id": "${infisical_identity.aws-auth.id}"
+                    }
+                infisical_identity_azure_auth.azure-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.azure-auth.id}",
+                      "tenant_id": "TENANT_ID"
+                    }
+                infisical_identity_gcp_auth.gcp-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.gcp-auth.id}",
+                      "type": "gce"
+                    }
+                infisical_identity_kubernetes_auth.k8-auth: |-
+                    {
+                      "allowed_namespaces": [
+                        "namespace-a",
+                        "namespace-b"
+                      ],
+                      "identity_id": "${infisical_identity.k8-auth.id}",
+                      "kubernetes_host": "http://example.com",
+                      "token_reviewer_jwt": "ey\u003cexample\u003e"
+                    }
+                infisical_identity_universal_auth.ua-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+                infisical_identity_universal_auth_client_secret.client-secret: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_universal_auth.ua-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+        argumentDocs:
+            auth_modes: (List of String) The authentication types of the identity
+            id: (String) The ID of the identity
+            name: (String) The name for the identity
+            org_id: (String) The ID of the organization for the identity
+            role: (String) The role for the identity. Available default role options are 'admin', 'member', and 'no-access'. If you've created custom roles, you can use their slugs as well.
+        importStatements: []
+    infisical_identity_aws_auth Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create and manage identity aws auth in Infisical.
+        name: infisical_identity_aws_auth Resource - terraform-provider-infisical
+        title: infisical_identity_aws_auth Resource - terraform-provider-infisical
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address.. (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            allowed_account_ids: (List of String) List of trusted AWS account IDs that are allowed to authenticate with Infisical.
+            allowed_principal_arns: '(List of String) List of trusted IAM principal ARNs that are allowed to authenticate with Infisical. The values should take one of three forms: arn:aws:iam::123456789012:user/MyUserName, arn:aws:iam::123456789012:role/MyRoleName, or arn:aws:iam::123456789012:*. Using a wildcard in this case allows any IAM principal in the account 123456789012 to authenticate with Infisical under the identity'
+            id: (String) The ID of the aws auth
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+            sts_endpoint: (String) The endpoint URL for the AWS STS API. This value should be adjusted based on the AWS region you are operating in (e.g. https://sts.us-east-1.amazonaws.com/); refer to the list of regional STS endpoints here.
+        importStatements: []
+    infisical_identity_azure_auth Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create and manage identity azure auth in Infisical.
+        name: infisical_identity_azure_auth Resource - terraform-provider-infisical
+        title: infisical_identity_azure_auth Resource - terraform-provider-infisical
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address.. (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            allowed_service_principal_ids: (List of String) List of Azure AD service principal IDs that are allowed to authenticate with Infisical
+            id: (String) The ID of the azure auth
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+            resource_url: (String) The resource URL for the application registered in Azure AD. The value is expected to match the aud claim of the access token JWT later used in the login operation against Infisical. See the resource parameter for how the audience is set when requesting a JWT access token from the Azure Instance Metadata Service (IMDS) endpoint. In most cases, this value should be https://management.azure.com/ which is the default
+            tenant_id: (String) The tenant ID for the Azure AD organization.
+        importStatements: []
+    infisical_identity_gcp_auth Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create and manage identity gcp auth in Infisical.
+        name: infisical_identity_gcp_auth Resource - terraform-provider-infisical
+        title: infisical_identity_gcp_auth Resource - terraform-provider-infisical
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address.. (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            allowed_projects: (List of String) List of trusted GCP projects that the GCE instance must belong to authenticate with Infisical. Note that this validation property will only work for GCE instances
+            allowed_service_account_emails: (List of String) List of trusted service account emails corresponding to the GCE resource(s) allowed to authenticate with Infisical; this could be something like test@project.iam.gserviceaccount.com, 12345-compute@developer.gserviceaccount.com, etc.
+            allowed_zones: (List of String) List of trusted zones that the GCE instances must belong to authenticate with Infisical; this should be the fully-qualified zone name in the format <region>-<zone>like us-central1-a, us-west1-b, etc. Note that this validation property will only work for GCE instances.
+            id: (String) The ID of the gcp auth
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+            type: '(String) The Type of GCP Auth Method to use: Options are gce, iam. Default:gce'
+        importStatements: []
+    infisical_identity_kubernetes_auth Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create and manage identity kubernetes auth in Infisical.
+        name: infisical_identity_kubernetes_auth Resource - terraform-provider-infisical
+        title: infisical_identity_kubernetes_auth Resource - terraform-provider-infisical
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address.. (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            allowed_audience: (String) An optional audience claim that the service account JWT token must have to authenticate with Infisical.
+            allowed_namespaces: (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
+            allowed_service_account_names: (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
+            id: (String) The ID of the kubernetes auth
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+            kubernetes_ca_certificate: (String) The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
+            kubernetes_host: (String) The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running kubectl cluster-info.
+            token_reviewer_jwt: (String) A long-lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
+        importStatements: []
+    infisical_identity_oidc_auth:
+        subCategory: ""
+        description: Create and manage identity oidc auth in Infisical.
+        name: infisical_identity_oidc_auth
+        title: infisical_identity_oidc_auth Resource - terraform-provider-infisical
+        examples:
+            - name: oidc-auth
+              manifest: |-
+                {
+                  "bound_audiences": [
+                    "sample-audience"
+                  ],
+                  "bound_issuer": "\u003c\u003e",
+                  "bound_subject": "\u003c\u003e",
+                  "identity_id": "${infisical_identity.machine-identity-1.id}",
+                  "oidc_discovery_url": "\u003c\u003e"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-1.id
+              dependencies:
+                infisical_identity.machine-identity-1: |-
+                    {
+                      "name": "machine-identity-1",
+                      "org_id": "\u003c\u003e",
+                      "role": "admin"
+                    }
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address... (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            bound_audiences: (List of String) The comma-separated list of intended recipients.
+            bound_claims: (Map of String) The attributes that should be present in the JWT for it to be valid. The provided values can be a glob pattern.
+            bound_issuer: (String) The unique identifier of the identity provider issuing the OIDC tokens.
+            bound_subject: (String) The expected principal that is the subject of the JWT.
+            id: (String) The ID of the oidc auth.
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+            oidc_ca_certificate: (String) The PEM-encoded CA cert for establishing secure communication with the Identity Provider endpoints
+            oidc_discovery_url: (String) The URL used to retrieve the OpenID Connect configuration from the identity provider.
+        importStatements: []
+    infisical_identity_universal_auth Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create and manage identity universal auth in Infisical.
+        name: infisical_identity_universal_auth Resource - terraform-provider-infisical
+        title: infisical_identity_universal_auth Resource - terraform-provider-infisical
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address.. (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            client_secret_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that the Client Secret can be used from together with the Client ID to get back an access token. You can use 0.0.0.0/0, to allow usage from any network address. (see below for nested schema)
+            id: (String) The ID of the universal auth
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+        importStatements: []
+    infisical_identity_universal_auth_client_secret Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create and manage identity universal auth client secret in Infisical.
+        name: infisical_identity_universal_auth_client_secret Resource - terraform-provider-infisical
+        title: infisical_identity_universal_auth_client_secret Resource - terraform-provider-infisical
+        argumentDocs:
+            client_id: (String) The client ID of the secret.
+            client_secret: (String, Sensitive) The client secret.
+            created_at: (String) The UTC timestamp of the created at.
+            description: (String) The description of the client secret.
+            id: (String) The ID of the universal auth client secret
+            identity_id: (String) The ID of the identity to create a client secret for
+            is_revoked: (Boolean) A flag indicating token has been revoked
+            number_of_uses: (Number) The number of times that the client secret is used
+            number_of_uses_limit: '(Number) The maximum number of times that the client secret can be used; a value of 0 implies infinite number of uses. Default: 0'
+            ttl: '(Number) The lifetime for the client secret in seconds. Default: 0 - not expiring'
+        importStatements: []
+    infisical_integration_aws_parameter_store:
+        subCategory: ""
+        description: Create AWS Parameter Store integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        name: infisical_integration_aws_parameter_store
+        title: infisical_integration_aws_parameter_store Resource - terraform-provider-infisical
+        examples:
+            - name: parameter-store-integration
+              manifest: |-
+                {
+                  "access_key_id": "\u003caws-access-key-id\u003e",
+                  "assume_role_arn": "arn:aws:iam::\u003caws-account-id\u003e:role/\u003crole-name\u003e",
+                  "aws_region": "\u003caws-region\u003e",
+                  "environment": "\u003cenv-slug\u003e",
+                  "options": {
+                    "aws_tags": [
+                      {
+                        "key": "key",
+                        "value": "value"
+                      }
+                    ],
+                    "should_disable_delete": true
+                  },
+                  "parameter_store_path": "/example/secrets/",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_access_key": "\u003caws-secret-access-key\u003e",
+                  "secret_path": "\u003cinfisical-secrets-path\u003e"
+                }
+        argumentDocs:
+            access_key_id: (String, Sensitive) The AWS access key ID. Used to authenticate with AWS Parameter Store. You must either set secret_access_key and access_key_id, or set assume_role_arn to assume a role.
+            assume_role_arn: (String) The ARN of the role to assume when syncing secrets to AWS Parameter Store. You must either set secret_access_key and access_key_id, or set assume_role_arn to assume a role.
+            aws_region: (String) The AWS region to sync secrets to. (us-east-1, us-east-2, etc)
+            aws_tags: (Attributes Set) Tags to attach to the AWS parameter store secrets. (see below for nested schema)
+            environment: (String) The slug of the environment to sync to AWS Parameter Store (prod, dev, staging, etc).
+            integration_auth_id: (String) The ID of the integration auth, used internally by Infisical.
+            integration_id: (String) The ID of the integration, used internally by Infisical.
+            key: (String) The key of the tag.
+            options: (Attributes) Integration options (see below for nested schema)
+            parameter_store_path: (String) The path in AWS Parameter Store to sync secrets to.
+            project_id: (String) The ID of your Infisical project.
+            secret_access_key: (String, Sensitive) The AWS secret access key. Used to authenticate with AWS Parameter Store. You must either set secret_access_key and access_key_id, or set assume_role_arn to assume a role.
+            secret_path: (String) The secret path in Infisical to sync secrets from.
+            should_disable_delete: (Boolean) Whether to disable deletion of existing secrets in AWS Parameter Store.
+            value: (String) The value of the tag.
+        importStatements: []
+    infisical_integration_aws_secrets_manager:
+        subCategory: ""
+        description: Create AWS Secrets Manager integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        name: infisical_integration_aws_secrets_manager
+        title: infisical_integration_aws_secrets_manager Resource - terraform-provider-infisical
+        examples:
+            - name: secrets-manager-integration
+              manifest: |-
+                {
+                  "access_key_id": "\u003caws-access-key-id\u003e",
+                  "assume_role_arn": "arn:aws:iam::\u003caws-account-id\u003e:role/\u003crole-name\u003e",
+                  "aws_region": "\u003caws-region\u003e",
+                  "environment": "\u003cenv-slug\u003e",
+                  "mapping_behavior": "one-to-one",
+                  "options": {
+                    "aws_tags": [
+                      {
+                        "key": "key",
+                        "value": "value"
+                      }
+                    ],
+                    "secret_prefix": "\u003coptional-prefix\u003e"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_access_key": "\u003caws-secret-access-key\u003e",
+                  "secret_path": "\u003cinfisical-secrets-path\u003e",
+                  "secrets_manager_path": "/example/secrets/"
+                }
+        argumentDocs:
+            access_key_id: (String, Sensitive) The AWS access key ID. Used to authenticate with AWS Secrets Manager. You must either set secret_access_key and access_key_id, or set assume_role_arn to assume a role.
+            assume_role_arn: (String) The ARN of the role to assume when syncing secrets to AWS Secrets Manager. You must either set secret_access_key and access_key_id, or set assume_role_arn to assume a role.
+            aws_region: (String) The AWS region to sync secrets to. (us-east-1, us-east-2, etc)
+            aws_tags: (Attributes Set) Tags to attach to the AWS Secrets Manager secrets. (see below for nested schema)
+            environment: (String) The slug of the environment to sync to AWS Secrets Manager (prod, dev, staging, etc).
+            integration_auth_id: (String) The ID of the integration auth, used internally by Infisical.
+            integration_id: (String) The ID of the integration, used internally by Infisical.
+            key: (String) The key of the tag.
+            mapping_behavior: '(String) The behavior of the mapping. Can be ''many-to-one'' or ''one-to-one''. Many to One: All Infisical secrets will be mapped to a single AWS secret. One to One: Each Infisical secret will be mapped to its own AWS secret.'
+            metadata_sync_mode: (String) The sync mode for AWS tags. The supported options are secret-metadata and custom. If secret-metadata is selected, the metadata of the Infisical secrets are used as tags in AWS (only supported for one-to-one integrations). If custom is selected, then the key/value pairs in the aws_tags field is used.
+            options: (Attributes) Integration options (see below for nested schema)
+            project_id: (String) The ID of your Infisical project.
+            secret_access_key: (String, Sensitive) The AWS secret access key. Used to authenticate with AWS Secrets Manager. You must either set secret_access_key and access_key_id, or set assume_role_arn to assume a role.
+            secret_path: (String) The secret path in Infisical to sync secrets from.
+            secret_prefix: (String) The prefix to add to the secret name in AWS Secrets Manager.
+            secrets_manager_path: (String) The path in AWS Secrets Manager to sync secrets to. This is required if mapping_behavior is 'many-to-one'.
+            value: (String) The value of the tag.
+        importStatements: []
+    infisical_integration_circleci:
+        subCategory: ""
+        description: Create CircleCI integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        name: infisical_integration_circleci
+        title: infisical_integration_circleci Resource - terraform-provider-infisical
+        examples:
+            - name: circleci-integration
+              manifest: |-
+                {
+                  "circleci_org_slug": "\u003cyour-circleci-org-slug\u003e",
+                  "circleci_project_id": "\u003cyour-circleci-project-id\u003e",
+                  "circleci_token": "\u003cyour-circle-cipersonal-access-token\u003e",
+                  "environment": "dev",
+                  "project_id": "225393b9-e3d6-424f-9df3-22c3cdeb97c9",
+                  "secret_path": "/test-folder"
+                }
+        argumentDocs:
+            circleci_org_slug: (String) The organization slug of your CircleCI organization.
+            circleci_project_id: (String) The project ID of your CircleCI project.
+            circleci_token: (String, Sensitive) Your personal CircleCI token to authenticate with.
+            environment: (String) The slug of the environment to sync to CircleCI (prod, dev, staging, etc).
+            integration_auth_id: (String) The ID of the integration auth, used internally by Infisical.
+            integration_id: (String) The ID of the integration, used internally by Infisical.
+            project_id: (String) The ID of your Infisical project.
+            secret_path: (String) The secret path in Infisical to sync secrets from.
+        importStatements: []
+    infisical_integration_databricks:
+        subCategory: ""
+        description: Create Databricks integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        name: infisical_integration_databricks
+        title: infisical_integration_databricks Resource - terraform-provider-infisical
+        examples:
+            - name: db-integration
+              manifest: |-
+                {
+                  "databricks_host": "\u003cdatabricks-host\u003e",
+                  "databricks_secret_scope": "\u003cdatabricks-secret-scope\u003e",
+                  "databricks_token": "\u003cdatabricks-personal-access-token\u003e",
+                  "environment": "\u003cenv-slug\u003e",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "/some/infisical/folder"
+                }
+        argumentDocs:
+            databricks_host: (String) The Databricks host URL.
+            databricks_secret_scope: '(String) The Databricks secret scope. Example: your-secret-scope'
+            databricks_token: (String, Sensitive) The Databricks access token.
+            environment: (String) The slug of the environment to sync to Databricks (prod, dev, staging, etc).
+            integration_auth_id: (String) The ID of the integration auth, used internally by Infisical.
+            integration_id: (String) The ID of the integration, used internally by Infisical.
+            project_id: (String) The ID of your Infisical project.
+            secret_path: (String) The secret path in Infisical to sync secrets from.
+        importStatements: []
+    infisical_integration_gcp_secret_manager:
+        subCategory: ""
+        description: Create GCP Secret Manager integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        name: infisical_integration_gcp_secret_manager
+        title: infisical_integration_gcp_secret_manager Resource - terraform-provider-infisical
+        examples:
+            - name: gcp-integration
+              manifest: |-
+                {
+                  "environment": "dev",
+                  "gcp_project_id": "gcp-project-id",
+                  "project_id": "your-project-id",
+                  "secret_path": "/",
+                  "service_account_json": "${var.service_account_json}"
+                }
+              references:
+                service_account_json: var.service_account_json
+        argumentDocs:
+            environment: (String) The slug of the environment to sync to GCP Secret Manager (prod, dev, staging, etc).
+            gcp_project_id: (String) The ID of the GCP project.
+            integration_auth_id: (String) The ID of the integration auth, used internally by Infisical.
+            integration_id: (String) The ID of the integration, used internally by Infisical.
+            options: (Attributes) Integration options (see below for nested schema)
+            project_id: (String) The ID of your Infisical project.
+            secret_path: (String) The secret path in Infisical to sync secrets from.
+            secret_prefix: (String) The prefix to add to the secret name in GCP Secret Manager.
+            secret_suffix: (String) The suffix to add to the secret name in GCP Secret Manager.
+            service_account_json: (String, Sensitive) Service account json for the GCP project.
+        importStatements: []
+    infisical_project:
+        subCategory: ""
+        description: Create projects & save to Infisical. Only Machine Identity authentication is supported for this data source.
+        name: infisical_project
+        title: infisical_project Resource - terraform-provider-infisical
+        examples:
+            - name: gcp-project
+              manifest: |-
+                {
+                  "description": "This is a GCP project",
+                  "name": "GCP Project",
+                  "slug": "gcp-project"
+                }
+            - name: aws-project
+              manifest: |-
+                {
+                  "description": "This is an AWS project",
+                  "name": "AWS Project",
+                  "slug": "aws-project"
+                }
+            - name: azure-project
+              manifest: |-
+                {
+                  "name": "Azure Project",
+                  "slug": "azure-project"
+                }
+        argumentDocs:
+            description: (String) The description of the project
+            id: (String) The ID of the project
+            last_updated: (String)
+            name: (String) The name of the project
+            slug: (String) The slug of the project
+            template_name: (String) The name of the template to use for the project
+        importStatements: []
+    infisical_project_environment:
+        subCategory: ""
+        description: Create project environment
+        name: infisical_project_environment
+        title: infisical_project_environment Resource - terraform-provider-infisical
+        examples:
+            - name: pre-prod
+              manifest: |-
+                {
+                  "name": "pre-prod",
+                  "position": 2,
+                  "project_id": "${infisical_project.example.id}",
+                  "slug": "preprod"
+                }
+              references:
+                project_id: infisical_project.example.id
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "position": 1,
+                      "slug": "example"
+                    }
+        argumentDocs:
+            id: (String) The ID of the environment
+            name: (String) The name of the environment
+            position: (Number) The position of the environment
+            project_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
+            slug: (String) The slug of the environment
+        importStatements: []
+    infisical_project_group:
+        subCategory: ""
+        description: Create project groups & save to Infisical. Only Machine Identity authentication is supported for this data source
+        name: infisical_project_group
+        title: infisical_project_group Resource - terraform-provider-infisical
+        examples:
+            - name: group
+              manifest: |-
+                {
+                  "group_id": "\u003c\u003e",
+                  "group_name": "\u003c\u003e",
+                  "project_id": "${infisical_project.example.id}",
+                  "roles": [
+                    {
+                      "is_temporary": true,
+                      "role_slug": "admin",
+                      "temporary_access_start_time": "2024-09-19T12:43:13Z",
+                      "temporary_range": "1y"
+                    },
+                    {
+                      "role_slug": "my-custom-role"
+                    }
+                  ]
+                }
+              references:
+                project_id: infisical_project.example.id
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
+        argumentDocs:
+            group_id: (String) The id of the group.
+            group_name: (String) The name of the group.
+            is_temporary: (Boolean) Flag to indicate the assigned role is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
+            membership_id: (String) The membership Id of the project group
+            project_id: (String) The id of the project.
+            role_slug: (String) The slug of the role
+            roles: (Attributes Set) The roles assigned to the project group (see below for nested schema)
+            temporary_access_start_time: (String) ISO time for which temporary access should begin. This is in the format YYYY-MM-DDTHH:MM:SSZ e.g. 2024-09-19T12:43:13Z
+            temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
+        importStatements: []
+    infisical_project_identity:
+        subCategory: ""
+        description: Create project identities & save to Infisical. Only Machine Identity authentication is supported for this data source
+        name: infisical_project_identity
+        title: infisical_project_identity Resource - terraform-provider-infisical
+        examples:
+            - name: test-identity
+              manifest: |-
+                {
+                  "identity_id": "\u003cidentity id\u003e",
+                  "project_id": "${infisical_project.example.id}",
+                  "roles": [
+                    {
+                      "role_slug": "admin"
+                    }
+                  ]
+                }
+              references:
+                project_id: infisical_project.example.id
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
+        argumentDocs:
+            auth_methods: (List of String) The auth methods for the identity
+            custom_role_id: (String) The id of the custom role slug
+            id: (String) The ID of the project identity role.
+            identity: (Attributes) The identity details of the project identity (see below for nested schema)
+            identity_id: (String) The id of the identity.
+            is_temporary: (Boolean) Flag to indicate the assigned role is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
+            membership_id: (String) The membership Id of the project identity
+            name: (String) The name of the identity
+            project_id: (String) The id of the project
+            role_slug: (String) The slug of the role
+            roles: (Attributes List) The roles assigned to the project identity (see below for nested schema)
+            temporary_access_end_time: (String) ISO time for which temporary access will end. Computed based on temporary_range and temporary_access_start_time
+            temporary_access_start_time: (String) ISO time for which temporary access should begin. The current time is used by default.
+            temporary_mode: '(String) Type of temporary access given. Types: relative. Default: relative'
+            temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
+        importStatements: []
+    infisical_project_identity_specific_privilege:
+        subCategory: ""
+        description: Create additional privileges for identities & save to Infisical. Only Machine Identity authentication is supported for this data source.
+        name: infisical_project_identity_specific_privilege
+        title: infisical_project_identity_specific_privilege Resource - terraform-provider-infisical
+        examples:
+            - name: test-privilege
+              manifest: |-
+                {
+                  "identity_id": "${infisical_project_identity.test-identity.identity_id}",
+                  "permissions_v2": [
+                    {
+                      "action": [
+                        "edit"
+                      ],
+                      "inverted": true,
+                      "subject": "secret-folders"
+                    },
+                    {
+                      "action": [
+                        "read",
+                        "edit"
+                      ],
+                      "conditions": "${jsonencode({\n        environment = {\n          \"$in\" = [\"dev\", \"prod\"]\n          \"$eq\" = \"dev\"\n        }\n        secretPath = {\n          \"$eq\" = \"/\"\n        }\n      })}",
+                      "subject": "secrets"
+                    }
+                  ],
+                  "project_slug": "${infisical_project.example.slug}"
+                }
+              references:
+                identity_id: infisical_project_identity.test-identity.identity_id
+                project_slug: infisical_project.example.slug
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
+                infisical_project_identity.test-identity: |-
+                    {
+                      "identity_id": "\u003cidentity id\u003e",
+                      "project_id": "${infisical_project.example.id}",
+                      "roles": [
+                        {
+                          "role_slug": "admin"
+                        }
+                      ]
+                    }
+        argumentDocs:
+            action: (Set of String) Describe what actions an entity can take.
+            actions: '(List of String) Describe what action an entity can take. Enum: create,edit,delete,read'
+            conditions: (Attributes) The conditions to scope permissions (see below for nested schema)
+            environment: (String) The environment slug this permission should allow.
+            id: (String) The ID of the privilege
+            identity_id: (String) The identity id to create identity specific privilege
+            inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
+            is_temporary: (Boolean) Flag to indicate the assigned specific privilege is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
+            permission: (Attributes) (DEPRECATED, USE permissions_v2. Refer to the migration guide in https://infisical.com/docs/internals/permissions#migrating-from-permission-v1-to-permission-v2) The permissions assigned to the project identity specific privilege (see below for nested schema)
+            permissions_v2: (Attributes List) The permissions assigned to the project identity specific privilege. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. (see below for nested schema)
+            project_slug: (String) The slug of the project to create identity specific privilege
+            secret_path: (String) The secret path this permission should be scoped to
+            slug: (String) The slug for the new privilege
+            subject: '(String) Describe what action an entity can take. Enum: role,member,groups,settings,integrations,webhooks,service-tokens,environments,tags,audit-logs,ip-allowlist,workspace,secrets,secret-rollback,secret-approval,secret-rotation,identity,certificate-authorities,certificates,certificate-templates,kms,pki-alerts,pki-collections'
+            temporary_access_end_time: (String) ISO time for which temporary access will end. Computed based on temporary_range and temporary_access_start_time
+            temporary_access_start_time: (String) ISO time for which temporary access should begin. The current time is used by default.
+            temporary_mode: '(String) Type of temporary access given. Types: relative. Default: relative'
+            temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
+        importStatements: []
+    infisical_project_role:
+        subCategory: ""
+        description: Create custom project roles & save to Infisical. Only Machine Identity authentication is supported for this data source.
+        name: infisical_project_role
+        title: infisical_project_role Resource - terraform-provider-infisical
+        examples:
+            - name: biller
+              manifest: |-
+                {
+                  "description": "A test role",
+                  "name": "Tester",
+                  "permissions_v2": [
+                    {
+                      "action": [
+                        "read",
+                        "create"
+                      ],
+                      "subject": "integrations"
+                    },
+                    {
+                      "action": [
+                        "read",
+                        "edit"
+                      ],
+                      "conditions": "${jsonencode({\n        environment = {\n          \"$in\" = [\"dev\", \"prod\"]\n          \"$eq\" = \"dev\"\n        }\n        secretPath = {\n          \"$eq\" = \"/\"\n        }\n      })}",
+                      "subject": "secrets"
+                    }
+                  ],
+                  "project_slug": "${infisical_project.example.slug}",
+                  "slug": "tester"
+                }
+              references:
+                project_slug: infisical_project.example.slug
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
+        argumentDocs:
+            action: '(String) Describe what action an entity can take. Enum: create,edit,delete,read'
+            conditions: (Attributes) The conditions to scope permissions (see below for nested schema)
+            description: (String) The description for the new role. Defaults to an empty string.
+            environment: (String) The environment slug this permission should allow.
+            id: (String) The ID of the role
+            inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
+            name: (String) The name for the new role
+            permissions: (Attributes List) (DEPRECATED, USE permissions_v2. Refer to the migration guide in https://infisical.com/docs/internals/permissions#migrating-from-permission-v1-to-permission-v2) The permissions assigned to the project role (see below for nested schema)
+            permissions_v2: (Attributes List) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. (see below for nested schema)
+            project_slug: (String) The slug of the project to create role
+            secret_path: (String) The secret path this permission should be scoped to
+            slug: (String) The slug for the new role
+            subject: '(String) Describe what action an entity can take. Enum: role,member,groups,settings,integrations,webhooks,service-tokens,environments,tags,audit-logs,ip-allowlist,workspace,secrets,secret-rollback,secret-approval,secret-rotation,identity,certificate-authorities,certificates,certificate-templates,kms,pki-alerts,pki-collections'
+        importStatements: []
+    infisical_project_user:
+        subCategory: ""
+        description: Create project users & save to Infisical. Only Machine Identity authentication is supported for this resource
+        name: infisical_project_user
+        title: infisical_project_user Resource - terraform-provider-infisical
+        examples:
+            - name: test-user
+              manifest: |-
+                {
+                  "project_id": "${infisical_project.example.id}",
+                  "roles": [
+                    {
+                      "role_slug": "admin"
+                    }
+                  ],
+                  "username": "\u003cusername/email\u003e"
+                }
+              references:
+                project_id: infisical_project.example.id
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
+        argumentDocs:
+            custom_role_id: (String) The id of the custom role slug
+            email: (String) The email of the user
+            first_name: (String) The first name of the user
+            id: (String) The ID of the project user role.
+            is_temporary: (Boolean) Flag to indicate the assigned role is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
+            last_name: (String) The last name of the user
+            membership_id: (String) The membershipId of the project user
+            project_id: (String) The id of the project
+            role_slug: (String) The slug of the role
+            roles: (Attributes List) The roles assigned to the project user (see below for nested schema)
+            temporary_access_end_time: (String) ISO time for which temporary access will end. Computed based on temporary_range and temporary_access_start_time
+            temporary_access_start_time: (String) ISO time for which temporary access should begin. The current time is used by default.
+            temporary_mode: '(String) Type of temporary access given. Types: relative. Default: relative'
+            temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
+            user: (Attributes) The user details of the project user (see below for nested schema)
+            username: (String) The usename of the user. By default its the email
+        importStatements: []
+    infisical_secret:
+        subCategory: ""
+        description: Create secrets & save to Infisical
+        name: infisical_secret
+        title: infisical_secret Resource - terraform-provider-infisical
+        examples:
+            - name: mongo_secret
+              manifest: |-
+                {
+                  "env_slug": "dev",
+                  "folder_path": "/",
+                  "name": "MONGO_DB",
+                  "value": "\u003csome-key\u003e",
+                  "workspace_id": "PROJECT_ID"
+                }
+              dependencies:
+                infisical_secret_tag.terraform: |-
+                    {
+                      "color": "#fff",
+                      "name": "terraform",
+                      "project_id": "PROJECT_ID",
+                      "slug": "terraform"
+                    }
+            - name: smtp_secret
+              manifest: |-
+                {
+                  "env_slug": "dev",
+                  "folder_path": "/mail-service",
+                  "name": "SMTP",
+                  "secret_reminder": {
+                    "note": "Rotate this secret using X API",
+                    "repeat_days": 30
+                  },
+                  "value": "\u003csome key\u003e",
+                  "workspace_id": "PROJECT_ID"
+                }
+              dependencies:
+                infisical_secret_tag.terraform: |-
+                    {
+                      "color": "#fff",
+                      "name": "terraform",
+                      "project_id": "PROJECT_ID",
+                      "slug": "terraform"
+                    }
+            - name: github_action_secret
+              manifest: |-
+                {
+                  "env_slug": "dev",
+                  "folder_path": "/",
+                  "name": "GITHUB_ACTION",
+                  "tag_ids": [
+                    "${infisical_secret_tag.terraform.id}"
+                  ],
+                  "value": "\u003csome value\u003e",
+                  "workspace_id": "PROJECT_ID"
+                }
+              dependencies:
+                infisical_secret_tag.terraform: |-
+                    {
+                      "color": "#fff",
+                      "name": "terraform",
+                      "project_id": "PROJECT_ID",
+                      "slug": "terraform"
+                    }
+        argumentDocs:
+            env_slug: (String) The environment slug of the secret to modify/create
+            folder_path: (String) The path to the folder where the given secret resides
+            last_updated: (String)
+            name: (String) The name of the secret
+            note: (String) Note for the secret rotation reminder
+            repeat_days: (Number) Frequency of secret rotation reminder in days
+            secret_reminder: (Attributes) (see below for nested schema)
+            tag_ids: (List of String) Tag ids to be attached for the secrets.
+            value: (String, Sensitive) The value of the secret
+            workspace_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
+        importStatements: []
+    infisical_secret_approval_policy:
+        subCategory: ""
+        description: Create secret approval policy for your projects
+        name: infisical_secret_approval_policy
+        title: infisical_secret_approval_policy Resource - terraform-provider-infisical
+        examples:
+            - name: prod-policy
+              manifest: |-
+                {
+                  "approvers": [
+                    {
+                      "id": "52c70c28-9504-4b88-b5af-ca2495dd277d",
+                      "type": "group"
+                    },
+                    {
+                      "type": "user",
+                      "username": "name@infisical.com"
+                    }
+                  ],
+                  "enforcement_level": "hard",
+                  "environment_slug": "prod",
+                  "name": "my-prod-policy",
+                  "project_id": "${infisical_project.example.id}",
+                  "required_approvals": 1,
+                  "secret_path": "/"
+                }
+              references:
+                project_id: infisical_project.example.id
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
+        argumentDocs:
+            approvers: (Attributes Set) The required approvers (see below for nested schema)
+            enforcement_level: (String) The enforcement level of the policy. This can either be hard or soft
+            environment_slug: (String) The environment to apply the secret approval policy to
+            id: (String) The ID of the secret approval policy
+            name: (String) The name of the secret approval policy
+            project_id: (String) The ID of the project to add the secret approval policy
+            required_approvals: (Number) The number of required approvers
+            secret_path: (String) The secret path to apply the secret approval policy to
+            type: (String) The type of approver. Either group or user
+            username: (String) The username of the approver. By default, this is the email
+        importStatements: []
+    infisical_secret_folder Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create secret folder & save to Infisical.
+        name: infisical_secret_folder Resource - terraform-provider-infisical
+        title: infisical_secret_folder Resource - terraform-provider-infisical
+        argumentDocs:
+            environment_id: (String) The ID of the environment
+            environment_slug: (String) The environment slug of the folder to modify/create
+            folder_path: (String) The path where the folder should be created/updated
+            id: (String) The ID of the folder
+            name: (String) The name for the folder
+            project_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
+        importStatements: []
+    infisical_secret_import Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create secret import & save to Infisical.
+        name: infisical_secret_import Resource - terraform-provider-infisical
+        title: infisical_secret_import Resource - terraform-provider-infisical
+        argumentDocs:
+            environment_slug: (String) The environment slug of the secret import to modify/create
+            folder_path: (String) The path where the secret should be imported
+            id: (String) The ID of the secret import
+            import_environment_slug: (String) The environment slug of the secret import to modify/create
+            import_folder_path: (String) The path where the secret should be imported from
+            is_replication: (Boolean) The is_replication of the secret import to modify/create
+            project_id: (String) The Infisical project ID
+        importStatements: []
+    infisical_secret_sync_aws_parameter_store:
+        subCategory: ""
+        description: Create and manage AWS Parameter Store secret syncs
+        name: infisical_secret_sync_aws_parameter_store
+        title: infisical_secret_sync_aws_parameter_store Resource - terraform-provider-infisical
+        examples:
+            - name: aws-parameter-store-secret-sync
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of AWS Parameter Store secret sync",
+                  "destination_config": {
+                    "aws_region": "\u003caws-region\u003e",
+                    "path": "/example/secrets/"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "aws-parameter-store-secret-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "sync_options": {
+                    "aws_kms_key_id": "\u003caws-kms-key-id\u003e",
+                    "initial_sync_behavior": "overwrite-destination",
+                    "sync_secret_metadata_as_tags": false,
+                    "tags": [
+                      {
+                        "key": "tag-1",
+                        "value": "tag-1-value"
+                      },
+                      {
+                        "key": "tag-2",
+                        "value": "tag-2-value"
+                      }
+                    ]
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            aws_kms_key_id: (String) The AWS KMS key ID to use for encryption
+            aws_region: (String) The AWS region of your AWS Parameter Store
+            connection_id: (String) The ID of the aws Connection to use for syncing.
+            description: (String) An optional description for the AWS Parameter Store sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the AWS Parameter Store secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key: (String) The key of the tag
+            name: (String) The name of the AWS Parameter Store sync to create. Must be slug-friendly.
+            path: '(String) The path in the AWS Parameter Store where the secrets will be stored, Example: /example/path/'
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_secret_metadata_as_tags: (Boolean) Whether to sync the secret metadata as tags
+            tags: (Attributes Set) The tags to sync to the secret (see below for nested schema)
+            value: (String) The value of the tag
+        importStatements: []
+    infisical_secret_sync_aws_secrets_manager:
+        subCategory: ""
+        description: Create and manage AWS Secrets Manager secret syncs
+        name: infisical_secret_sync_aws_secrets_manager
+        title: infisical_secret_sync_aws_secrets_manager Resource - terraform-provider-infisical
+        examples:
+            - name: aws-secrets-manager-secret-sync
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of AWS Secrets Manager secret sync",
+                  "destination_config": {
+                    "aws_region": "\u003caws-region\u003e",
+                    "aws_secrets_manager_secret_name": "\u003caws-secret-name\u003e",
+                    "mapping_behavior": "many-to-one"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "aws-secrets-manager-secret-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "sync_options": {
+                    "aws_kms_key_id": "\u003caws-kms-key-id\u003e",
+                    "initial_sync_behavior": "overwrite-destination",
+                    "sync_secret_metadata_as_tags": false,
+                    "tags": [
+                      {
+                        "key": "tag-1",
+                        "value": "tag-1-value"
+                      },
+                      {
+                        "key": "tag-2",
+                        "value": "tag-2-value"
+                      }
+                    ]
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            aws_kms_key_id: (String) The AWS KMS key ID to use for encryption
+            aws_region: (String) The AWS region of your AWS Secrets Manager
+            aws_secrets_manager_secret_name: (String) The name of the AWS secret to map to. This only applies when mapping_behavior is set to 'many-to-one'.
+            connection_id: (String) The ID of the aws Connection to use for syncing.
+            description: (String) An optional description for the AWS Secrets Manager sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the AWS Secrets Manager secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key: (String) The key of the tag
+            mapping_behavior: '(String) The behavior of the mapping. Can be ''many-to-one'' or ''one-to-one''. Many to One: All Infisical secrets will be mapped to a single AWS secret. One to One: Each Infisical secret will be mapped to its own AWS secret.'
+            name: (String) The name of the AWS Secrets Manager sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_secret_metadata_as_tags: (Boolean) Whether to sync the secret metadata as tags. This is only supported for the 'one-to-one' mapping behavior.
+            tags: (Attributes Set) The tags to sync to the secret (see below for nested schema)
+            value: (String) The value of the tag
+        importStatements: []
+    infisical_secret_sync_azure_app_configuration:
+        subCategory: ""
+        description: Create and manage Azure App Configuration secret syncs
+        name: infisical_secret_sync_azure_app_configuration
+        title: infisical_secret_sync_azure_app_configuration Resource - terraform-provider-infisical
+        examples:
+            - name: app-configuration-demo
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "This is a demo sync",
+                  "destination_config": {
+                    "configuration_url": "\u003cazure-configuration-url\u003e"
+                  },
+                  "environment": "dev",
+                  "name": "demo-sync",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "/",
+                  "sync_options": {
+                    "initial_sync_behavior": "overwrite-destination"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            configuration_url: (String) The URL of your Azure App Configuration
+            connection_id: (String) The ID of the azure Connection to use for syncing.
+            description: (String) An optional description for the Azure App Configuration sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Azure App Configuration secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            label: (String) The label to attach to secrets created in Azure App Configuration
+            name: (String) The name of the Azure App Configuration sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+        importStatements: []
+    infisical_secret_sync_azure_key_vault:
+        subCategory: ""
+        description: Create and manage Azure Key Vault secret syncs
+        name: infisical_secret_sync_azure_key_vault
+        title: infisical_secret_sync_azure_key_vault Resource - terraform-provider-infisical
+        examples:
+            - name: app-configuration-demo
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "This is a demo sync.",
+                  "destination_config": {
+                    "vault_base_url": "\u003cvault-base-url\u003e"
+                  },
+                  "environment": "dev",
+                  "name": "demo-sync",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "/",
+                  "sync_options": {
+                    "initial_sync_behavior": "overwrite-destination"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the azure Connection to use for syncing.
+            description: (String) An optional description for the Azure Key Vault sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Azure Key Vault secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            name: (String) The name of the Azure Key Vault sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            vault_base_url: (String) The base URL of your Azure Key Vault
+        importStatements: []
+    infisical_secret_sync_gcp_secret_manager:
+        subCategory: ""
+        description: Create and manage GCP Secret Manager secret syncs
+        name: infisical_secret_sync_gcp_secret_manager
+        title: infisical_secret_sync_gcp_secret_manager Resource - terraform-provider-infisical
+        examples:
+            - name: secret_manager_test
+              manifest: |-
+                {
+                  "connection_id": "${infisical_app_connection_gcp.app-connection-gcp.id}",
+                  "description": "I am a test secret sync",
+                  "destination_config": {
+                    "project_id": "my-duplicate-project"
+                  },
+                  "environment": "prod",
+                  "name": "gcp-sync-tests",
+                  "project_id": "f4517f4c-8b61-4727-8aef-5ae2807126fb",
+                  "secret_path": "/",
+                  "sync_options": {
+                    "initial_sync_behavior": "import-prioritize-destination"
+                  }
+                }
+              references:
+                connection_id: infisical_app_connection_gcp.app-connection-gcp.id
+              dependencies:
+                infisical_app_connection_gcp.app-connection-gcp: |-
+                    {
+                      "credentials": {
+                        "service_account_email": "service-account-df92581a-0fe9@my-duplicate-project.iam.gserviceaccount.com"
+                      },
+                      "description": "I am a test app connection",
+                      "method": "service-account-impersonation",
+                      "name": "gcp-app-connect"
+                    }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the GCP Connection to use for syncing.
+            description: (String) An optional description for the GCP Secret Manager sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the GCP Secret Manager secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            name: (String) The name of the GCP Secret Manager sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            scope: '(String) The scope of the sync with GCP Secret Manager. Supported options: global'
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+        importStatements: []
+    infisical_secret_tag Resource - terraform-provider-infisical:
+        subCategory: ""
+        description: Create secret tag & save to Infisical.
+        name: infisical_secret_tag Resource - terraform-provider-infisical
+        title: infisical_secret_tag Resource - terraform-provider-infisical
+        argumentDocs:
+            color: (String) Color code for the tag.
+            id: (String) The ID of the role
+            name: (String) The name for the new tag
+            project_id: (String) The project id associated with the secret tag
+            slug: (String) The slug for the new tag
         importStatements: []
