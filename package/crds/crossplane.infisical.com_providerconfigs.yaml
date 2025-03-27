@@ -107,8 +107,12 @@ spec:
                 required:
                 - source
                 type: object
+              host:
+                description: The host of the Infisical instance.
+                type: string
             required:
             - credentials
+            - host
             type: object
           status:
             description: A ProviderConfigStatus reflects the observed state of a ProviderConfig.

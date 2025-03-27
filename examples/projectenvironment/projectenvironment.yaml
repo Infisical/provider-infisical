@@ -1,0 +1,14 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectEnvironment
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/projectenvironment
+  labels:
+    testing.upbound.io/example-name: pre-prod
+  name: pre-prod
+spec:
+  forProvider:
+    name: pre-prod
+    slug: pre-prod
+    position: 3
+    projectId: 5a6d4c12-9cd6-4ca4-ab5c-5eb84e1a77c1

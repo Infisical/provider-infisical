@@ -1,8 +1,9 @@
-apiVersion: infisical.upbound.io/v1beta1
+apiVersion: crossplane.infisical.com/v1beta1
 kind: ProviderConfig
 metadata:
   name: default
 spec:
+  host: http://localhost:8088
   credentials:
     source: Secret
     secretRef:

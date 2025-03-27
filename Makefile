@@ -12,14 +12,16 @@ TERRAFORM_VERSION_VALID := $(shell [ "$(TERRAFORM_VERSION)" = "`printf "$(TERRAF
 
 export TERRAFORM_PROVIDER_SOURCE ?= Infisical/infisical
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provider-infisical
-export TERRAFORM_PROVIDER_VERSION ?= 0.15.0
-export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical
+export TERRAFORM_PROVIDER_VERSION ?= 0.0.1
+export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical-crossplane
 export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?=infisical
-export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v0.15.0
+export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_PROVIDER_VERSION)
 export TERRAFORM_DOCS_PATH ?= docs/resources
 
-PLATFORMS ?= linux_amd64 linux_arm64
+export TERRAFORM_LOCAL_PROVIDER_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/bin
+export TERRAFORM_LOCAL_PROVIDER_REPO_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 
+PLATFORMS ?= linux_amd64 linux_arm64
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only
 # "include" was used, the make command would fail and refuse
@@ -103,6 +105,7 @@ build.init: $(UP) check-terraform-version
 TERRAFORM := $(TOOLS_HOST_DIR)/terraform-$(TERRAFORM_VERSION)
 TERRAFORM_WORKDIR := $(WORK_DIR)/terraform
 TERRAFORM_PROVIDER_SCHEMA := config/schema.json
+export TF_CLI_CONFIG_FILE := $(TERRAFORM_WORKDIR)/terraformrc.hcl
 
 check-terraform-version:
 ifneq ($(TERRAFORM_VERSION_VALID),1)
@@ -118,18 +121,31 @@ $(TERRAFORM): check-terraform-version
 	@rm -fr $(TOOLS_HOST_DIR)/tmp-terraform
 	@$(OK) installing terraform $(HOSTOS)-$(HOSTARCH)
 
-$(TERRAFORM_PROVIDER_SCHEMA): $(TERRAFORM)
-	@$(INFO) generating provider schema for $(TERRAFORM_PROVIDER_SOURCE) $(TERRAFORM_PROVIDER_VERSION)
-	@mkdir -p $(TERRAFORM_WORKDIR)
-	@echo '{"terraform":[{"required_providers":[{"provider":{"source":"'"$(TERRAFORM_PROVIDER_SOURCE)"'","version":"'"$(TERRAFORM_PROVIDER_VERSION)"'"}}],"required_version":"'"$(TERRAFORM_VERSION)"'"}]}' > $(TERRAFORM_WORKDIR)/main.tf.json
-	@$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) init > $(TERRAFORM_WORKDIR)/terraform-logs.txt 2>&1
-	@$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) providers schema -json=true > $(TERRAFORM_PROVIDER_SCHEMA) 2>> $(TERRAFORM_WORKDIR)/terraform-logs.txt
-	@$(OK) generating provider schema for $(TERRAFORM_PROVIDER_SOURCE) $(TERRAFORM_PROVIDER_VERSION)
+$(TERRAFORM_PROVIDER_SCHEMA): $(TERRAFORM) download-provider-binary
+	$(INFO) generating provider schema from GitHub binary
+	mkdir -p $(TERRAFORM_WORKDIR)
+	cp $(ROOT_DIR)/gen-terraformrc.hcl $(TERRAFORM_WORKDIR)/terraformrc.hcl
+	mkdir -p $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)
+	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)/
+	echo '{"terraform":[{"required_providers":[{"provider":{"source":"'"$(TERRAFORM_PROVIDER_SOURCE)"'","version":"'"$(TERRAFORM_PROVIDER_VERSION)"'"}}],"required_version":"'"$(TERRAFORM_VERSION)"'"}]}' > $(TERRAFORM_WORKDIR)/main.tf.json
+	$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) init -upgrade
+	$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) providers schema -json=true | tee $(TERRAFORM_PROVIDER_SCHEMA)
+	$(OK) generating provider schema from GitHub binary
+
+download-provider-binary:
+	@$(INFO) downloading provider binary from GitHub releases
+	@mkdir -p $(WORK_DIR)
+	@curl -L -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(HOSTARCH).zip
+	@unzip -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip -d $(WORK_DIR)
+	@chmod +x $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY)
+	@$(OK) downloaded provider binary from GitHub releases
+
+.PHONY: download-provider-binary
 
 pull-docs:
 	@if [ ! -d "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" ]; then \
   		mkdir -p "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" && \
-		git clone -c advice.detachedHead=false --depth 1 --filter=blob:none --branch "v$(TERRAFORM_PROVIDER_VERSION)" --sparse "$(TERRAFORM_PROVIDER_REPO)" "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"; \
+		git clone -c advice.detachedHead=false --depth 1 --filter=blob:none --branch "crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)" --sparse "$(TERRAFORM_PROVIDER_REPO)" "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"; \
 	fi
 	@git -C "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" sparse-checkout set "$(TERRAFORM_DOCS_PATH)"
 
@@ -163,10 +179,14 @@ submodules:
 # This is for running out-of-cluster locally, and is for convenience. Running
 # this make target will print out the command which was used. For more control,
 # try running the binary directly with different arguments.
-run: go.build
+run: go.build download-provider-binary
 	@$(INFO) Running Crossplane locally out-of-cluster . . .
+	mkdir -p $(TERRAFORM_WORKDIR)
+	cp $(ROOT_DIR)/local-terraformrc.hcl $(TERRAFORM_WORKDIR)/terraformrc.hcl
+	@mkdir -p /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)/
+	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)/
 	@# To see other arguments that can be provided, run the command with --help instead
-	UPBOUND_CONTEXT="local" $(GO_OUT_DIR)/provider --debug
+	UPBOUND_CONTEXT="local" $(GO_OUT_DIR)/provider --debug --poll=60s
 
 # ====================================================================================
 # End to End Testing

@@ -1,0 +1,13 @@
+apiVersion: identity.crossplane.infisical.com/v1alpha1
+kind: Identity
+metadata:
+  annotations:
+    meta.upbound.io/example-id: identity/v1alpha1/identity
+  labels:
+    testing.upbound.io/example-name: universal-auth
+  name: universal-auth
+spec:
+  forProvider:
+    name: universal-auth
+    orgId: <org_id>
+    role: member

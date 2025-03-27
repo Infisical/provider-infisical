@@ -1,0 +1,16 @@
+apiVersion: identity.crossplane.infisical.com/v1alpha1
+kind: UniversalAuth
+metadata:
+  annotations:
+    meta.upbound.io/example-id: identity/v1alpha1/universalauth
+  labels:
+    testing.upbound.io/example-name: universal-auth
+  name: identity-universal-auth
+spec:
+  forProvider:
+    identityId: e4deba64-a2f4-4b9e-9e21-b73fe54d2a29
+    accessTokenTtl: 3600
+    accessTokenMaxTtl: 2592000
+    accessTokenNumUsesLimit: 5
+  providerConfigRef:
+    name: default

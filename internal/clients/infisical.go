@@ -7,6 +7,7 @@ package clients
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	"github.com/pkg/errors"
@@ -37,6 +38,7 @@ func TerraformSetupBuilder(version, providerSource, providerVersion string) terr
 				Source:  providerSource,
 				Version: providerVersion,
 			},
+			Configuration: map[string]any{},
 		}
 
 		configRef := mg.GetProviderConfigReference()
@@ -57,16 +59,47 @@ func TerraformSetupBuilder(version, providerSource, providerVersion string) terr
 		if err != nil {
 			return ps, errors.Wrap(err, errExtractCredentials)
 		}
-		creds := map[string]string{}
+
+		if pc.Spec.Host != "" {
+			ps.Configuration["host"] = pc.Spec.Host
+		}
+
+		creds := map[string]any{}
 		if err := json.Unmarshal(data, &creds); err != nil {
 			return ps, errors.Wrap(err, errUnmarshalCredentials)
 		}
 
-		// Set credentials in Terraform provider configuration.
-		/*ps.Configuration = map[string]any{
-			"username": creds["username"],
-			"password": creds["password"],
-		}*/
+		authField, ok := creds["auth"]
+		if !ok || authField == nil {
+			return ps, errors.Wrap(fmt.Errorf("auth is not set"), errUnmarshalCredentials)
+		}
+
+		authMap, ok := authField.(map[string]any)
+		if !ok {
+			return ps, errors.Wrap(fmt.Errorf("auth is not a valid object"), errUnmarshalCredentials)
+		}
+
+		if universal, ok := authMap["universal"]; ok && universal != nil {
+			universalMap, ok := universal.(map[string]any)
+			if !ok {
+				return ps, errors.Wrap(fmt.Errorf("universal auth is not a valid object"), errUnmarshalCredentials)
+			}
+
+			clientID, hasClientID := universalMap["client_id"]
+			clientSecret, hasClientSecret := universalMap["client_secret"]
+
+			if !hasClientID || !hasClientSecret {
+				return ps, errors.Wrap(fmt.Errorf("missing client_id or client_secret in universal auth"), errUnmarshalCredentials)
+			}
+
+			ps.Configuration["auth"] = map[string]any{
+				"universal": map[string]any{
+					"client_id":     clientID,
+					"client_secret": clientSecret,
+				},
+			}
+		}
+
 		return ps, nil
 	}
 }

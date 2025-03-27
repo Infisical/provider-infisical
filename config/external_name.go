@@ -4,13 +4,18 @@ Copyright 2022 Upbound Inc.
 
 package config
 
-import "github.com/crossplane/upjet/pkg/config"
+import (
+	"github.com/crossplane/upjet/pkg/config"
+)
 
 // ExternalNameConfigs contains all external name configurations for this
 // provider.
 var ExternalNameConfigs = map[string]config.ExternalName{
-	// Import requires using a randomly generated ID from provider: nl-2e21sda
-	"infisical_project": config.IdentifierFromProvider,
+	"infisical_project":                 config.IdentifierFromProvider,
+	"infisical_identity":                config.IdentifierFromProvider,
+	"infisical_project_environment":     config.IdentifierFromProvider,
+	"infisical_identity_universal_auth": config.IdentifierFromProvider,
+	"infisical_project_identity":        config.ParameterAsIdentifier("membershipId"),
 }
 
 // ExternalNameConfigurations applies all external name configs listed in the

@@ -1,0 +1,30 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectEnvironment
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/projectenvironment
+  labels:
+    testing.upbound.io/example-name: pre-prod
+  name: pre-prod
+spec:
+  forProvider:
+    name: pre-prod
+    position: 2
+    projectId: ${infisical_project.example.id}
+    slug: preprod
+
+---
+
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: Project
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/projectenvironment
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    name: example
+    position: 1
+    slug: example

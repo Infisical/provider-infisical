@@ -7,4 +7,15 @@ func Configure(p *config.Provider) {
 		r.Kind = "Project"
 		r.ShortGroup = "project"
 	})
+
+	p.AddResourceConfigurator("infisical_project_environment", func(r *config.Resource) {
+		r.Kind = "ProjectEnvironment"
+		r.ShortGroup = "project"
+	})
+
+	p.AddResourceConfigurator("infisical_project_identity", func(r *config.Resource) {
+		r.Kind = "ProjectIdentity"
+		r.ShortGroup = "project"
+	})
+
 }
