@@ -125,8 +125,8 @@ $(TERRAFORM_PROVIDER_SCHEMA): $(TERRAFORM) download-provider-binary
 	$(INFO) generating provider schema from GitHub binary
 	mkdir -p $(TERRAFORM_WORKDIR)
 	cp $(ROOT_DIR)/gen-terraformrc.hcl $(TERRAFORM_WORKDIR)/terraformrc.hcl
-	mkdir -p $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)
-	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)/
+	mkdir -p $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)
+	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)/
 	echo '{"terraform":[{"required_providers":[{"provider":{"source":"'"$(TERRAFORM_PROVIDER_SOURCE)"'","version":"'"$(TERRAFORM_PROVIDER_VERSION)"'"}}],"required_version":"'"$(TERRAFORM_VERSION)"'"}]}' > $(TERRAFORM_WORKDIR)/main.tf.json
 	$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) init -upgrade
 	$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) providers schema -json=true | tee $(TERRAFORM_PROVIDER_SCHEMA)
@@ -134,9 +134,9 @@ $(TERRAFORM_PROVIDER_SCHEMA): $(TERRAFORM) download-provider-binary
 
 download-provider-binary:
 	@$(INFO) downloading provider binary from GitHub releases
-	@echo "Downloading from: ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(HOSTARCH).zip"
+	@echo "Downloading from: ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip"
 	@mkdir -p $(WORK_DIR)
-	@curl -L -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(HOSTARCH).zip
+	@curl -L -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip
 	@unzip -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip -d $(WORK_DIR)
 	@chmod +x $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY)
 	@$(OK) downloaded provider binary from GitHub releases
@@ -186,7 +186,7 @@ run: go.build download-provider-binary
 	@$(INFO) Running Crossplane locally out-of-cluster . . .
 	mkdir -p $(TERRAFORM_WORKDIR)
 	cp $(ROOT_DIR)/local-terraformrc.hcl $(TERRAFORM_WORKDIR)/terraformrc.hcl
-	@mkdir -p /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)/
+	@mkdir -p /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)/
 	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)/
 	@# To see other arguments that can be provided, run the command with --help instead
 	UPBOUND_CONTEXT="local" $(GO_OUT_DIR)/provider --debug --poll=60s
