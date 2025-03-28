@@ -8,7 +8,9 @@ metadata:
   name: test-user
 spec:
   forProvider:
-    projectId: ${infisical_project.example.id}
+    projectIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
     roles: '[{"role_slug": "admin"}]'
     username: sheen+200@infisical.com
 

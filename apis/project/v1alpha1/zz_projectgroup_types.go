@@ -25,7 +25,16 @@ type ProjectGroupInitParameters struct {
 
 	// (String) The id of the project.
 	// The id of the project.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha1.Project
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
+
+	// Reference to a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+
+	// Selector for a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this group. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -71,8 +80,17 @@ type ProjectGroupParameters struct {
 
 	// (String) The id of the project.
 	// The id of the project.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha1.Project
 	// +kubebuilder:validation:Optional
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
+
+	// Reference to a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+
+	// Selector for a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this group. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -116,7 +134,6 @@ type ProjectGroupStatus struct {
 type ProjectGroup struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.projectId) || (has(self.initProvider) && has(self.initProvider.projectId))",message="spec.forProvider.projectId is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.roles) || (has(self.initProvider) && has(self.initProvider.roles))",message="spec.forProvider.roles is a required parameter"
 	Spec   ProjectGroupSpec   `json:"spec"`
 	Status ProjectGroupStatus `json:"status,omitempty"`

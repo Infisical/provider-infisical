@@ -25,7 +25,16 @@ type UniversalAuthInitParameters struct {
 	AccessTokenTTL *float64 `json:"accessTokenTtl,omitempty" tf:"access_token_ttl,omitempty"`
 
 	// The ID of the identity to attach the configuration onto.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/identity/v1alpha1.Identity
 	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
+
+	// Reference to a Identity in identity to populate identityId.
+	// +kubebuilder:validation:Optional
+	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+
+	// Selector for a Identity in identity to populate identityId.
+	// +kubebuilder:validation:Optional
+	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 }
 
 type UniversalAuthObservation struct {
@@ -60,8 +69,17 @@ type UniversalAuthParameters struct {
 	AccessTokenTTL *float64 `json:"accessTokenTtl,omitempty" tf:"access_token_ttl,omitempty"`
 
 	// The ID of the identity to attach the configuration onto.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/identity/v1alpha1.Identity
 	// +kubebuilder:validation:Optional
 	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
+
+	// Reference to a Identity in identity to populate identityId.
+	// +kubebuilder:validation:Optional
+	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+
+	// Selector for a Identity in identity to populate identityId.
+	// +kubebuilder:validation:Optional
+	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 }
 
 // UniversalAuthSpec defines the desired state of UniversalAuth
@@ -100,9 +118,8 @@ type UniversalAuthStatus struct {
 type UniversalAuth struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.identityId) || (has(self.initProvider) && has(self.initProvider.identityId))",message="spec.forProvider.identityId is a required parameter"
-	Spec   UniversalAuthSpec   `json:"spec"`
-	Status UniversalAuthStatus `json:"status,omitempty"`
+	Spec              UniversalAuthSpec   `json:"spec"`
+	Status            UniversalAuthStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

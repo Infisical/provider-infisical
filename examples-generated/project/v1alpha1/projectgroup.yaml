@@ -9,7 +9,9 @@ metadata:
 spec:
   forProvider:
     groupId: <group-id>
-    projectId: ${infisical_project.example.id}
+    projectIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
     roles: '[{"role_slug": "admin"}]'
 
 ---

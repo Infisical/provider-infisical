@@ -12,5 +12,8 @@ func Configure(p *config.Provider) {
 		r.Kind = "UniversalAuth"
 		r.ShortGroup = "identity"
 		r.ExternalName.OmittedFields = []string{"access_token_trusted_ips", "client_secret_trusted_ips"}
+		r.References["identity_id"] = config.Reference{
+			TerraformName: "infisical_identity",
+		}
 	})
 }

@@ -17,11 +17,29 @@ type ProjectIdentityInitParameters struct {
 
 	// (String) The id of the identity.
 	// The id of the identity.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/identity/v1alpha1.Identity
 	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
+
+	// Reference to a Identity in identity to populate identityId.
+	// +kubebuilder:validation:Optional
+	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+
+	// Selector for a Identity in identity to populate identityId.
+	// +kubebuilder:validation:Optional
+	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 
 	// (String) The id of the project
 	// The id of the project
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha1.Project
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
+
+	// Reference to a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+
+	// Selector for a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -52,13 +70,31 @@ type ProjectIdentityParameters struct {
 
 	// (String) The id of the identity.
 	// The id of the identity.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/identity/v1alpha1.Identity
 	// +kubebuilder:validation:Optional
 	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
 
+	// Reference to a Identity in identity to populate identityId.
+	// +kubebuilder:validation:Optional
+	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+
+	// Selector for a Identity in identity to populate identityId.
+	// +kubebuilder:validation:Optional
+	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
+
 	// (String) The id of the project
 	// The id of the project
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha1.Project
 	// +kubebuilder:validation:Optional
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
+
+	// Reference to a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+
+	// Selector for a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -102,8 +138,6 @@ type ProjectIdentityStatus struct {
 type ProjectIdentity struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.identityId) || (has(self.initProvider) && has(self.initProvider.identityId))",message="spec.forProvider.identityId is a required parameter"
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.projectId) || (has(self.initProvider) && has(self.initProvider.projectId))",message="spec.forProvider.projectId is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.roles) || (has(self.initProvider) && has(self.initProvider.roles))",message="spec.forProvider.roles is a required parameter"
 	Spec   ProjectIdentitySpec   `json:"spec"`
 	Status ProjectIdentityStatus `json:"status,omitempty"`

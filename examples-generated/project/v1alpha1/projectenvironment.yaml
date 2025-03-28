@@ -10,7 +10,9 @@ spec:
   forProvider:
     name: pre-prod
     position: 2
-    projectId: ${infisical_project.example.id}
+    projectIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
     slug: preprod
 
 ---

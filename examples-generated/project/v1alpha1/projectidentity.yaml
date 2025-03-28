@@ -8,8 +8,12 @@ metadata:
   name: test-identity
 spec:
   forProvider:
-    identityId: <identity id>
-    projectId: ${infisical_project.example.id}
+    identityIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+    projectIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
     roles: '[{"role_slug": "admin"}]'
 
 ---
