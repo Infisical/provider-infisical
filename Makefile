@@ -12,7 +12,7 @@ TERRAFORM_VERSION_VALID := $(shell [ "$(TERRAFORM_VERSION)" = "`printf "$(TERRAF
 
 export TERRAFORM_PROVIDER_SOURCE ?= Infisical/infisical
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provider-infisical
-export TERRAFORM_PROVIDER_VERSION ?= 0.0.5
+export TERRAFORM_PROVIDER_VERSION ?= 0.0.6
 export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical-crossplane
 export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?=infisical
 export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_PROVIDER_VERSION)
@@ -134,6 +134,7 @@ $(TERRAFORM_PROVIDER_SCHEMA): $(TERRAFORM) download-provider-binary
 
 download-provider-binary:
 	@$(INFO) downloading provider binary from GitHub releases
+	@echo "Downloading from: ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(HOSTARCH).zip"
 	@mkdir -p $(WORK_DIR)
 	@curl -L -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(HOSTARCH).zip
 	@unzip -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip -d $(WORK_DIR)
