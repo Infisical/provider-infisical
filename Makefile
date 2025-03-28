@@ -22,6 +22,8 @@ export TERRAFORM_LOCAL_PROVIDER_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 export TERRAFORM_LOCAL_PROVIDER_REPO_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 
 PLATFORMS ?= linux_amd64 linux_arm64
+VERSION ?= 0.1.2
+
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only
 # "include" was used, the make command would fail and refuse
@@ -64,17 +66,17 @@ UPTEST_VERSION = v0.5.0
 # ====================================================================================
 # Setup Images
 
-REGISTRY_ORGS ?= xpkg.upbound.io/infisical
+REGISTRY_ORGS ?= xpkg.upbound.io/infisical-inc
 IMAGES = $(PROJECT_NAME)
 -include build/makelib/imagelight.mk
 
 # ====================================================================================
 # Setup XPKG
 
-XPKG_REG_ORGS ?= xpkg.upbound.io/infisical
+XPKG_REG_ORGS ?= xpkg.upbound.io/infisical-inc
 # NOTE(hasheddan): skip promoting on xpkg.upbound.io as channel tags are
 # inferred.
-XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/infisical
+XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/infisical-inc
 XPKGS = $(PROJECT_NAME)
 -include build/makelib/xpkg.mk
 
