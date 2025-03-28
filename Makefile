@@ -14,9 +14,9 @@ export TERRAFORM_PROVIDER_SOURCE ?= Infisical/infisical
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provider-infisical
 export TERRAFORM_PROVIDER_VERSION ?= 0.0.6
 export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical-crossplane
-export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?=infisical
 export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_PROVIDER_VERSION)
 export TERRAFORM_DOCS_PATH ?= docs/resources
+export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?= ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)
 
 export TERRAFORM_LOCAL_PROVIDER_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/bin
 export TERRAFORM_LOCAL_PROVIDER_REPO_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
