@@ -1,16 +1,16 @@
 apiVersion: project.crossplane.infisical.com/v1alpha1
-kind: ProjectIdentity
+kind: ProjectUser
 metadata:
   annotations:
-    meta.upbound.io/example-id: project/v1alpha1/projectidentity
+    meta.upbound.io/example-id: project/v1alpha1/projectuser
   labels:
-    testing.upbound.io/example-name: test-identity
-  name: test-identity
+    testing.upbound.io/example-name: test-user
+  name: test-user
 spec:
   forProvider:
-    identityId: <identity id>
     projectId: ${infisical_project.example.id}
     roles: '[{"role_slug": "admin"}]'
+    username: sheen+200@infisical.com
 
 ---
 
@@ -18,7 +18,7 @@ apiVersion: project.crossplane.infisical.com/v1alpha1
 kind: Project
 metadata:
   annotations:
-    meta.upbound.io/example-id: project/v1alpha1/projectidentity
+    meta.upbound.io/example-id: project/v1alpha1/projectuser
   labels:
     testing.upbound.io/example-name: example
   name: example

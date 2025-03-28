@@ -13,7 +13,9 @@ import (
 	universalauth "github.com/infisical/provider-infisical/internal/controller/identity/universalauth"
 	project "github.com/infisical/provider-infisical/internal/controller/project/project"
 	projectenvironment "github.com/infisical/provider-infisical/internal/controller/project/projectenvironment"
+	projectgroup "github.com/infisical/provider-infisical/internal/controller/project/projectgroup"
 	projectidentity "github.com/infisical/provider-infisical/internal/controller/project/projectidentity"
+	projectuser "github.com/infisical/provider-infisical/internal/controller/project/projectuser"
 	providerconfig "github.com/infisical/provider-infisical/internal/controller/providerconfig"
 )
 
@@ -25,7 +27,9 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		universalauth.Setup,
 		project.Setup,
 		projectenvironment.Setup,
+		projectgroup.Setup,
 		projectidentity.Setup,
+		projectuser.Setup,
 		providerconfig.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {

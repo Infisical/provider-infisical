@@ -1,0 +1,13 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectIdentity
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/projectidentity
+  labels:
+    testing.upbound.io/example-name: test-identity
+  name: sample-project-identity
+spec:
+  forProvider:
+    identityId: dceae01b-9a05-4a74-8938-1bfcf35906ad
+    projectId: f3754800-5fad-4323-9cb0-f686d2eda24c
+    roles: '[{"role_slug":"admin"},{"role_slug":"member"}]'

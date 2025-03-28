@@ -1,0 +1,18 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectGroup
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/projectgroup
+  labels:
+    testing.upbound.io/example-name: test-group
+  name: test-group
+spec:
+  forProvider:
+    groupId: 62ade129-427a-43f1-91fe-b49ac45b854e
+    projectId: f3754800-5fad-4323-9cb0-f686d2eda24c
+    roles: |-
+      [
+        {
+          "role_slug": "admin"
+        }
+      ]

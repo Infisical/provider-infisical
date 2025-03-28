@@ -17,6 +17,15 @@ func (l *ProjectEnvironmentList) GetItems() []resource.Managed {
 	return items
 }
 
+// GetItems of this ProjectGroupList.
+func (l *ProjectGroupList) GetItems() []resource.Managed {
+	items := make([]resource.Managed, len(l.Items))
+	for i := range l.Items {
+		items[i] = &l.Items[i]
+	}
+	return items
+}
+
 // GetItems of this ProjectIdentityList.
 func (l *ProjectIdentityList) GetItems() []resource.Managed {
 	items := make([]resource.Managed, len(l.Items))
@@ -28,6 +37,15 @@ func (l *ProjectIdentityList) GetItems() []resource.Managed {
 
 // GetItems of this ProjectList.
 func (l *ProjectList) GetItems() []resource.Managed {
+	items := make([]resource.Managed, len(l.Items))
+	for i := range l.Items {
+		items[i] = &l.Items[i]
+	}
+	return items
+}
+
+// GetItems of this ProjectUserList.
+func (l *ProjectUserList) GetItems() []resource.Managed {
 	items := make([]resource.Managed, len(l.Items))
 	for i := range l.Items {
 		items[i] = &l.Items[i]

@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: projectidentities.project.crossplane.infisical.com
+  name: projectgroups.project.crossplane.infisical.com
 spec:
   group: project.crossplane.infisical.com
   names:
@@ -12,10 +12,10 @@ spec:
     - crossplane
     - managed
     - infisical
-    kind: ProjectIdentity
-    listKind: ProjectIdentityList
-    plural: projectidentities
-    singular: projectidentity
+    kind: ProjectGroup
+    listKind: ProjectGroupList
+    plural: projectgroups
+    singular: projectgroup
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -34,8 +34,8 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ProjectIdentity is the Schema for the ProjectIdentitys API. Create
-          project identities & save to Infisical. Only Machine Identity authentication
+        description: ProjectGroup is the Schema for the ProjectGroups API. Create
+          project groups & save to Infisical. Only Machine Identity authentication
           is supported for this data source
         properties:
           apiVersion:
@@ -56,7 +56,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: ProjectIdentitySpec defines the desired state of ProjectIdentity
+            description: ProjectGroupSpec defines the desired state of ProjectGroup
             properties:
               deletionPolicy:
                 default: Delete
@@ -74,20 +74,25 @@ spec:
                 type: string
               forProvider:
                 properties:
-                  identityId:
+                  groupId:
                     description: |-
-                      (String) The id of the identity.
-                      The id of the identity.
+                      (String) The id of the group.
+                      The id of the group.
+                    type: string
+                  groupName:
+                    description: |-
+                      (String) The name of the group.
+                      The name of the group.
                     type: string
                   projectId:
                     description: |-
-                      (String) The id of the project
-                      The id of the project
+                      (String) The id of the project.
+                      The id of the project.
                     type: string
                   roles:
                     description: |-
-                      (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-                      JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                      (String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+                      JSON array of role assignments for this group. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
                     type: string
                 type: object
               initProvider:
@@ -103,20 +108,25 @@ spec:
                   for example because of an external controller is managing them, like an
                   autoscaler.
                 properties:
-                  identityId:
+                  groupId:
                     description: |-
-                      (String) The id of the identity.
-                      The id of the identity.
+                      (String) The id of the group.
+                      The id of the group.
+                    type: string
+                  groupName:
+                    description: |-
+                      (String) The name of the group.
+                      The name of the group.
                     type: string
                   projectId:
                     description: |-
-                      (String) The id of the project
-                      The id of the project
+                      (String) The id of the project.
+                      The id of the project.
                     type: string
                   roles:
                     description: |-
-                      (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-                      JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                      (String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+                      JSON array of role assignments for this group. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
                     type: string
                 type: object
               managementPolicies:
@@ -287,10 +297,6 @@ spec:
             - forProvider
             type: object
             x-kubernetes-validations:
-            - message: spec.forProvider.identityId is a required parameter
-              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
-                || ''Update'' in self.managementPolicies) || has(self.forProvider.identityId)
-                || (has(self.initProvider) && has(self.initProvider.identityId))'
             - message: spec.forProvider.projectId is a required parameter
               rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
                 || ''Update'' in self.managementPolicies) || has(self.forProvider.projectId)
@@ -300,31 +306,36 @@ spec:
                 || ''Update'' in self.managementPolicies) || has(self.forProvider.roles)
                 || (has(self.initProvider) && has(self.initProvider.roles))'
           status:
-            description: ProjectIdentityStatus defines the observed state of ProjectIdentity.
+            description: ProjectGroupStatus defines the observed state of ProjectGroup.
             properties:
               atProvider:
                 properties:
-                  id:
-                    type: string
-                  identityId:
+                  groupId:
                     description: |-
-                      (String) The id of the identity.
-                      The id of the identity.
+                      (String) The id of the group.
+                      The id of the group.
+                    type: string
+                  groupName:
+                    description: |-
+                      (String) The name of the group.
+                      The name of the group.
+                    type: string
+                  id:
                     type: string
                   membershipId:
                     description: |-
-                      (String) The membership Id of the project identity
-                      The membership Id of the project identity
+                      (String) The membership Id of the project group
+                      The membership Id of the project group
                     type: string
                   projectId:
                     description: |-
-                      (String) The id of the project
-                      The id of the project
+                      (String) The id of the project.
+                      The id of the project.
                     type: string
                   roles:
                     description: |-
-                      (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-                      JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                      (String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+                      JSON array of role assignments for this group. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
                     type: string
                 type: object
               conditions:

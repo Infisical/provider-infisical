@@ -757,23 +757,12 @@ resources:
         name: infisical_project_group
         title: infisical_project_group Resource - terraform-provider-infisical
         examples:
-            - name: group
+            - name: test-group
               manifest: |-
                 {
-                  "group_id": "\u003c\u003e",
-                  "group_name": "\u003c\u003e",
+                  "group_id": "\u003cgroup-id\u003e",
                   "project_id": "${infisical_project.example.id}",
-                  "roles": [
-                    {
-                      "is_temporary": true,
-                      "role_slug": "admin",
-                      "temporary_access_start_time": "2024-09-19T12:43:13Z",
-                      "temporary_range": "1y"
-                    },
-                    {
-                      "role_slug": "my-custom-role"
-                    }
-                  ]
+                  "roles": "[{\"role_slug\": \"admin\"}]"
                 }
               references:
                 project_id: infisical_project.example.id
@@ -786,13 +775,9 @@ resources:
         argumentDocs:
             group_id: (String) The id of the group.
             group_name: (String) The name of the group.
-            is_temporary: (Boolean) Flag to indicate the assigned role is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
             membership_id: (String) The membership Id of the project group
             project_id: (String) The id of the project.
-            role_slug: (String) The slug of the role
-            roles: (Attributes Set) The roles assigned to the project group (see below for nested schema)
-            temporary_access_start_time: (String) ISO time for which temporary access should begin. This is in the format YYYY-MM-DDTHH:MM:SSZ e.g. 2024-09-19T12:43:13Z
-            temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
+            roles: '(String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].'
         importStatements: []
     infisical_project_identity:
         subCategory: ""
@@ -805,11 +790,7 @@ resources:
                 {
                   "identity_id": "\u003cidentity id\u003e",
                   "project_id": "${infisical_project.example.id}",
-                  "roles": [
-                    {
-                      "role_slug": "admin"
-                    }
-                  ]
+                  "roles": "[{\"role_slug\": \"admin\"}]"
                 }
               references:
                 project_id: infisical_project.example.id
@@ -820,21 +801,10 @@ resources:
                       "slug": "example"
                     }
         argumentDocs:
-            auth_methods: (List of String) The auth methods for the identity
-            custom_role_id: (String) The id of the custom role slug
-            id: (String) The ID of the project identity role.
-            identity: (Attributes) The identity details of the project identity (see below for nested schema)
             identity_id: (String) The id of the identity.
-            is_temporary: (Boolean) Flag to indicate the assigned role is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
             membership_id: (String) The membership Id of the project identity
-            name: (String) The name of the identity
             project_id: (String) The id of the project
-            role_slug: (String) The slug of the role
-            roles: (Attributes List) The roles assigned to the project identity (see below for nested schema)
-            temporary_access_end_time: (String) ISO time for which temporary access will end. Computed based on temporary_range and temporary_access_start_time
-            temporary_access_start_time: (String) ISO time for which temporary access should begin. The current time is used by default.
-            temporary_mode: '(String) Type of temporary access given. Types: relative. Default: relative'
-            temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
+            roles: '(String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].'
         importStatements: []
     infisical_project_identity_specific_privilege:
         subCategory: ""
@@ -968,12 +938,8 @@ resources:
               manifest: |-
                 {
                   "project_id": "${infisical_project.example.id}",
-                  "roles": [
-                    {
-                      "role_slug": "admin"
-                    }
-                  ],
-                  "username": "\u003cusername/email\u003e"
+                  "roles": "[{\"role_slug\": \"admin\"}]",
+                  "username": "sheen+200@infisical.com"
                 }
               references:
                 project_id: infisical_project.example.id
@@ -984,21 +950,9 @@ resources:
                       "slug": "example"
                     }
         argumentDocs:
-            custom_role_id: (String) The id of the custom role slug
-            email: (String) The email of the user
-            first_name: (String) The first name of the user
-            id: (String) The ID of the project user role.
-            is_temporary: (Boolean) Flag to indicate the assigned role is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
-            last_name: (String) The last name of the user
             membership_id: (String) The membershipId of the project user
             project_id: (String) The id of the project
-            role_slug: (String) The slug of the role
-            roles: (Attributes List) The roles assigned to the project user (see below for nested schema)
-            temporary_access_end_time: (String) ISO time for which temporary access will end. Computed based on temporary_range and temporary_access_start_time
-            temporary_access_start_time: (String) ISO time for which temporary access should begin. The current time is used by default.
-            temporary_mode: '(String) Type of temporary access given. Types: relative. Default: relative'
-            temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
-            user: (Attributes) The user details of the project user (see below for nested schema)
+            roles: '(String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].'
             username: (String) The usename of the user. By default its the email
         importStatements: []
     infisical_secret:

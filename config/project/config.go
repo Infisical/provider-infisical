@@ -18,4 +18,13 @@ func Configure(p *config.Provider) {
 		r.ShortGroup = "project"
 	})
 
+	p.AddResourceConfigurator("infisical_project_user", func(r *config.Resource) {
+		r.Kind = "ProjectUser"
+		r.ShortGroup = "project"
+	})
+
+	p.AddResourceConfigurator("infisical_project_group", func(r *config.Resource) {
+		r.Kind = "ProjectGroup"
+		r.ShortGroup = "project"
+	})
 }

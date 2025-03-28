@@ -13,63 +13,63 @@ import (
 	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
-type ProjectIdentityInitParameters struct {
-
-	// (String) The id of the identity.
-	// The id of the identity.
-	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
+type ProjectUserInitParameters struct {
 
 	// (String) The id of the project
 	// The id of the project
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
 
-	// (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-	// JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+	// (String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+	// JSON array of role assignments for this user. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
 	Roles *string `json:"roles,omitempty" tf:"roles,omitempty"`
+
+	// (String) The usename of the user. By default its the email
+	// The usename of the user. By default its the email
+	Username *string `json:"username,omitempty" tf:"username,omitempty"`
 }
 
-type ProjectIdentityObservation struct {
+type ProjectUserObservation struct {
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 
-	// (String) The id of the identity.
-	// The id of the identity.
-	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
-
-	// (String) The membership Id of the project identity
-	// The membership Id of the project identity
+	// (String) The membershipId of the project user
+	// The membershipId of the project user
 	MembershipID *string `json:"membershipId,omitempty" tf:"membership_id,omitempty"`
 
 	// (String) The id of the project
 	// The id of the project
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
 
-	// (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-	// JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+	// (String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+	// JSON array of role assignments for this user. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
 	Roles *string `json:"roles,omitempty" tf:"roles,omitempty"`
+
+	// (String) The usename of the user. By default its the email
+	// The usename of the user. By default its the email
+	Username *string `json:"username,omitempty" tf:"username,omitempty"`
 }
 
-type ProjectIdentityParameters struct {
-
-	// (String) The id of the identity.
-	// The id of the identity.
-	// +kubebuilder:validation:Optional
-	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
+type ProjectUserParameters struct {
 
 	// (String) The id of the project
 	// The id of the project
 	// +kubebuilder:validation:Optional
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
 
-	// (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-	// JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+	// (String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+	// JSON array of role assignments for this user. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
 	// +kubebuilder:validation:Optional
 	Roles *string `json:"roles,omitempty" tf:"roles,omitempty"`
+
+	// (String) The usename of the user. By default its the email
+	// The usename of the user. By default its the email
+	// +kubebuilder:validation:Optional
+	Username *string `json:"username,omitempty" tf:"username,omitempty"`
 }
 
-// ProjectIdentitySpec defines the desired state of ProjectIdentity
-type ProjectIdentitySpec struct {
+// ProjectUserSpec defines the desired state of ProjectUser
+type ProjectUserSpec struct {
 	v1.ResourceSpec `json:",inline"`
-	ForProvider     ProjectIdentityParameters `json:"forProvider"`
+	ForProvider     ProjectUserParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -80,52 +80,52 @@ type ProjectIdentitySpec struct {
 	// required on creation, but we do not desire to update them after creation,
 	// for example because of an external controller is managing them, like an
 	// autoscaler.
-	InitProvider ProjectIdentityInitParameters `json:"initProvider,omitempty"`
+	InitProvider ProjectUserInitParameters `json:"initProvider,omitempty"`
 }
 
-// ProjectIdentityStatus defines the observed state of ProjectIdentity.
-type ProjectIdentityStatus struct {
+// ProjectUserStatus defines the observed state of ProjectUser.
+type ProjectUserStatus struct {
 	v1.ResourceStatus `json:",inline"`
-	AtProvider        ProjectIdentityObservation `json:"atProvider,omitempty"`
+	AtProvider        ProjectUserObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 
-// ProjectIdentity is the Schema for the ProjectIdentitys API. Create project identities & save to Infisical. Only Machine Identity authentication is supported for this data source
+// ProjectUser is the Schema for the ProjectUsers API. Create project users & save to Infisical. Only Machine Identity authentication is supported for this resource
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,infisical}
-type ProjectIdentity struct {
+type ProjectUser struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.identityId) || (has(self.initProvider) && has(self.initProvider.identityId))",message="spec.forProvider.identityId is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.projectId) || (has(self.initProvider) && has(self.initProvider.projectId))",message="spec.forProvider.projectId is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.roles) || (has(self.initProvider) && has(self.initProvider.roles))",message="spec.forProvider.roles is a required parameter"
-	Spec   ProjectIdentitySpec   `json:"spec"`
-	Status ProjectIdentityStatus `json:"status,omitempty"`
+	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.username) || (has(self.initProvider) && has(self.initProvider.username))",message="spec.forProvider.username is a required parameter"
+	Spec   ProjectUserSpec   `json:"spec"`
+	Status ProjectUserStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// ProjectIdentityList contains a list of ProjectIdentitys
-type ProjectIdentityList struct {
+// ProjectUserList contains a list of ProjectUsers
+type ProjectUserList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ProjectIdentity `json:"items"`
+	Items           []ProjectUser `json:"items"`
 }
 
 // Repository type metadata.
 var (
-	ProjectIdentity_Kind             = "ProjectIdentity"
-	ProjectIdentity_GroupKind        = schema.GroupKind{Group: CRDGroup, Kind: ProjectIdentity_Kind}.String()
-	ProjectIdentity_KindAPIVersion   = ProjectIdentity_Kind + "." + CRDGroupVersion.String()
-	ProjectIdentity_GroupVersionKind = CRDGroupVersion.WithKind(ProjectIdentity_Kind)
+	ProjectUser_Kind             = "ProjectUser"
+	ProjectUser_GroupKind        = schema.GroupKind{Group: CRDGroup, Kind: ProjectUser_Kind}.String()
+	ProjectUser_KindAPIVersion   = ProjectUser_Kind + "." + CRDGroupVersion.String()
+	ProjectUser_GroupVersionKind = CRDGroupVersion.WithKind(ProjectUser_Kind)
 )
 
 func init() {
-	SchemeBuilder.Register(&ProjectIdentity{}, &ProjectIdentityList{})
+	SchemeBuilder.Register(&ProjectUser{}, &ProjectUserList{})
 }

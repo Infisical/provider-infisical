@@ -12,7 +12,7 @@ TERRAFORM_VERSION_VALID := $(shell [ "$(TERRAFORM_VERSION)" = "`printf "$(TERRAF
 
 export TERRAFORM_PROVIDER_SOURCE ?= Infisical/infisical
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provider-infisical
-export TERRAFORM_PROVIDER_VERSION ?= 0.0.1
+export TERRAFORM_PROVIDER_VERSION ?= 0.0.5
 export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical-crossplane
 export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?=infisical
 export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_PROVIDER_VERSION)
@@ -143,11 +143,13 @@ download-provider-binary:
 .PHONY: download-provider-binary
 
 pull-docs:
+	@echo "Pulling docs for version v$(TERRAFORM_PROVIDER_VERSION)"
 	@if [ ! -d "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" ]; then \
-  		mkdir -p "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" && \
-		git clone -c advice.detachedHead=false --depth 1 --filter=blob:none --branch "crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)" --sparse "$(TERRAFORM_PROVIDER_REPO)" "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"; \
+		mkdir -p "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"; \
 	fi
-	@git -C "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" sparse-checkout set "$(TERRAFORM_DOCS_PATH)"
+	@rm -f $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip
+	@curl -L -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/crossplane-tf-provider-docs.zip
+	@unzip -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip -d $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 
 generate.init: $(TERRAFORM_PROVIDER_SCHEMA) pull-docs
 

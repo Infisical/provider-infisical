@@ -6,6 +6,7 @@ package config
 
 import (
 	"github.com/crossplane/upjet/pkg/config"
+	"github.com/pkg/errors"
 )
 
 // ExternalNameConfigs contains all external name configurations for this
@@ -15,7 +16,66 @@ var ExternalNameConfigs = map[string]config.ExternalName{
 	"infisical_identity":                config.IdentifierFromProvider,
 	"infisical_project_environment":     config.IdentifierFromProvider,
 	"infisical_identity_universal_auth": config.IdentifierFromProvider,
-	"infisical_project_identity":        config.ParameterAsIdentifier("membershipId"),
+	"infisical_project_identity": func() config.ExternalName {
+		e := config.IdentifierFromProvider
+		e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
+			membershipId, ok := tfstate["membership_id"]
+			if !ok {
+				return "", errors.Errorf("no membership_id attribute found in tfstate")
+			}
+
+			if membershipId == nil {
+				return "", nil
+			}
+
+			membershipIdStr, ok := membershipId.(string)
+			if !ok {
+				return "", errors.Errorf("membership_id attribute is not a string")
+			}
+			return membershipIdStr, nil
+		}
+		return e
+	}(),
+	"infisical_project_user": func() config.ExternalName {
+		e := config.IdentifierFromProvider
+		e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
+			membershipId, ok := tfstate["membership_id"]
+			if !ok {
+				return "", errors.Errorf("no membership_id attribute found in tfstate")
+			}
+
+			if membershipId == nil {
+				return "", nil
+			}
+
+			membershipIdStr, ok := membershipId.(string)
+			if !ok {
+				return "", errors.Errorf("membership_id attribute is not a string")
+			}
+			return membershipIdStr, nil
+		}
+		return e
+	}(),
+	"infisical_project_group": func() config.ExternalName {
+		e := config.IdentifierFromProvider
+		e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
+			membershipId, ok := tfstate["membership_id"]
+			if !ok {
+				return "", errors.Errorf("no membership_id attribute found in tfstate")
+			}
+
+			if membershipId == nil {
+				return "", nil
+			}
+
+			membershipIdStr, ok := membershipId.(string)
+			if !ok {
+				return "", errors.Errorf("membership_id attribute is not a string")
+			}
+			return membershipIdStr, nil
+		}
+		return e
+	}(),
 }
 
 // ExternalNameConfigurations applies all external name configs listed in the

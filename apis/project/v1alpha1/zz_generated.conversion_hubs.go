@@ -13,4 +13,10 @@ func (tr *Project) Hub() {}
 func (tr *ProjectEnvironment) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *ProjectGroup) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *ProjectIdentity) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *ProjectUser) Hub() {}

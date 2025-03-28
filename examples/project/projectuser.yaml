@@ -1,0 +1,13 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectUser
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/projectuser
+  labels:
+    testing.upbound.io/example-name: test-user
+  name: test-user
+spec:
+  forProvider:
+    projectId: f3754800-5fad-4323-9cb0-f686d2eda24c
+    roles: '[{"role_slug":"member"},{"role_slug":"admin"}]'
+    username: test-user@gmail.com

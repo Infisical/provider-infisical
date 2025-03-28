@@ -4,7 +4,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: projectidentities.project.crossplane.infisical.com
+  name: projectusers.project.crossplane.infisical.com
 spec:
   group: project.crossplane.infisical.com
   names:
@@ -12,10 +12,10 @@ spec:
     - crossplane
     - managed
     - infisical
-    kind: ProjectIdentity
-    listKind: ProjectIdentityList
-    plural: projectidentities
-    singular: projectidentity
+    kind: ProjectUser
+    listKind: ProjectUserList
+    plural: projectusers
+    singular: projectuser
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -34,9 +34,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: ProjectIdentity is the Schema for the ProjectIdentitys API. Create
-          project identities & save to Infisical. Only Machine Identity authentication
-          is supported for this data source
+        description: ProjectUser is the Schema for the ProjectUsers API. Create project
+          users & save to Infisical. Only Machine Identity authentication is supported
+          for this resource
         properties:
           apiVersion:
             description: |-
@@ -56,7 +56,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: ProjectIdentitySpec defines the desired state of ProjectIdentity
+            description: ProjectUserSpec defines the desired state of ProjectUser
             properties:
               deletionPolicy:
                 default: Delete
@@ -74,11 +74,6 @@ spec:
                 type: string
               forProvider:
                 properties:
-                  identityId:
-                    description: |-
-                      (String) The id of the identity.
-                      The id of the identity.
-                    type: string
                   projectId:
                     description: |-
                       (String) The id of the project
@@ -86,8 +81,13 @@ spec:
                     type: string
                   roles:
                     description: |-
-                      (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-                      JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                      (String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+                      JSON array of role assignments for this user. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                    type: string
+                  username:
+                    description: |-
+                      (String) The usename of the user. By default its the email
+                      The usename of the user. By default its the email
                     type: string
                 type: object
               initProvider:
@@ -103,11 +103,6 @@ spec:
                   for example because of an external controller is managing them, like an
                   autoscaler.
                 properties:
-                  identityId:
-                    description: |-
-                      (String) The id of the identity.
-                      The id of the identity.
-                    type: string
                   projectId:
                     description: |-
                       (String) The id of the project
@@ -115,8 +110,13 @@ spec:
                     type: string
                   roles:
                     description: |-
-                      (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-                      JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                      (String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+                      JSON array of role assignments for this user. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                    type: string
+                  username:
+                    description: |-
+                      (String) The usename of the user. By default its the email
+                      The usename of the user. By default its the email
                     type: string
                 type: object
               managementPolicies:
@@ -287,10 +287,6 @@ spec:
             - forProvider
             type: object
             x-kubernetes-validations:
-            - message: spec.forProvider.identityId is a required parameter
-              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
-                || ''Update'' in self.managementPolicies) || has(self.forProvider.identityId)
-                || (has(self.initProvider) && has(self.initProvider.identityId))'
             - message: spec.forProvider.projectId is a required parameter
               rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
                 || ''Update'' in self.managementPolicies) || has(self.forProvider.projectId)
@@ -299,22 +295,21 @@ spec:
               rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
                 || ''Update'' in self.managementPolicies) || has(self.forProvider.roles)
                 || (has(self.initProvider) && has(self.initProvider.roles))'
+            - message: spec.forProvider.username is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.username)
+                || (has(self.initProvider) && has(self.initProvider.username))'
           status:
-            description: ProjectIdentityStatus defines the observed state of ProjectIdentity.
+            description: ProjectUserStatus defines the observed state of ProjectUser.
             properties:
               atProvider:
                 properties:
                   id:
                     type: string
-                  identityId:
-                    description: |-
-                      (String) The id of the identity.
-                      The id of the identity.
-                    type: string
                   membershipId:
                     description: |-
-                      (String) The membership Id of the project identity
-                      The membership Id of the project identity
+                      (String) The membershipId of the project user
+                      The membershipId of the project user
                     type: string
                   projectId:
                     description: |-
@@ -323,8 +318,13 @@ spec:
                     type: string
                   roles:
                     description: |-
-                      (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
-                      JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                      (String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
+                      JSON array of role assignments for this user. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
+                    type: string
+                  username:
+                    description: |-
+                      (String) The usename of the user. By default its the email
+                      The usename of the user. By default its the email
                     type: string
                 type: object
               conditions:
