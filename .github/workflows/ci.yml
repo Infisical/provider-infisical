@@ -5,8 +5,6 @@ on:
     branches:
       - main
       - release-*
-    tags:
-      - "v*"
   pull_request: {}
   workflow_dispatch: {}
 
@@ -243,18 +241,15 @@ jobs:
 
   publish-artifacts:
     runs-on: ubuntu-24.04
-    if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - detect-noop
       - report-breaking-changes
       - check-diff
       - unit-tests
       - local-deploy
+    if: needs.detect-noop.outputs.noop != 'true'
 
     steps:
-      - name: Set VERSION from tag
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
       - name: Setup QEMU
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3
         with:
@@ -311,6 +306,8 @@ jobs:
       - name: Build Artifacts
         run: make -j2 build.all
         env:
+          # We're using docker buildx, which doesn't actually load the images it
+          # builds by default. Specifying --load does so.
           BUILD_ARGS: "--load"
 
       - name: Upload Artifacts to GitHub
