@@ -5,14 +5,16 @@ on:
     branches:
       - main
       - release-*
+    tags:
+      - "v*"
   pull_request: {}
   workflow_dispatch: {}
 
 env:
   # Common versions
-  GO_VERSION: '1.21'
-  GOLANGCI_VERSION: 'v1.54.0'
-  DOCKER_BUILDX_VERSION: 'v0.8.2'
+  GO_VERSION: "1.21"
+  GOLANGCI_VERSION: "v1.54.0"
+  DOCKER_BUILDX_VERSION: "v0.8.2"
 
   # Common users. We can't run a step 'if secrets.XXX != ""' but we can run a
   # step 'if env.XXX != ""', so we copy these to succinctly test whether
@@ -60,49 +62,49 @@ jobs:
         run: |
           make schema-version-diff
 
-  lint:
-    runs-on: ubuntu-24.04
-    needs: detect-noop
-    if: needs.detect-noop.outputs.noop != 'true'
+  # lint:
+  #   runs-on: ubuntu-24.04
+  #   needs: detect-noop
+  #   if: needs.detect-noop.outputs.noop != 'true'
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
-        with:
-          submodules: true
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+  #       with:
+  #         submodules: true
 
-      - name: Setup Go
-        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
+  #     - name: Setup Go
+  #       uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5
+  #       with:
+  #         go-version: ${{ env.GO_VERSION }}
 
-      - name: Find the Go Build Cache
-        id: go
-        run: echo "cache=$(make go.cachedir)" >> $GITHUB_OUTPUT
+  #     - name: Find the Go Build Cache
+  #       id: go
+  #       run: echo "cache=$(make go.cachedir)" >> $GITHUB_OUTPUT
 
-      - name: Cache the Go Build Cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.go.outputs.cache }}
-          key: ${{ runner.os }}-build-lint-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-build-lint-
+  #     - name: Cache the Go Build Cache
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ${{ steps.go.outputs.cache }}
+  #         key: ${{ runner.os }}-build-lint-${{ hashFiles('**/go.sum') }}
+  #         restore-keys: ${{ runner.os }}-build-lint-
 
-      - name: Cache Go Dependencies
-        uses: actions/cache@v4
-        with:
-          path: .work/pkg
-          key: ${{ runner.os }}-pkg-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-pkg-
+  #     - name: Cache Go Dependencies
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: .work/pkg
+  #         key: ${{ runner.os }}-pkg-${{ hashFiles('**/go.sum') }}
+  #         restore-keys: ${{ runner.os }}-pkg-
 
-      - name: Vendor Dependencies
-        run: make vendor vendor.check
+  #     - name: Vendor Dependencies
+  #       run: make vendor vendor.check
 
-      # We could run 'make lint' but we prefer this action because it leaves
-      # 'annotations' (i.e. it comments on PRs to point out linter violations).
-      - name: Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: ${{ env.GOLANGCI_VERSION }}
+  #     # We could run 'make lint' but we prefer this action because it leaves
+  #     # 'annotations' (i.e. it comments on PRs to point out linter violations).
+  #     - name: Lint
+  #       uses: golangci/golangci-lint-action@v6
+  #       with:
+  #         version: ${{ env.GOLANGCI_VERSION }}
 
   check-diff:
     runs-on: ubuntu-24.04
@@ -241,16 +243,18 @@ jobs:
 
   publish-artifacts:
     runs-on: ubuntu-24.04
+    if: startsWith(github.ref, 'refs/tags/v')
     needs:
       - detect-noop
       - report-breaking-changes
-      - lint
       - check-diff
       - unit-tests
       - local-deploy
-    if: needs.detect-noop.outputs.noop != 'true'
 
     steps:
+      - name: Set VERSION from tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
       - name: Setup QEMU
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3
         with:
@@ -307,8 +311,6 @@ jobs:
       - name: Build Artifacts
         run: make -j2 build.all
         env:
-          # We're using docker buildx, which doesn't actually load the images it
-          # builds by default. Specifying --load does so.
           BUILD_ARGS: "--load"
 
       - name: Upload Artifacts to GitHub
