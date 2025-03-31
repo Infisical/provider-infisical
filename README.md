@@ -9,11 +9,13 @@ Infisical API.
 
 Install the provider by using the following command after changing the image tag
 to the [latest release](https://marketplace.upbound.io/providers/infisical/provider-infisical):
+
 ```
-up ctp provider install infisical/provider-infisical:v0.1.0
+up ctp provider install xpkg.upbound.io/infisical-inc/provider-infisical:v0.1.4
 ```
 
 Alternatively, you can use declarative installation:
+
 ```
 cat <<EOF | kubectl apply -f -
 apiVersion: pkg.crossplane.io/v1
@@ -21,7 +23,7 @@ kind: Provider
 metadata:
   name: provider-infisical
 spec:
-  package: infisical/provider-infisical:v0.1.0
+  package: xpkg.upbound.io/infisical-inc/provider-infisical:v0.1.4
 EOF
 ```
 
@@ -32,6 +34,7 @@ You can see the API reference [here](https://doc.crds.dev/github.com/infisical/p
 ## Developing
 
 Run code-generation pipeline:
+
 ```console
 go run cmd/generator/main.go "$PWD"
 ```

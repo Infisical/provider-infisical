@@ -22,7 +22,7 @@ export TERRAFORM_LOCAL_PROVIDER_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 export TERRAFORM_LOCAL_PROVIDER_REPO_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 
 PLATFORMS ?= linux_amd64 linux_arm64
-VERSION ?= v0.1.3
+VERSION ?= v0.1.4
 
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only

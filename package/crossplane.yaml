@@ -2,3 +2,11 @@ apiVersion: meta.pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-infisical
+  annotations:
+    meta.crossplane.io/maintainer: Infisical <support@infisical.com>
+    meta.crossplane.io/source: github.com/infisical/provider-infisical
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      Provider Infisical is a Crossplane provider for Infisical.
+    meta.crossplane.io/readme: |
+      Provider Infisical is a Crossplane provider for Infisical.
