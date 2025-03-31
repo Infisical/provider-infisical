@@ -3,4 +3,4 @@ kind: Provider
 metadata:
   name: provider-infisical
 spec:
-  package: infisical/provider-infisical:v0.1.0
+  package: xpkg.upbound.io/infisical-inc/provider-infisical:v0.1.2
