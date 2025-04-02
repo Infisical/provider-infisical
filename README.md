@@ -8,7 +8,7 @@ Infisical API.
 ## Getting Started
 
 Install the provider by using the following command after changing the image tag
-to the [latest release](https://marketplace.upbound.io/providers/infisical/provider-infisical):
+to the [latest release](https://marketplace.upbound.io/providers/infisical-inc/provider-infisical):
 
 ```
 up ctp provider install xpkg.upbound.io/infisical-inc/provider-infisical:v0.1.4
