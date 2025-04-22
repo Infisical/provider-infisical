@@ -1066,6 +1066,7 @@ resources:
                       "slug": "example"
                     }
         argumentDocs:
+            allow_self_approval: (Boolean) Whether to allow the  approvers to approve their own changes
             approvers: (Attributes Set) The required approvers (see below for nested schema)
             enforcement_level: (String) The enforcement level of the policy. This can either be hard or soft
             environment_slug: (String) The environment to apply the secret approval policy to
@@ -1146,6 +1147,7 @@ resources:
             connection_id: (String) The ID of the aws Connection to use for syncing.
             description: (String) An optional description for the AWS Parameter Store sync.
             destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from AWS Parameter Store. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the AWS Parameter Store secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
@@ -1203,6 +1205,7 @@ resources:
             connection_id: (String) The ID of the aws Connection to use for syncing.
             description: (String) An optional description for the AWS Secrets Manager sync.
             destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from AWS Secrets Manager. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the AWS Secrets Manager secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
@@ -1244,6 +1247,7 @@ resources:
             connection_id: (String) The ID of the azure Connection to use for syncing.
             description: (String) An optional description for the Azure App Configuration sync.
             destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure App Configuration. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure App Configuration secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
@@ -1280,6 +1284,7 @@ resources:
             connection_id: (String) The ID of the azure Connection to use for syncing.
             description: (String) An optional description for the Azure Key Vault sync.
             destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure Key Vault. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure Key Vault secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
@@ -1328,6 +1333,7 @@ resources:
             connection_id: (String) The ID of the GCP Connection to use for syncing.
             description: (String) An optional description for the GCP Secret Manager sync.
             destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from GCP Secret Manager. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the GCP Secret Manager secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'

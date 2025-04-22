@@ -100,6 +100,31 @@ func TerraformSetupBuilder(version, providerSource, providerVersion string) terr
 			}
 		}
 
+		if kubernetes, ok := authMap["kubernetes"]; ok && kubernetes != nil {
+			kubernetesMap, ok := kubernetes.(map[string]any)
+			if !ok {
+				return ps, errors.Wrap(fmt.Errorf("kubernetes auth is not a valid object"), errUnmarshalCredentials)
+			}
+
+			identityID, hasIdentityID := kubernetesMap["identity_id"]
+			if !hasIdentityID {
+				return ps, errors.Wrap(fmt.Errorf("missing identity_id in kubernetes auth"), errUnmarshalCredentials)
+			}
+
+			kubeMap := map[string]any{
+				"identity_id": identityID,
+			}
+
+			serviceAccountTokenPath, hasServiceAccountTokenPath := kubernetesMap["service_account_token_path"]
+			if hasServiceAccountTokenPath {
+				kubeMap["service_account_token_path"] = serviceAccountTokenPath
+			}
+
+			ps.Configuration["auth"] = map[string]any{
+				"kubernetes": kubeMap,
+			}
+		}
+
 		return ps, nil
 	}
 }
