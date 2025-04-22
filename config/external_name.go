@@ -12,10 +12,11 @@ import (
 // ExternalNameConfigs contains all external name configurations for this
 // provider.
 var ExternalNameConfigs = map[string]config.ExternalName{
-	"infisical_project":                 config.IdentifierFromProvider,
-	"infisical_identity":                config.IdentifierFromProvider,
-	"infisical_project_environment":     config.IdentifierFromProvider,
-	"infisical_identity_universal_auth": config.IdentifierFromProvider,
+	"infisical_project":                  config.IdentifierFromProvider,
+	"infisical_identity":                 config.IdentifierFromProvider,
+	"infisical_project_environment":      config.IdentifierFromProvider,
+	"infisical_identity_universal_auth":  config.IdentifierFromProvider,
+	"infisical_identity_kubernetes_auth": config.IdentifierFromProvider,
 	"infisical_project_identity": func() config.ExternalName {
 		e := config.IdentifierFromProvider
 		e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {

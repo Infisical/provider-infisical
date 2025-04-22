@@ -16,4 +16,13 @@ func Configure(p *config.Provider) {
 			TerraformName: "infisical_identity",
 		}
 	})
+
+	p.AddResourceConfigurator("infisical_identity_kubernetes_auth", func(r *config.Resource) {
+		r.Kind = "KubernetesAuth"
+		r.ShortGroup = "identity"
+		r.ExternalName.OmittedFields = []string{"access_token_trusted_ips"}
+		r.References["identity_id"] = config.Reference{
+			TerraformName: "infisical_identity",
+		}
+	})
 }

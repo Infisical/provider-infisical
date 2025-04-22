@@ -13,6 +13,48 @@ import (
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// ResolveReferences of this KubernetesAuth.
+func (mg *KubernetesAuth) ResolveReferences(ctx context.Context, c client.Reader) error {
+	r := reference.NewAPIResolver(c, mg)
+
+	var rsp reference.ResolutionResponse
+	var err error
+
+	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: reference.FromPtrValue(mg.Spec.ForProvider.IdentityID),
+		Extract:      reference.ExternalName(),
+		Reference:    mg.Spec.ForProvider.IdentityIDRef,
+		Selector:     mg.Spec.ForProvider.IdentityIDSelector,
+		To: reference.To{
+			List:    &IdentityList{},
+			Managed: &Identity{},
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "mg.Spec.ForProvider.IdentityID")
+	}
+	mg.Spec.ForProvider.IdentityID = reference.ToPtrValue(rsp.ResolvedValue)
+	mg.Spec.ForProvider.IdentityIDRef = rsp.ResolvedReference
+
+	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: reference.FromPtrValue(mg.Spec.InitProvider.IdentityID),
+		Extract:      reference.ExternalName(),
+		Reference:    mg.Spec.InitProvider.IdentityIDRef,
+		Selector:     mg.Spec.InitProvider.IdentityIDSelector,
+		To: reference.To{
+			List:    &IdentityList{},
+			Managed: &Identity{},
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "mg.Spec.InitProvider.IdentityID")
+	}
+	mg.Spec.InitProvider.IdentityID = reference.ToPtrValue(rsp.ResolvedValue)
+	mg.Spec.InitProvider.IdentityIDRef = rsp.ResolvedReference
+
+	return nil
+}
+
 // ResolveReferences of this UniversalAuth.
 func (mg *UniversalAuth) ResolveReferences(ctx context.Context, c client.Reader) error {
 	r := reference.NewAPIResolver(c, mg)

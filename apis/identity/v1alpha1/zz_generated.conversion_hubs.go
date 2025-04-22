@@ -10,4 +10,7 @@ package v1alpha1
 func (tr *Identity) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *KubernetesAuth) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *UniversalAuth) Hub() {}
