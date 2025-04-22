@@ -10,6 +10,7 @@ import (
 	"github.com/crossplane/upjet/pkg/controller"
 
 	identity "github.com/infisical/provider-infisical/internal/controller/identity/identity"
+	kubernetesauth "github.com/infisical/provider-infisical/internal/controller/identity/kubernetesauth"
 	universalauth "github.com/infisical/provider-infisical/internal/controller/identity/universalauth"
 	project "github.com/infisical/provider-infisical/internal/controller/project/project"
 	projectenvironment "github.com/infisical/provider-infisical/internal/controller/project/projectenvironment"
@@ -24,6 +25,7 @@ import (
 func Setup(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
 		identity.Setup,
+		kubernetesauth.Setup,
 		universalauth.Setup,
 		project.Setup,
 		projectenvironment.Setup,

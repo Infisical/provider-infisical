@@ -17,6 +17,15 @@ func (l *IdentityList) GetItems() []resource.Managed {
 	return items
 }
 
+// GetItems of this KubernetesAuthList.
+func (l *KubernetesAuthList) GetItems() []resource.Managed {
+	items := make([]resource.Managed, len(l.Items))
+	for i := range l.Items {
+		items[i] = &l.Items[i]
+	}
+	return items
+}
+
 // GetItems of this UniversalAuthList.
 func (l *UniversalAuthList) GetItems() []resource.Managed {
 	items := make([]resource.Managed, len(l.Items))
