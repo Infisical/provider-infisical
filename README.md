@@ -32,7 +32,7 @@ EOF
 Before using the provider, create a Kubernetes `Secret` that contains your Infisical API credentials.
 
 #### 1. Create a Secret
-
+##### Authenticating with Universal Auth
 ```yaml
 apiVersion: v1
 kind: Secret
@@ -52,6 +52,25 @@ stringData:
     }
 ```
 
+##### Authenticating with Kubernetes Auth
+This requires you to setup [Kubernetes Auth](https://infisical.com/docs/documentation/platform/identities/kubernetes-auth) with the controller's service account.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: example-creds-1
+  namespace: crossplane-system
+type: Opaque
+stringData:
+  credentials: |
+    {
+      "auth": {
+        "kubernetes": {
+          "identity_id": "81310d3c-aa51-4299-93df-3a7f983aee1a"
+        }
+      }
+    }
+```
 #### 2. Create a ProviderConfig
 
 ```yaml
