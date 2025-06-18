@@ -15,13 +15,29 @@ import (
 
 type ProjectInitParameters struct {
 
+	// (Number) The audit log retention in days
+	// The audit log retention in days
+	AuditLogRetentionDays *float64 `json:"auditLogRetentionDays,omitempty" tf:"audit_log_retention_days,omitempty"`
+
 	// (String) The description of the project
 	// The description of the project
 	Description *string `json:"description,omitempty" tf:"description,omitempty"`
 
+	// (Boolean) Whether the project has delete protection, defaults to false
+	// Whether the project has delete protection, defaults to false
+	HasDeleteProtection *bool `json:"hasDeleteProtection,omitempty" tf:"has_delete_protection,omitempty"`
+
+	// (String) The ID of the KMS secret manager key to use for the project
+	// The ID of the KMS secret manager key to use for the project
+	KMSSecretManagerKeyID *string `json:"kmsSecretManagerKeyId,omitempty" tf:"kms_secret_manager_key_id,omitempty"`
+
 	// (String) The name of the project
 	// The name of the project
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
+
+	// (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
+	// Whether to create default environments for the project (dev, staging, prod), defaults to true
+	ShouldCreateDefaultEnvs *bool `json:"shouldCreateDefaultEnvs,omitempty" tf:"should_create_default_envs,omitempty"`
 
 	// (String) The slug of the project
 	// The slug of the project
@@ -34,12 +50,24 @@ type ProjectInitParameters struct {
 
 type ProjectObservation struct {
 
+	// (Number) The audit log retention in days
+	// The audit log retention in days
+	AuditLogRetentionDays *float64 `json:"auditLogRetentionDays,omitempty" tf:"audit_log_retention_days,omitempty"`
+
 	// (String) The description of the project
 	// The description of the project
 	Description *string `json:"description,omitempty" tf:"description,omitempty"`
 
+	// (Boolean) Whether the project has delete protection, defaults to false
+	// Whether the project has delete protection, defaults to false
+	HasDeleteProtection *bool `json:"hasDeleteProtection,omitempty" tf:"has_delete_protection,omitempty"`
+
 	// (String) The ID of the project
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
+
+	// (String) The ID of the KMS secret manager key to use for the project
+	// The ID of the KMS secret manager key to use for the project
+	KMSSecretManagerKeyID *string `json:"kmsSecretManagerKeyId,omitempty" tf:"kms_secret_manager_key_id,omitempty"`
 
 	// (String)
 	LastUpdated *string `json:"lastUpdated,omitempty" tf:"last_updated,omitempty"`
@@ -47,6 +75,10 @@ type ProjectObservation struct {
 	// (String) The name of the project
 	// The name of the project
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
+
+	// (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
+	// Whether to create default environments for the project (dev, staging, prod), defaults to true
+	ShouldCreateDefaultEnvs *bool `json:"shouldCreateDefaultEnvs,omitempty" tf:"should_create_default_envs,omitempty"`
 
 	// (String) The slug of the project
 	// The slug of the project
@@ -59,15 +91,35 @@ type ProjectObservation struct {
 
 type ProjectParameters struct {
 
+	// (Number) The audit log retention in days
+	// The audit log retention in days
+	// +kubebuilder:validation:Optional
+	AuditLogRetentionDays *float64 `json:"auditLogRetentionDays,omitempty" tf:"audit_log_retention_days,omitempty"`
+
 	// (String) The description of the project
 	// The description of the project
 	// +kubebuilder:validation:Optional
 	Description *string `json:"description,omitempty" tf:"description,omitempty"`
 
+	// (Boolean) Whether the project has delete protection, defaults to false
+	// Whether the project has delete protection, defaults to false
+	// +kubebuilder:validation:Optional
+	HasDeleteProtection *bool `json:"hasDeleteProtection,omitempty" tf:"has_delete_protection,omitempty"`
+
+	// (String) The ID of the KMS secret manager key to use for the project
+	// The ID of the KMS secret manager key to use for the project
+	// +kubebuilder:validation:Optional
+	KMSSecretManagerKeyID *string `json:"kmsSecretManagerKeyId,omitempty" tf:"kms_secret_manager_key_id,omitempty"`
+
 	// (String) The name of the project
 	// The name of the project
 	// +kubebuilder:validation:Optional
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
+
+	// (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
+	// Whether to create default environments for the project (dev, staging, prod), defaults to true
+	// +kubebuilder:validation:Optional
+	ShouldCreateDefaultEnvs *bool `json:"shouldCreateDefaultEnvs,omitempty" tf:"should_create_default_envs,omitempty"`
 
 	// (String) The slug of the project
 	// The slug of the project

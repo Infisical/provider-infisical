@@ -74,16 +74,36 @@ spec:
                 type: string
               forProvider:
                 properties:
+                  auditLogRetentionDays:
+                    description: |-
+                      (Number) The audit log retention in days
+                      The audit log retention in days
+                    type: number
                   description:
                     description: |-
                       (String) The description of the project
                       The description of the project
+                    type: string
+                  hasDeleteProtection:
+                    description: |-
+                      (Boolean) Whether the project has delete protection, defaults to false
+                      Whether the project has delete protection, defaults to false
+                    type: boolean
+                  kmsSecretManagerKeyId:
+                    description: |-
+                      (String) The ID of the KMS secret manager key to use for the project
+                      The ID of the KMS secret manager key to use for the project
                     type: string
                   name:
                     description: |-
                       (String) The name of the project
                       The name of the project
                     type: string
+                  shouldCreateDefaultEnvs:
+                    description: |-
+                      (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
+                      Whether to create default environments for the project (dev, staging, prod), defaults to true
+                    type: boolean
                   slug:
                     description: |-
                       (String) The slug of the project
@@ -108,16 +128,36 @@ spec:
                   for example because of an external controller is managing them, like an
                   autoscaler.
                 properties:
+                  auditLogRetentionDays:
+                    description: |-
+                      (Number) The audit log retention in days
+                      The audit log retention in days
+                    type: number
                   description:
                     description: |-
                       (String) The description of the project
                       The description of the project
+                    type: string
+                  hasDeleteProtection:
+                    description: |-
+                      (Boolean) Whether the project has delete protection, defaults to false
+                      Whether the project has delete protection, defaults to false
+                    type: boolean
+                  kmsSecretManagerKeyId:
+                    description: |-
+                      (String) The ID of the KMS secret manager key to use for the project
+                      The ID of the KMS secret manager key to use for the project
                     type: string
                   name:
                     description: |-
                       (String) The name of the project
                       The name of the project
                     type: string
+                  shouldCreateDefaultEnvs:
+                    description: |-
+                      (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
+                      Whether to create default environments for the project (dev, staging, prod), defaults to true
+                    type: boolean
                   slug:
                     description: |-
                       (String) The slug of the project
@@ -310,13 +350,28 @@ spec:
             properties:
               atProvider:
                 properties:
+                  auditLogRetentionDays:
+                    description: |-
+                      (Number) The audit log retention in days
+                      The audit log retention in days
+                    type: number
                   description:
                     description: |-
                       (String) The description of the project
                       The description of the project
                     type: string
+                  hasDeleteProtection:
+                    description: |-
+                      (Boolean) Whether the project has delete protection, defaults to false
+                      Whether the project has delete protection, defaults to false
+                    type: boolean
                   id:
                     description: (String) The ID of the project
+                    type: string
+                  kmsSecretManagerKeyId:
+                    description: |-
+                      (String) The ID of the KMS secret manager key to use for the project
+                      The ID of the KMS secret manager key to use for the project
                     type: string
                   lastUpdated:
                     description: (String)
@@ -326,6 +381,11 @@ spec:
                       (String) The name of the project
                       The name of the project
                     type: string
+                  shouldCreateDefaultEnvs:
+                    description: |-
+                      (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
+                      Whether to create default environments for the project (dev, staging, prod), defaults to true
+                    type: boolean
                   slug:
                     description: |-
                       (String) The slug of the project

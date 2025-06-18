@@ -100,6 +100,12 @@ func TerraformSetupBuilder(version, providerSource, providerVersion string) terr
 			}
 		}
 
+		if token, ok := authMap["token"]; ok && token != nil {
+			ps.Configuration["auth"] = map[string]any{
+				"token": token,
+			}
+		}
+
 		if kubernetes, ok := authMap["kubernetes"]; ok && kubernetes != nil {
 			kubernetesMap, ok := kubernetes.(map[string]any)
 			if !ok {

@@ -46,6 +46,44 @@ resources:
             type: (String) The type of approver. Either group or user
             username: (String) The username of the approver. By default, this is the email
         importStatements: []
+    infisical_app_connection_aws:
+        subCategory: ""
+        description: Create and manage AWS App Connection
+        name: infisical_app_connection_aws
+        title: infisical_app_connection_aws Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-aws-assume-role
+              manifest: |-
+                {
+                  "credentials": {
+                    "role_arn": "\u003cassume role arn\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "assume-role",
+                  "name": "aws-assume-role-app-connection"
+                }
+            - name: app-connection-aws-access-key
+              manifest: |-
+                {
+                  "credentials": {
+                    "access_key_id": "\u003caccess-key-id\u003e",
+                    "secret_access_key": "\u003csecret-access-key\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "access-key",
+                  "name": "aws-access-key-app-connection"
+                }
+        argumentDocs:
+            access_key_id: (String, Sensitive) The AWS Access Key ID used to authenticate requests to AWS services. Required for access-key access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#access-key
+            credentials: (Attributes) The credentials for the AWS App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the AWS App Connection credentials
+            description: (String) An optional description for the AWS App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with AWS. Possible values are: assume-role, access-key'
+            name: (String) The name of the AWS App Connection to create. Must be slug-friendly
+            role_arn: (String, Sensitive) The Amazon Resource Name (ARN) of the IAM role to assume for performing operations. Infisical will assume this role using AWS Security Token Service (STS). Required for assume-role access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#assume-role-recommended
+            secret_access_key: (String, Sensitive) The AWS Secret Access Key associated with the Access Key ID to authenticate requests to AWS services. Required for access-key access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#access-key
+        importStatements: []
     infisical_app_connection_gcp:
         subCategory: ""
         description: Create and manage GCP App Connection
@@ -71,6 +109,99 @@ resources:
             name: (String) The name of the GCP App Connection to create. Must be slug-friendly
             service_account_email: (String, Sensitive) The service account email to connect with GCP. The service account ID (the part of the email before '@') must be suffixed with the first two sections of your organization ID e.g. service-account-df92581a-0fe9@my-project.iam.gserviceaccount.com. For more details, refer to the documentation here https://infisical.com/docs/integrations/app-connections/gcp#configure-service-account-for-infisical
         importStatements: []
+    infisical_dynamic_secret_sql_database:
+        subCategory: ""
+        description: Create and manage SQL Database Dynamic Secret
+        name: infisical_dynamic_secret_sql_database
+        title: infisical_dynamic_secret_sql_database Resource - terraform-provider-infisical
+        examples:
+            - name: sql-database
+              manifest: |-
+                {
+                  "configuration": {
+                    "client": "postgres",
+                    "creation_statement": "CREATE USER \"{{username}}\" WITH ENCRYPTED PASSWORD '{{password}}' VALID UNTIL '{{expiration}}';\nGRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"{{username}}\";\n",
+                    "database": "infisical",
+                    "host": "host.docker.internal",
+                    "password": "infisical",
+                    "password_requirements": {
+                      "allowed_symbols": "!@#$%^\u0026*()_+-=[]{}|;:,.\u003c\u003e?`~",
+                      "length": 32,
+                      "required": {
+                        "digits": 3,
+                        "lowercase": 2,
+                        "symbols": 2,
+                        "uppercase": 2
+                      }
+                    },
+                    "port": "5431",
+                    "renew_statement": "ALTER ROLE \"{{username}}\" VALID UNTIL \"{{expiration}}\";\n",
+                    "revocation_statement": "REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM \"{{username}}\";\nDROP ROLE \"{{username}}\";\n",
+                    "username": "infisical"
+                  },
+                  "default_ttl": "2h",
+                  "environment_slug": "prod",
+                  "max_ttl": "4h",
+                  "name": "postgres-dynamic-secret",
+                  "path": "/",
+                  "project_slug": "project-7-new-c7-vv",
+                  "username_template": "{{randomUsername}}"
+                }
+        argumentDocs:
+            allowed_symbols: (String) The symbols allowed in the password.
+            ca: (String) The CA certificate to use to connect to the database.
+            client: (String) The database client to use. Currently supported values are postgres, mysql2, oracledb, mssql, sap-ase, and vertica.
+            configuration: (Attributes) The configuration of the dynamic secret (see below for nested schema)
+            creation_statement: (String) The creation statement to use to create the dynamic secret lease.
+            database: (String) The name of the database to use.
+            default_ttl: (String) The default TTL that will be applied for all the leases.
+            digits: (Number) The number of digits required in the password.
+            environment_slug: (String) The slug of the environment to create the dynamic secret in.
+            gateway_id: (String) The Gateway ID to use to connect to the database.
+            host: (String) The host of the database server.
+            id: (String) The ID of the dynamic secret.
+            key: (String) The key of the metadata object
+            length: (Number) The length of the password to use to create the dynamic secret lease.
+            lowercase: (Number) The number of lowercase characters required in the password.
+            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
+            name: (String) The name of the dynamic secret.
+            password: (String, Sensitive) The password to use to connect to the database.
+            password_requirements: (Attributes) The password requirements to use to create the dynamic secret lease. (see below for nested schema)
+            path: (String) The path to create the dynamic secret in.
+            port: (Number) The port of the database server.
+            project_slug: (String) The slug of the project to create dynamic secret in.
+            renew_statement: (String) The renew statement to use to renew the dynamic secret lease.
+            required: (Attributes) The required characters to use to create the dynamic secret lease. (see below for nested schema)
+            revocation_statement: (String) The revocation statement to use to revoke the dynamic secret lease.
+            symbols: (Number) The number of symbols required in the password.
+            uppercase: (Number) The number of uppercase characters required in the password.
+            username: (String) The username to use to connect to the database.
+            username_template: (String) The username template of the dynamic secret
+            value: (String) The value of the metadata object
+        importStatements: []
+    infisical_group:
+        subCategory: ""
+        description: Create groups & save to Infisical. Only Machine Identity authentication is supported for this resource
+        name: infisical_group
+        title: infisical_group Resource - terraform-provider-infisical
+        examples:
+            - name: test-group
+              manifest: |-
+                {
+                  "name": "my-test-name",
+                  "role": "member",
+                  "slug": "my-test-slug"
+                }
+        argumentDocs:
+            id: (String) The id of the group.
+            name: (String) The name of the group.
+            role: (String) The role of the group.
+            slug: (String) The slug of the group.
+        importStatements:
+            - |-
+              # This will import the resource by its group ID
+              terraform import infisical_group.example <group_id>
     infisical_identity:
         subCategory: ""
         description: Create and manage identity in Infisical.
@@ -80,6 +211,16 @@ resources:
             - name: universal-auth
               manifest: |-
                 {
+                  "metadata": [
+                    {
+                      "key": "key1",
+                      "value": "value1"
+                    },
+                    {
+                      "key": "key2",
+                      "value": "value2"
+                    }
+                  ],
                   "name": "universal-auth",
                   "org_id": "\u003corg_id\u003e",
                   "role": "member"
@@ -360,10 +501,16 @@ resources:
         argumentDocs:
             auth_modes: (List of String) The authentication types of the identity
             id: (String) The ID of the identity
+            key: (String) The key of the metadata object
+            metadata: (Attributes Set) The metadata associated with this identity (see below for nested schema)
             name: (String) The name for the identity
             org_id: (String) The ID of the organization for the identity
             role: (String) The role for the identity. Available default role options are 'admin', 'member', and 'no-access'. If you've created custom roles, you can use their slugs as well.
-        importStatements: []
+            value: (String) The value of the metadata object
+        importStatements:
+            - |-
+              # This will import the resource by its identity ID
+              terraform import infisical_identity.example <identity_id>
     infisical_identity_aws_auth Resource - terraform-provider-infisical:
         subCategory: ""
         description: Create and manage identity aws auth in Infisical.
@@ -381,11 +528,34 @@ resources:
             ip_address: (String)
             sts_endpoint: (String) The endpoint URL for the AWS STS API. This value should be adjusted based on the AWS region you are operating in (e.g. https://sts.us-east-1.amazonaws.com/); refer to the list of regional STS endpoints here.
         importStatements: []
-    infisical_identity_azure_auth Resource - terraform-provider-infisical:
+    infisical_identity_azure_auth:
         subCategory: ""
         description: Create and manage identity azure auth in Infisical.
-        name: infisical_identity_azure_auth Resource - terraform-provider-infisical
+        name: infisical_identity_azure_auth
         title: infisical_identity_azure_auth Resource - terraform-provider-infisical
+        examples:
+            - name: azure-auth
+              manifest: |-
+                {
+                  "access_token_max_ttl": 2592000,
+                  "access_token_ttl": 2592000,
+                  "allowed_service_principal_ids": [
+                    "\u003c\u003e",
+                    "\u003c\u003e"
+                  ],
+                  "identity_id": "${infisical_identity.machine-identity-1.id}",
+                  "resource_url": "https://management.azure.com/",
+                  "tenant_id": "\u003c\u003e"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-1.id
+              dependencies:
+                infisical_identity.machine-identity-1: |-
+                    {
+                      "name": "machine-identity-1",
+                      "org_id": "601815be-6884-4ee4-86c7-bfc6415f2123",
+                      "role": "admin"
+                    }
         argumentDocs:
             access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
             access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
@@ -397,7 +567,10 @@ resources:
             ip_address: (String)
             resource_url: (String) The resource URL for the application registered in Azure AD. The value is expected to match the aud claim of the access token JWT later used in the login operation against Infisical. See the resource parameter for how the audience is set when requesting a JWT access token from the Azure Instance Metadata Service (IMDS) endpoint. In most cases, this value should be https://management.azure.com/ which is the default
             tenant_id: (String) The tenant ID for the Azure AD organization.
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the resource by its identity ID
+              terraform import infisical_identity_azure_auth.example <identity_id>
     infisical_identity_gcp_auth Resource - terraform-provider-infisical:
         subCategory: ""
         description: Create and manage identity gcp auth in Infisical.
@@ -461,11 +634,6 @@ resources:
                       "name": "machine-identity-1",
                       "org_id": "\u003c\u003e",
                       "role": "admin"
-                    }
-                infisical_project.example: |-
-                    {
-                      "name": "example",
-                      "slug": "example"
                     }
         argumentDocs:
             access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
@@ -714,10 +882,14 @@ resources:
                   "slug": "azure-project"
                 }
         argumentDocs:
+            audit_log_retention_days: (Number) The audit log retention in days
             description: (String) The description of the project
+            has_delete_protection: (Boolean) Whether the project has delete protection, defaults to false
             id: (String) The ID of the project
+            kms_secret_manager_key_id: (String) The ID of the KMS secret manager key to use for the project
             last_updated: (String)
             name: (String) The name of the project
+            should_create_default_envs: (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
             slug: (String) The slug of the project
             template_name: (String) The name of the template to use for the project
         importStatements: []
@@ -1152,6 +1324,7 @@ resources:
             id: (String) The ID of the AWS Parameter Store secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key: (String) The key of the tag
+            key_schema: (String) The format to use for structuring secret keys in the AWS Parameter Store destination.
             name: (String) The name of the AWS Parameter Store sync to create. Must be slug-friendly.
             path: '(String) The path in the AWS Parameter Store where the secrets will be stored, Example: /example/path/'
             project_id: (String) The ID of the Infisical project to create the sync in.
@@ -1210,6 +1383,7 @@ resources:
             id: (String) The ID of the AWS Secrets Manager secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key: (String) The key of the tag
+            key_schema: (String) The format to use for structuring secret keys in the AWS Secrets Manager destination.
             mapping_behavior: '(String) The behavior of the mapping. Can be ''many-to-one'' or ''one-to-one''. Many to One: All Infisical secrets will be mapped to a single AWS secret. One to One: Each Infisical secret will be mapped to its own AWS secret.'
             name: (String) The name of the AWS Secrets Manager sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
@@ -1251,6 +1425,7 @@ resources:
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure App Configuration secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Azure App Configuration destination.
             label: (String) The label to attach to secrets created in Azure App Configuration
             name: (String) The name of the Azure App Configuration sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
@@ -1288,6 +1463,7 @@ resources:
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure Key Vault secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Azure Key Vault destination.
             name: (String) The name of the Azure Key Vault sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
@@ -1337,6 +1513,7 @@ resources:
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the GCP Secret Manager secret sync
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: (String) The format to use for structuring secret keys in the GCP Secret Manager destination.
             name: (String) The name of the GCP Secret Manager sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             scope: '(String) The scope of the sync with GCP Secret Manager. Supported options: global'

@@ -5,6 +5,7 @@ import "github.com/crossplane/upjet/pkg/config"
 func Configure(p *config.Provider) {
 	p.AddResourceConfigurator("infisical_identity", func(r *config.Resource) {
 		r.Kind = "Identity"
+		r.ExternalName.OmittedFields = []string{"metadata"}
 		r.ShortGroup = "identity"
 	})
 
