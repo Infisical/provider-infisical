@@ -1805,8 +1805,6 @@ resources:
                   "value": "\u003csome value\u003e",
                   "workspace_id": "PROJECT_ID"
                 }
-              references:
-                tag_ids: infisical_secret_tag.terraform.id
               dependencies:
                 infisical_secret_tag.terraform: |-
                     {
