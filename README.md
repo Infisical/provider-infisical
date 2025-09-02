@@ -147,7 +147,3 @@ make build
 
 For filing bugs, suggesting improvements, or requesting new features, please
 open an [issue](https://github.com/infisical/provider-infisical/issues).
-
----
-
-Let me know if you want a fancy badge or `kubectl kustomize` support section next, bruh.
