@@ -77,6 +77,20 @@ var ExternalNameConfigs = map[string]config.ExternalName{
 		}
 		return e
 	}(),
+
+	"infisical_secret": func() config.ExternalName {
+		e := config.IdentifierFromProvider
+		e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
+			if id, ok := tfstate["id"]; ok && id != nil {
+				idStr, ok := id.(string)
+				if ok && idStr != "" {
+					return idStr, nil
+				}
+			}
+			return "", nil
+		}
+		return e
+	}(),
 }
 
 // ExternalNameConfigurations applies all external name configs listed in the
