@@ -13,7 +13,7 @@ import (
 	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
-type InfisicalSecretInitParameters struct {
+type SecretInitParameters struct {
 
 	// (String) The environment slug of the secret to modify/create
 	// The environment slug of the secret to modify/create
@@ -40,7 +40,7 @@ type InfisicalSecretInitParameters struct {
 	WorkspaceID *string `json:"workspaceId,omitempty" tf:"workspace_id,omitempty"`
 }
 
-type InfisicalSecretObservation struct {
+type SecretObservation struct {
 
 	// (String) The environment slug of the secret to modify/create
 	// The environment slug of the secret to modify/create
@@ -69,7 +69,7 @@ type InfisicalSecretObservation struct {
 	WorkspaceID *string `json:"workspaceId,omitempty" tf:"workspace_id,omitempty"`
 }
 
-type InfisicalSecretParameters struct {
+type SecretParameters struct {
 
 	// (String) The environment slug of the secret to modify/create
 	// The environment slug of the secret to modify/create
@@ -102,10 +102,10 @@ type InfisicalSecretParameters struct {
 	WorkspaceID *string `json:"workspaceId,omitempty" tf:"workspace_id,omitempty"`
 }
 
-// InfisicalSecretSpec defines the desired state of InfisicalSecret
-type InfisicalSecretSpec struct {
+// SecretSpec defines the desired state of Secret
+type SecretSpec struct {
 	v1.ResourceSpec `json:",inline"`
-	ForProvider     InfisicalSecretParameters `json:"forProvider"`
+	ForProvider     SecretParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -116,53 +116,53 @@ type InfisicalSecretSpec struct {
 	// required on creation, but we do not desire to update them after creation,
 	// for example because of an external controller is managing them, like an
 	// autoscaler.
-	InitProvider InfisicalSecretInitParameters `json:"initProvider,omitempty"`
+	InitProvider SecretInitParameters `json:"initProvider,omitempty"`
 }
 
-// InfisicalSecretStatus defines the observed state of InfisicalSecret.
-type InfisicalSecretStatus struct {
+// SecretStatus defines the observed state of Secret.
+type SecretStatus struct {
 	v1.ResourceStatus `json:",inline"`
-	AtProvider        InfisicalSecretObservation `json:"atProvider,omitempty"`
+	AtProvider        SecretObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 
-// InfisicalSecret is the Schema for the InfisicalSecrets API. Create secrets & save to Infisical
+// Secret is the Schema for the Secrets API. Create secrets & save to Infisical
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,infisical}
-type InfisicalSecret struct {
+type Secret struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.envSlug) || (has(self.initProvider) && has(self.initProvider.envSlug))",message="spec.forProvider.envSlug is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.folderPath) || (has(self.initProvider) && has(self.initProvider.folderPath))",message="spec.forProvider.folderPath is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.name) || (has(self.initProvider) && has(self.initProvider.name))",message="spec.forProvider.name is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.valueSecretRef)",message="spec.forProvider.valueSecretRef is a required parameter"
-	Spec   InfisicalSecretSpec   `json:"spec"`
-	Status InfisicalSecretStatus `json:"status,omitempty"`
+	Spec   SecretSpec   `json:"spec"`
+	Status SecretStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// InfisicalSecretList contains a list of InfisicalSecrets
-type InfisicalSecretList struct {
+// SecretList contains a list of Secrets
+type SecretList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []InfisicalSecret `json:"items"`
+	Items           []Secret `json:"items"`
 }
 
 // Repository type metadata.
 var (
-	InfisicalSecret_Kind             = "InfisicalSecret"
-	InfisicalSecret_GroupKind        = schema.GroupKind{Group: CRDGroup, Kind: InfisicalSecret_Kind}.String()
-	InfisicalSecret_KindAPIVersion   = InfisicalSecret_Kind + "." + CRDGroupVersion.String()
-	InfisicalSecret_GroupVersionKind = CRDGroupVersion.WithKind(InfisicalSecret_Kind)
+	Secret_Kind             = "Secret"
+	Secret_GroupKind        = schema.GroupKind{Group: CRDGroup, Kind: Secret_Kind}.String()
+	Secret_KindAPIVersion   = Secret_Kind + "." + CRDGroupVersion.String()
+	Secret_GroupVersionKind = CRDGroupVersion.WithKind(Secret_Kind)
 )
 
 func init() {
-	SchemeBuilder.Register(&InfisicalSecret{}, &InfisicalSecretList{})
+	SchemeBuilder.Register(&Secret{}, &SecretList{})
 }
