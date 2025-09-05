@@ -42,4 +42,10 @@ func Configure(p *config.Provider) {
 			TerraformName: "infisical_project",
 		}
 	})
+
+	p.AddResourceConfigurator("infisical_secret", func(r *config.Resource) {
+		r.Kind = "Secret"
+		r.ShortGroup = "secret"
+		r.ExternalName.OmittedFields = []string{"secret_reminder"}
+	})
 }

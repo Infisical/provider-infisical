@@ -20,7 +20,9 @@ resources:
                     }
                   ],
                   "enforcement_level": "soft",
-                  "environment_slug": "prod",
+                  "environment_slugs": [
+                    "prod"
+                  ],
                   "name": "my-approval-policy",
                   "project_id": "${infisical_project.example.id}",
                   "required_approvals": 1,
@@ -37,7 +39,8 @@ resources:
         argumentDocs:
             approvers: (Attributes Set) The required approvers (see below for nested schema)
             enforcement_level: (String) The enforcement level of the policy. This can either be hard or soft
-            environment_slug: (String) The environment to apply the access approval policy to
+            environment_slug: (String) (DEPRECATED, Use environment_slugs instead) The environment to apply the access approval policy to
+            environment_slugs: (List of String) The environments to apply the access approval policy to
             id: (String) The ID of the access approval policy
             name: (String) The name of the access approval policy
             project_id: (String) The ID of the project to add the access approval policy
@@ -45,6 +48,33 @@ resources:
             secret_path: (String) The secret path to apply the access approval policy to
             type: (String) The type of approver. Either group or user
             username: (String) The username of the approver. By default, this is the email
+        importStatements: []
+    infisical_app_connection_1password:
+        subCategory: ""
+        description: Create and manage 1Password App Connection
+        name: infisical_app_connection_1password
+        title: infisical_app_connection_1password Resource - terraform-provider-infisical
+        examples:
+            - name: one-password-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_token": "\u003cAPI_TOKEN\u003e",
+                    "instance_url": "\u003chttps://1pass.example.com\u003e"
+                  },
+                  "description": "This is a demo 1password connection.",
+                  "method": "api-token",
+                  "name": "1password-demo"
+                }
+        argumentDocs:
+            api_token: (String, Sensitive) The API token to use for authentication. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/1password
+            credentials: (Attributes) The credentials for the 1Password App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the 1Password App Connection credentials
+            description: (String) An optional description for the 1Password App Connection.
+            id: (String) The ID of the app connection
+            instance_url: (String, Sensitive) The URL of the 1Password Connect instance to connect to. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/1password
+            method: '(String) The method used to authenticate with 1Password. Possible values are: api-token'
+            name: (String) The name of the 1Password App Connection to create. Must be slug-friendly
         importStatements: []
     infisical_app_connection_aws:
         subCategory: ""
@@ -84,6 +114,143 @@ resources:
             role_arn: (String, Sensitive) The Amazon Resource Name (ARN) of the IAM role to assume for performing operations. Infisical will assume this role using AWS Security Token Service (STS). Required for assume-role access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#assume-role-recommended
             secret_access_key: (String, Sensitive) The AWS Secret Access Key associated with the Access Key ID to authenticate requests to AWS services. Required for access-key access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#access-key
         importStatements: []
+    infisical_app_connection_azure_client_secrets:
+        subCategory: ""
+        description: Create and manage Azure Client Secrets App Connection
+        name: infisical_app_connection_azure_client_secrets
+        title: infisical_app_connection_azure_client_secrets Resource - terraform-provider-infisical
+        examples:
+            - name: app_connection_azure_client_secret
+              manifest: |-
+                {
+                  "credentials": {
+                    "client_id": "\u003cazure-client-id\u003e",
+                    "client_secret": "\u003cazure-client-secret\u003e",
+                    "tenant_id": "\u003cazure-tenant-id\u003e"
+                  },
+                  "description": "I am a test Azure app connection using client credentials",
+                  "method": "client-secret",
+                  "name": "app_connection_azure_client_secret"
+                }
+        argumentDocs:
+            client_id: (String, Sensitive) The Azure application (client) ID. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-client-secrets
+            client_secret: (String, Sensitive) The Azure client secret. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-client-secrets
+            credentials: (Attributes) The credentials for the Azure Client Secrets App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Azure Client Secrets App Connection credentials
+            description: (String) An optional description for the Azure Client Secrets App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Azure Client Secrets. Possible values are: client-secret'
+            name: (String) The name of the Azure Client Secrets App Connection to create. Must be slug-friendly
+            tenant_id: (String) The Azure Active Directory (AAD) tenant ID. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-client-secrets
+        importStatements: []
+    infisical_app_connection_bitbucket:
+        subCategory: ""
+        description: Create and manage Bitbucket App Connection
+        name: infisical_app_connection_bitbucket
+        title: infisical_app_connection_bitbucket Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_token": "your-bitbucket-api-token",
+                    "email": "your-bitbucket-email@example.com"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "api-token",
+                  "name": "bitbucket-connection"
+                }
+        argumentDocs:
+            api_token: (String, Sensitive) The Bitbucket API token for authentication.
+            credentials: (Attributes) The credentials for the Bitbucket App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Bitbucket App Connection credentials
+            description: (String) An optional description for the Bitbucket App Connection.
+            email: (String) The email address associated with the Bitbucket API token.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Bitbucket. Possible values are: api-token'
+            name: (String) The name of the Bitbucket App Connection to create. Must be slug-friendly
+        importStatements: []
+    infisical_app_connection_cloudflare:
+        subCategory: ""
+        description: Create and manage Cloudflare App Connection
+        name: infisical_app_connection_cloudflare
+        title: infisical_app_connection_cloudflare Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-cloudflare
+              manifest: |-
+                {
+                  "credentials": {
+                    "account_id": "\u003ccloudflare-account-id\u003e",
+                    "api_token": "\u003ccloudflare-api-token\u003e"
+                  },
+                  "description": "I am a Cloudflare app connection",
+                  "method": "api-token",
+                  "name": "cloudflare-app-connection"
+                }
+        argumentDocs:
+            account_id: (String, Sensitive) The Cloudflare Account ID. This can be found in the sidebar of your Cloudflare dashboard.
+            api_token: (String, Sensitive) The Cloudflare API token with the necessary permissions to manage Workers scripts. The token should have Zone:Zone:Read, Zone:Zone Settings:Read, and Zone:Zone:Edit permissions.
+            credentials: (Attributes) The credentials for the Cloudflare App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Cloudflare App Connection credentials
+            description: (String) An optional description for the Cloudflare App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Cloudflare. Possible values are: api-token'
+            name: (String) The name of the Cloudflare App Connection to create. Must be slug-friendly
+        importStatements: []
+    infisical_app_connection_databricks:
+        subCategory: ""
+        description: Create and manage Databricks App Connection
+        name: infisical_app_connection_databricks
+        title: infisical_app_connection_databricks Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "credentials": {
+                    "client_id": "your-databricks-client-id",
+                    "client_secret": "your-databricks-client-secret",
+                    "workspace_url": "https://your-workspace.cloud.databricks.com"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "service-principal",
+                  "name": "databricks-connection"
+                }
+        argumentDocs:
+            client_id: (String) The client ID of the Databricks service principal.
+            client_secret: (String, Sensitive) The client secret of the Databricks service principal.
+            credentials: (Attributes) The credentials for the Databricks App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Databricks App Connection credentials
+            description: (String) An optional description for the Databricks App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Databricks. Possible values are: service-principal'
+            name: (String) The name of the Databricks App Connection to create. Must be slug-friendly
+            workspace_url: (String) The workspace URL of the Databricks instance.
+        importStatements: []
+    infisical_app_connection_flyio:
+        subCategory: ""
+        description: Create and manage Fly.io App Connection
+        name: infisical_app_connection_flyio
+        title: infisical_app_connection_flyio Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "credentials": {
+                    "access_token": "\u003cyour-flyio-access-token\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "access-token",
+                  "name": "flyio-connection"
+                }
+        argumentDocs:
+            access_token: (String, Sensitive) The Fly.io access token for authentication.
+            credentials: (Attributes) The credentials for the Fly.io App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Fly.io App Connection credentials
+            description: (String) An optional description for the Fly.io App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Fly.io. Possible values are: access-token'
+            name: (String) The name of the Fly.io App Connection to create. Must be slug-friendly
+        importStatements: []
     infisical_app_connection_gcp:
         subCategory: ""
         description: Create and manage GCP App Connection
@@ -108,6 +275,402 @@ resources:
             method: '(String) The method used to authenticate with GCP. Possible values are: service-account-impersonation'
             name: (String) The name of the GCP App Connection to create. Must be slug-friendly
             service_account_email: (String, Sensitive) The service account email to connect with GCP. The service account ID (the part of the email before '@') must be suffixed with the first two sections of your organization ID e.g. service-account-df92581a-0fe9@my-project.iam.gserviceaccount.com. For more details, refer to the documentation here https://infisical.com/docs/integrations/app-connections/gcp#configure-service-account-for-infisical
+        importStatements: []
+    infisical_app_connection_gitlab:
+        subCategory: ""
+        description: Create and manage GitLab App Connection
+        name: infisical_app_connection_gitlab
+        title: infisical_app_connection_gitlab Resource - terraform-provider-infisical
+        examples:
+            - name: gitlab_connection
+              manifest: |-
+                {
+                  "credentials": {
+                    "access_token": "\u003caccess-token\u003e",
+                    "access_token_type": "project",
+                    "instance_url": "https://gitlab.com"
+                  },
+                  "description": "GitLab connection for CI/CD variables sync",
+                  "method": "access-token",
+                  "name": "gitlab-connection"
+                }
+        argumentDocs:
+            access_token: (String, Sensitive) The Access Token used to access GitLab.
+            access_token_type: '(String) The type of token used to connect with GitLab. Supported options: ''project'' and ''personal'''
+            credentials: (Attributes) The credentials for the GitLab App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the GitLab App Connection credentials
+            description: (String) An optional description for the GitLab App Connection.
+            id: (String) The ID of the app connection
+            instance_url: '(String) The GitLab instance URL to connect with. (default: https://gitlab.com)'
+            method: '(String) The method used to authenticate with GitLab. Possible values are: access-token'
+            name: (String) The name of the GitLab App Connection to create. Must be slug-friendly
+        importStatements: []
+    infisical_app_connection_ldap:
+        subCategory: ""
+        description: Create and manage LDAP App Connection
+        name: infisical_app_connection_ldap
+        title: infisical_app_connection_ldap Resource - terraform-provider-infisical
+        examples:
+            - name: ldap-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "dn": "cn=admin,dc=example,dc=com",
+                    "password": "\u003cpassword\u003e",
+                    "provider": "active-directory",
+                    "ssl_reject_unauthorized": false,
+                    "url": "ldap://ldap.example.com:389"
+                  },
+                  "description": "This is a demo LDAP connection.",
+                  "method": "simple-bind",
+                  "name": "ldap-demo"
+                }
+            - name: ldap-demo-secure
+              manifest: |-
+                {
+                  "credentials": {
+                    "dn": "cn=admin,dc=example,dc=com",
+                    "password": "\u003cpassword\u003e",
+                    "provider": "active-directory",
+                    "ssl_certificate": "${file(\"${path.module}/ca.pem\")}",
+                    "ssl_reject_unauthorized": true,
+                    "url": "ldaps://ldap.example.com:636"
+                  },
+                  "description": "This is a demo LDAP connection with SSL.",
+                  "method": "simple-bind",
+                  "name": "ldap-demo-secure"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the LDAP App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the LDAP App Connection credentials
+            description: (String) An optional description for the LDAP App Connection.
+            dn: (String) The Distinguished Name (DN) or User Principal Name (UPN) of the principal to bind with (e.g., 'CN=John,CN=Users,DC=example,DC=com').
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with LDAP. Possible values are: simple-bind'
+            name: (String) The name of the LDAP App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to bind with for authentication.
+            provider: (String) The LDAP provider (e.g., 'active-directory').
+            ssl_certificate: (String) The SSL certificate (PEM format) to use for secure connection when using ldaps:// with a self-signed certificate.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates (true/false) when using ldaps://. Set to false only in test environments.
+            url: (String) The LDAP server URL (e.g., 'ldap://example.com:389' or 'ldaps://example.com:636').
+        importStatements: []
+    infisical_app_connection_mssql:
+        subCategory: ""
+        description: Create and manage MsSQL App Connection
+        name: infisical_app_connection_mssql
+        title: infisical_app_connection_mssql Resource - terraform-provider-infisical
+        examples:
+            - name: mssql-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "database": "default",
+                    "host": "example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 1433,
+                    "ssl_enabled": false,
+                    "username": "root"
+                  },
+                  "description": "This is a demo mssql connection.",
+                  "method": "username-and-password",
+                  "name": "mssql-demo"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the MsSQL App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the MsSQL App Connection credentials
+            database: (String) The name of the database to connect to.
+            description: (String) An optional description for the MsSQL App Connection.
+            host: (String) The hostname of the database server.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with MsSQL. Possible values are: username-and-password'
+            name: (String) The name of the MsSQL App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to connect to the database with.
+            port: (Number) The port number of the database.
+            ssl_certificate: (String) The SSL certificate to use for connection.
+            ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
+            username: (String) The username to connect to the database with.
+        importStatements: []
+    infisical_app_connection_mysql:
+        subCategory: ""
+        description: Create and manage MySQL App Connection
+        name: infisical_app_connection_mysql
+        title: infisical_app_connection_mysql Resource - terraform-provider-infisical
+        examples:
+            - name: mysql-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "database": "default",
+                    "host": "example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 3306,
+                    "ssl_enabled": false,
+                    "username": "root"
+                  },
+                  "description": "This is a demo mysql connection.",
+                  "method": "username-and-password",
+                  "name": "mysql-demo"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the MySQL App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the MySQL App Connection credentials
+            database: (String) The name of the database to connect to.
+            description: (String) An optional description for the MySQL App Connection.
+            host: (String) The hostname of the database server.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with MySQL. Possible values are: username-and-password'
+            name: (String) The name of the MySQL App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to connect to the database with.
+            port: (Number) The port number of the database.
+            ssl_certificate: (String) The SSL certificate to use for connection.
+            ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
+            username: (String) The username to connect to the database with.
+        importStatements: []
+    infisical_app_connection_oracledb:
+        subCategory: ""
+        description: Create and manage Oracle Database App Connection
+        name: infisical_app_connection_oracledb
+        title: infisical_app_connection_oracledb Resource - terraform-provider-infisical
+        examples:
+            - name: oracledb-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "database": "ORCL",
+                    "host": "example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 1521,
+                    "ssl_enabled": false,
+                    "username": "system"
+                  },
+                  "description": "This is a demo Oracle Database connection.",
+                  "method": "username-and-password",
+                  "name": "oracledb-demo"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the Oracle Database App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Oracle Database App Connection credentials
+            database: (String) The name of the database to connect to.
+            description: (String) An optional description for the Oracle Database App Connection.
+            host: (String) The hostname of the database server.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Oracle Database. Possible values are: username-and-password'
+            name: (String) The name of the Oracle Database App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to connect to the database with.
+            port: (Number) The port number of the database.
+            ssl_certificate: (String) The SSL certificate to use for connection.
+            ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
+            username: (String) The username to connect to the database with.
+        importStatements: []
+    infisical_app_connection_postgres:
+        subCategory: ""
+        description: Create and manage PostgreSQL App Connection
+        name: infisical_app_connection_postgres
+        title: infisical_app_connection_postgres Resource - terraform-provider-infisical
+        examples:
+            - name: postgres-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "database": "default",
+                    "host": "example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 5432,
+                    "ssl_enabled": false,
+                    "username": "postgres"
+                  },
+                  "description": "This is a demo postgres connection.",
+                  "method": "username-and-password",
+                  "name": "postgres-demo"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the PostgreSQL App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the PostgreSQL App Connection credentials
+            database: (String) The name of the database to connect to.
+            description: (String) An optional description for the PostgreSQL App Connection.
+            host: (String) The hostname of the database server.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with PostgreSQL. Possible values are: username-and-password'
+            name: (String) The name of the PostgreSQL App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to connect to the database with.
+            port: (Number) The port number of the database.
+            ssl_certificate: (String) The SSL certificate to use for connection.
+            ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
+            username: (String) The username to connect to the database with.
+        importStatements: []
+    infisical_app_connection_render:
+        subCategory: ""
+        description: Create and manage Render App Connection
+        name: infisical_app_connection_render
+        title: infisical_app_connection_render Resource - terraform-provider-infisical
+        examples:
+            - name: render-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_key": "\u003capi-key\u003e"
+                  },
+                  "description": "This is a demo render connection.",
+                  "method": "api-key",
+                  "name": "render-demo"
+                }
+        argumentDocs:
+            api_key: (String, Sensitive) The API key to use for authentication. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/render
+            credentials: (Attributes) The credentials for the Render App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Render App Connection credentials
+            description: (String) An optional description for the Render App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Render. Possible values are: api-key'
+            name: (String) The name of the Render App Connection to create. Must be slug-friendly
+        importStatements: []
+    infisical_app_connection_supabase:
+        subCategory: ""
+        description: Create and manage Supabase App Connection
+        name: infisical_app_connection_supabase
+        title: infisical_app_connection_supabase Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "credentials": {
+                    "access_key": "\u003cyour-supabase-access-key\u003e",
+                    "instance_url": "\u003cyour-supabase-instance-url\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "access-token",
+                  "name": "supabase-connection"
+                }
+        argumentDocs:
+            access_key: (String, Sensitive) The Supabase access key for authentication.
+            credentials: (Attributes) The credentials for the Supabase App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Supabase App Connection credentials
+            description: (String) An optional description for the Supabase App Connection.
+            id: (String) The ID of the app connection
+            instance_url: (String) The Supabase instance URL (e.g., https://your-domain.com).
+            method: '(String) The method used to authenticate with Supabase. Possible values are: access-token'
+            name: (String) The name of the Supabase App Connection to create. Must be slug-friendly
+        importStatements: []
+    infisical_dynamic_secret_aws_iam:
+        subCategory: ""
+        description: Create and manage AWS IAM Dynamic Secret
+        name: infisical_dynamic_secret_aws_iam
+        title: infisical_dynamic_secret_aws_iam Resource - terraform-provider-infisical
+        examples:
+            - name: aws-iam
+              manifest: |-
+                {
+                  "configuration": {
+                    "access_key_config": {
+                      "access_key": "YOUR_AWS_ACCESS_KEY_ID",
+                      "secret_access_key": "YOUR_AWS_SECRET_ACCESS_KEY"
+                    },
+                    "aws_path": "/",
+                    "method": "access_key",
+                    "permission_boundary_policy_arn": "arn:aws:iam::123456789012:policy/YourBoundaryPolicy",
+                    "policy_arns": "arn:aws:iam::aws:policy/ReadOnlyAccess,arn:aws:iam::123456789012:policy/SpecificPolicy",
+                    "policy_document": "{\n  \"Version\": \"2012-10-17\",\n  \"Statement\": [\n    {\n      \"Effect\": \"Allow\",\n      \"Action\": \"s3:ListBucket\",\n      \"Resource\": \"*\"\n    }\n  ]\n}\n",
+                    "region": "us-east-1",
+                    "user_groups": "group-a,group-b"
+                  },
+                  "default_ttl": "2h",
+                  "environment_slug": "dev",
+                  "max_ttl": "4h",
+                  "name": "aws-iam-dynamic-secret-example",
+                  "path": "/",
+                  "project_slug": "your-project-slug",
+                  "username_template": "{{randomUsername}}"
+                }
+        argumentDocs:
+            access_key: (String) The managing AWS IAM User Access Key
+            access_key_config: (Attributes) Configuration for the 'access_key' authentication method. (see below for nested schema)
+            assume_role_config: (Attributes) Configuration for the 'assume_role' authentication method. (see below for nested schema)
+            aws_path: (String) IAM AWS Path to scope created IAM User resource access.
+            configuration: (Attributes) The configuration of the dynamic secret (see below for nested schema)
+            default_ttl: (String) The default TTL that will be applied for all the leases.
+            environment_slug: (String) The slug of the environment to create the dynamic secret in.
+            id: (String) The ID of the dynamic secret.
+            key: (String) The key of the metadata object
+            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
+            method: (String) The authentication method to use. Must be 'access_key' or 'assume_role'.
+            name: (String) The name of the dynamic secret.
+            path: (String) The path to create the dynamic secret in.
+            permission_boundary_policy_arn: (String) The IAM Policy ARN of the AWS Permissions Boundary to attach to IAM users created in the role.
+            policy_arns: (String) The AWS IAM managed policies that should be attached to the created users. Multiple values can be provided by separating them with commas
+            policy_document: (String) The AWS IAM inline policy that should be attached to the created users. Multiple values can be provided by separating them with commas
+            project_slug: (String) The slug of the project to create dynamic secret in.
+            region: (String) The AWS data center region.
+            role_arn: (String) The ARN of the AWS Role to assume.
+            secret_access_key: (String, Sensitive) The managing AWS IAM User Secret Key
+            user_groups: (String) The AWS IAM groups that should be assigned to the created users. Multiple values can be provided by separating them with commas
+            username_template: (String) The username template of the dynamic secret
+            value: (String) The value of the metadata object
+        importStatements: []
+    infisical_dynamic_secret_kubernetes:
+        subCategory: ""
+        description: Create and manage Kubernetes Dynamic Secret
+        name: infisical_dynamic_secret_kubernetes
+        title: infisical_dynamic_secret_kubernetes Resource - terraform-provider-infisical
+        examples:
+            - name: kubernetes
+              manifest: |-
+                {
+                  "configuration": {
+                    "api_config": {
+                      "ca": "",
+                      "cluster_token": "\u003ctoken\u003e",
+                      "cluster_url": "https://example.com",
+                      "enable_ssl": false
+                    },
+                    "audiences": [],
+                    "auth_method": "api",
+                    "credential_type": "static",
+                    "static_config": {
+                      "namespace": "default",
+                      "service_account_name": "test-account"
+                    }
+                  },
+                  "default_ttl": "1h",
+                  "environment_slug": "dev",
+                  "max_ttl": "4h",
+                  "name": "kubernetes-dynamic-secret-example",
+                  "path": "/",
+                  "project_slug": "your-project-slug",
+                  "username_template": "{{randomUsername}}"
+                }
+        argumentDocs:
+            allowed_namespaces: (String) Kubernetes namespace(s) where the service accounts will be created. You can specify multiple namespaces as a comma-separated list (e.g., “default,kube-system”). During lease creation, you can specify which namespace to use from this allowed list.
+            api_config: (Attributes) Configuration for the 'api' authentication method. (see below for nested schema)
+            audiences: (List of String) Optional list of audiences to include in the generated token.
+            auth_method: (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+            ca: (String) Custom CA certificate for the Kubernetes API server. Leave blank to use the system/public CA.
+            cluster_token: (String, Sensitive) Service account token with permissions to create service accounts and manage RBAC.
+            cluster_url: (String) Kubernetes API server URL (e.g., https://kubernetes.default.svc).
+            configuration: (Attributes) The configuration of the dynamic secret (see below for nested schema)
+            credential_type: (String) Choose between 'static' (predefined service account) or 'dynamic' (temporary service accounts with role assignments).
+            default_ttl: (String) The default TTL that will be applied for all the leases.
+            dynamic_config: (Attributes) Configuration for the 'dynamic' credential type. (see below for nested schema)
+            enable_ssl: (Boolean) Whether to enable SSL verification for the Kubernetes API server connection.
+            environment_slug: (String) The slug of the environment to create the dynamic secret in.
+            gateway_id: (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+            id: (String) The ID of the dynamic secret.
+            key: (String) The key of the metadata object
+            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
+            name: (String) The name of the dynamic secret.
+            namespace: (String) Kubernetes namespace where the service account exists.
+            path: (String) The path to create the dynamic secret in.
+            project_slug: (String) The slug of the project to create dynamic secret in.
+            role: (String) Name of the role to assign to the temporary service account.
+            role_type: (String) Type of role to assign ('cluster-role' or 'role').
+            service_account_name: (String) Name of the service account to generate tokens for.
+            static_config: (Attributes) Configuration for the 'static' credential type. (see below for nested schema)
+            username_template: (String) The username template of the dynamic secret
+            value: (String) The value of the metadata object
         importStatements: []
     infisical_dynamic_secret_sql_database:
         subCategory: ""
@@ -500,6 +1063,7 @@ resources:
                     }
         argumentDocs:
             auth_modes: (List of String) The authentication types of the identity
+            has_delete_protection: (Boolean) Whether the identity has delete protection, defaults to false
             id: (String) The ID of the identity
             key: (String) The key of the metadata object
             metadata: (Attributes Set) The metadata associated with this identity (see below for nested schema)
@@ -1100,6 +1664,64 @@ resources:
             slug: (String) The slug for the new role
             subject: '(String) Describe what action an entity can take. Enum: role,member,groups,settings,integrations,webhooks,service-tokens,environments,tags,audit-logs,ip-allowlist,workspace,secrets,secret-rollback,secret-approval,secret-rotation,identity,certificate-authorities,certificates,certificate-templates,kms,pki-alerts,pki-collections'
         importStatements: []
+    infisical_project_template:
+        subCategory: ""
+        description: Create project templates & save to Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_project_template
+        title: infisical_project_template Resource - terraform-provider-infisical
+        examples:
+            - name: example-project-template
+              manifest: |-
+                {
+                  "description": "This is an example project template",
+                  "environments": [
+                    {
+                      "name": "development",
+                      "position": 1,
+                      "slug": "dev"
+                    }
+                  ],
+                  "name": "example-project-template",
+                  "roles": [
+                    {
+                      "name": "Test",
+                      "permissions": [
+                        {
+                          "action": [
+                            "edit"
+                          ],
+                          "inverted": true,
+                          "subject": "secret-folders"
+                        },
+                        {
+                          "action": [
+                            "read",
+                            "edit"
+                          ],
+                          "conditions": "${jsonencode({\n          environment = {\n            \"$in\" = [\"dev\", \"prod\"]\n            \"$eq\" = \"dev\"\n          }\n          secretPath = {\n            \"$eq\" = \"/\"\n          }\n        })}",
+                          "subject": "secrets"
+                        }
+                      ],
+                      "slug": "test"
+                    }
+                  ],
+                  "type": "secret-manager"
+                }
+        argumentDocs:
+            action: (Set of String) Describe what actions an entity can take.
+            conditions: (String) When specified, only matching conditions will be allowed to access given resource. Refer to the documentation in https://infisical.com/docs/internals/permissions#conditions for the complete list of supported properties and operators.
+            description: (String) The description of the project template
+            environments: (Attributes List) The environments for the project template (see below for nested schema)
+            id: (String) The ID of the project template
+            inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
+            name: (String) The name of the project template
+            permissions: (Attributes List) The permissions assigned to the role. Refer to the documentation here https://infisical.com/docs/api-reference/endpoints/project-templates/create#body-roles-permissions for its usage. (see below for nested schema)
+            position: (Number) The position of the environment
+            roles: (Attributes List) The roles for the project template (see below for nested schema)
+            slug: (String) The slug of the environment
+            subject: (String) Describe the entity the permission pertains to.
+            type: (String) The type of the project template. Refer to the documentation here https://infisical.com/docs/api-reference/endpoints/project-templates/create#body-type for the available options
+        importStatements: []
     infisical_project_user:
         subCategory: ""
         description: Create project users & save to Infisical. Only Machine Identity authentication is supported for this resource
@@ -1194,6 +1816,7 @@ resources:
         argumentDocs:
             env_slug: (String) The environment slug of the secret to modify/create
             folder_path: (String) The path to the folder where the given secret resides
+            id: (String) The ID of the secret
             last_updated: (String)
             name: (String) The name of the secret
             note: (String) Note for the secret rotation reminder
@@ -1223,7 +1846,9 @@ resources:
                     }
                   ],
                   "enforcement_level": "hard",
-                  "environment_slug": "prod",
+                  "environment_slugs": [
+                    "prod"
+                  ],
                   "name": "my-prod-policy",
                   "project_id": "${infisical_project.example.id}",
                   "required_approvals": 1,
@@ -1241,7 +1866,8 @@ resources:
             allow_self_approval: (Boolean) Whether to allow the  approvers to approve their own changes
             approvers: (Attributes Set) The required approvers (see below for nested schema)
             enforcement_level: (String) The enforcement level of the policy. This can either be hard or soft
-            environment_slug: (String) The environment to apply the secret approval policy to
+            environment_slug: (String) (DEPRECATED, Use environment_slugs instead) The environment to apply the secret approval policy to
+            environment_slugs: (List of String) The environments to apply the secret approval policy to
             id: (String) The ID of the secret approval policy
             name: (String) The name of the secret approval policy
             project_id: (String) The ID of the project to add the secret approval policy
@@ -1261,6 +1887,7 @@ resources:
             folder_path: (String) The path where the folder should be created/updated
             id: (String) The ID of the folder
             name: (String) The name for the folder
+            path: (String) The full path of the folder, including its name.
             project_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
         importStatements: []
     infisical_secret_import Resource - terraform-provider-infisical:
@@ -1276,6 +1903,391 @@ resources:
             import_folder_path: (String) The path where the secret should be imported from
             is_replication: (Boolean) The is_replication of the secret import to modify/create
             project_id: (String) The Infisical project ID
+        importStatements: []
+    infisical_secret_rotation_aws_iam_user_secret:
+        subCategory: ""
+        description: Create and manage AWS IAM User Secret Secret Rotations
+        name: infisical_secret_rotation_aws_iam_user_secret
+        title: infisical_secret_rotation_aws_iam_user_secret Resource - terraform-provider-infisical
+        examples:
+            - name: aws-iam-user-secret
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "aws-iam-user-secret-rotation-example",
+                  "parameters": {
+                    "region": "\u003caws-region\u003e",
+                    "user_name": "\u003caws-iam-user-name\u003e"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "access_key_id": "AWS_ACCESS_KEY_ID",
+                    "secret_access_key": "AWS_SECRET_ACCESS_KEY"
+                  }
+                }
+        argumentDocs:
+            access_key_id: (String) The name of the secret that the access key ID will be mapped to.
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            region: (String) The AWS region the client is present in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_access_key: (String) The name of the secret that the rotated secret access key will be mapped to.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+            user_name: (String) The name of the client to rotate credentials for.
+        importStatements: []
+    infisical_secret_rotation_azure_client_secret:
+        subCategory: ""
+        description: Create and manage Azure Client Secret Secret Rotations
+        name: infisical_secret_rotation_azure_client_secret
+        title: infisical_secret_rotation_azure_client_secret Resource - terraform-provider-infisical
+        examples:
+            - name: azure-client-secret
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "azure-client-secret-secret-rotation-example",
+                  "parameters": {
+                    "client_id": "\u003cazure-app-client-id\u003e",
+                    "object_id": "\u003cazure-app-id\u003e"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "client_id": "AZURE_CLIENT_ID",
+                    "client_secret": "AZURE_CLIENT_SECRET"
+                  }
+                }
+        argumentDocs:
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            client_id: (String) The client ID of the Azure Application to rotate the client secret for.
+            client_secret: (String) The name of the secret that the rotated client secret will be mapped to.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            object_id: (String) The ID of the Azure Application to rotate the client secret for.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+        importStatements: []
+    infisical_secret_rotation_ldap_password:
+        subCategory: ""
+        description: Create and manage LDAP Password Secret Rotations
+        name: infisical_secret_rotation_ldap_password
+        title: infisical_secret_rotation_ldap_password Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "auto_rotation_enabled": true,
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Rotation for LDAP user passwords",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "ldap-password-rotation",
+                  "parameters": {
+                    "dn": "CN=John,OU=Users,DC=example,DC=com",
+                    "password_requirements": {
+                      "allowed_symbols": "-_.~!*",
+                      "length": 48,
+                      "required": {
+                        "digits": 1,
+                        "lowercase": 1,
+                        "symbols": 0,
+                        "uppercase": 1
+                      }
+                    },
+                    "rotation_method": "connection-principal"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "rotate_at_utc": {
+                    "hours": 2,
+                    "minutes": 0
+                  },
+                  "rotation_interval": 30,
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "dn": "LDAP_DN",
+                    "password": "LDAP_PASSWORD"
+                  }
+                }
+        argumentDocs:
+            allowed_symbols: (String) String of allowed symbols for password generation.
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            digits: (Number) Minimum number of digits required in the password.
+            dn: (String) The Distinguished Name (DN) of the LDAP entry to rotate the password for.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            length: (Number) The length of the generated password.
+            lowercase: (Number) Minimum number of lowercase letters required in the password.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            password: (String) The name of the secret that the generated password will be mapped to.
+            password_requirements: (Attributes) Password generation requirements. (see below for nested schema)
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            required: (Attributes) Required character types in the generated password. (see below for nested schema)
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            rotation_method: '(String) The method to use for rotating the password. Supported options: connection-principal and target-principal (default: connection-principal)'
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            symbols: (Number) Minimum number of symbols required in the password.
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+            uppercase: (Number) Minimum number of uppercase letters required in the password.
+        importStatements: []
+    infisical_secret_rotation_mssql_credentials:
+        subCategory: ""
+        description: Create and manage MsSQL Credentials Secret Rotations
+        name: infisical_secret_rotation_mssql_credentials
+        title: infisical_secret_rotation_mssql_credentials Resource - terraform-provider-infisical
+        examples:
+            - name: mssql-credentials
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "mssql-credentials-secret-rotation-example",
+                  "parameters": {
+                    "username1": "infisical_user_1",
+                    "username2": "infisical_user_2"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "password": "MSSQL_PASSWORD",
+                    "username": "MSSQL_USERNAME"
+                  }
+                }
+        argumentDocs:
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            password: (String) The name of the secret that the generated password will be mapped to.
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+            username: (String) The name of the secret that the active username will be mapped to.
+            username1: (String) The username of the first login to rotate passwords for. This user must already exists in your database.
+            username2: (String) The username of the second login to rotate passwords for. This user must already exists in your database.
+        importStatements: []
+    infisical_secret_rotation_mysql_credentials:
+        subCategory: ""
+        description: Create and manage MySQL Credentials Secret Rotations
+        name: infisical_secret_rotation_mysql_credentials
+        title: infisical_secret_rotation_mysql_credentials Resource - terraform-provider-infisical
+        examples:
+            - name: mysql-credentials
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "mysql-credentials-secret-rotation-example",
+                  "parameters": {
+                    "username1": "infisical_user1",
+                    "username2": "infisical_user2"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "password": "MYSQL_PASSWORD",
+                    "username": "MYSQL_USERNAME"
+                  }
+                }
+        argumentDocs:
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            password: (String) The name of the secret that the generated password will be mapped to.
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+            username: (String) The name of the secret that the active username will be mapped to.
+            username1: (String) The username of the first login to rotate passwords for. This user must already exists in your database.
+            username2: (String) The username of the second login to rotate passwords for. This user must already exists in your database.
+        importStatements: []
+    infisical_secret_rotation_oracledb_credentials:
+        subCategory: ""
+        description: Create and manage Oracle Database Credentials Secret Rotations
+        name: infisical_secret_rotation_oracledb_credentials
+        title: infisical_secret_rotation_oracledb_credentials Resource - terraform-provider-infisical
+        examples:
+            - name: oracledb-credentials
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "oracledb-credentials-secret-rotation-example",
+                  "parameters": {
+                    "username1": "INFISICAL_USER_1",
+                    "username2": "INFISICAL_USER_2"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "password": "ORACLEDB_PASSWORD",
+                    "username": "ORACLEDB_USERNAME"
+                  }
+                }
+        argumentDocs:
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            password: (String) The name of the secret that the generated password will be mapped to.
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+            username: (String) The name of the secret that the active username will be mapped to.
+            username1: (String) The username of the first login to rotate passwords for. This user must already exists in your database.
+            username2: (String) The username of the second login to rotate passwords for. This user must already exists in your database.
+        importStatements: []
+    infisical_secret_rotation_postgres_credentials:
+        subCategory: ""
+        description: Create and manage PostgreSQL Credentials Secret Rotations
+        name: infisical_secret_rotation_postgres_credentials
+        title: infisical_secret_rotation_postgres_credentials Resource - terraform-provider-infisical
+        examples:
+            - name: postgres-credentials
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "postgres-credentials-secret-rotation-example",
+                  "parameters": {
+                    "username1": "infisical_user_1",
+                    "username2": "infisical_user_2"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "password": "POSTGRES_DB_PASSWORD",
+                    "username": "POSTGRES_DB_USERNAME"
+                  }
+                }
+        argumentDocs:
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            password: (String) The name of the secret that the generated password will be mapped to.
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+            username: (String) The name of the secret that the active username will be mapped to.
+            username1: (String) The username of the first login to rotate passwords for. This user must already exists in your database.
+            username2: (String) The username of the second login to rotate passwords for. This user must already exists in your database.
+        importStatements: []
+    infisical_secret_sync_1password:
+        subCategory: ""
+        description: Create and manage 1Password secret syncs
+        name: infisical_secret_sync_1password
+        title: infisical_secret_sync_1password Resource - terraform-provider-infisical
+        examples:
+            - name: one-password-secret-sync-demo
+              manifest: |-
+                {
+                  "connection_id": "${infisical_app_connection_1password.one-password-app-connection-demo.id}",
+                  "description": "This is a demo 1Password Secret Sync.",
+                  "destination_config": {
+                    "value_label": "\u003cvalue-label\u003e",
+                    "vault_id": "\u003cvault-id\u003e"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "1password-secret-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "sync_options": {
+                    "initial_sync_behavior": "\u003cinitial-sync-behavior\u003e",
+                    "key_schema": "\u003ckey-schema\u003e"
+                  }
+                }
+              references:
+                connection_id: infisical_app_connection_1password.one-password-app-connection-demo.id
+              dependencies:
+                infisical_app_connection_1password.one-password-app-connection-demo: |-
+                    {
+                      "credentials": {
+                        "api_token": "\u003cAPI_TOKEN\u003e",
+                        "instance_url": "\u003chttps://1pass.example.com\u003e"
+                      },
+                      "description": "This is a demo 1Password App Connection.",
+                      "method": "api-token",
+                      "name": "1password-app-connection-demo"
+                    }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the 1password Connection to use for syncing.
+            description: (String) An optional description for the 1Password sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from 1Password. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the 1Password secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: (String) The format to use for structuring secret keys in the 1Password destination.
+            name: (String) The name of the 1Password sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            value_label: '(String) The label of the 1Password item field which will hold your secret value. For example, if you were to sync Infisical secret ''foo: bar'', the 1Password item equivalent would have an item title of ''foo'', and a field on that item ''value: bar''. The field label ''value'' is what gets changed by this option'
+            vault_id: (String) The ID of the 1Password vault to sync secrets to
         importStatements: []
     infisical_secret_sync_aws_parameter_store:
         subCategory: ""
@@ -1432,6 +2444,41 @@ resources:
             secret_path: (String) The folder path to sync secrets from.
             sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
         importStatements: []
+    infisical_secret_sync_azure_devops:
+        subCategory: ""
+        description: Create and manage Azure DevOps secret syncs
+        name: infisical_secret_sync_azure_devops
+        title: infisical_secret_sync_azure_devops Resource - terraform-provider-infisical
+        examples:
+            - name: app-configuration-demo
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "This is a demo sync.",
+                  "destination_config": {
+                    "devops_project_id": "\u003cdevops-project-id\u003e"
+                  },
+                  "environment": "dev",
+                  "name": "demo-sync",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "/",
+                  "sync_options": {}
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the azure Connection to use for syncing.
+            description: (String) An optional description for the Azure DevOps sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            devops_project_id: (String) The ID of the Azure DevOps project to sync secrets to.
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure DevOps. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Azure DevOps secret sync
+            key_schema: (String) The format to use for structuring secret keys in the Azure DevOps destination.
+            name: (String) The name of the Azure DevOps sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+        importStatements: []
     infisical_secret_sync_azure_key_vault:
         subCategory: ""
         description: Create and manage Azure Key Vault secret syncs
@@ -1469,6 +2516,214 @@ resources:
             secret_path: (String) The folder path to sync secrets from.
             sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
             vault_base_url: (String) The base URL of your Azure Key Vault
+        importStatements: []
+    infisical_secret_sync_bitbucket:
+        subCategory: ""
+        description: Create and manage Bitbucket secret syncs
+        name: infisical_secret_sync_bitbucket
+        title: infisical_secret_sync_bitbucket Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "auto_sync_enabled": true,
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Sync secrets to Bitbucket repository",
+                  "destination_config": {
+                    "environment_id": "\u003cbitbucket-environment-slug\u003e",
+                    "repository_slug": "\u003cbitbucket-repository-slug\u003e",
+                    "workspace_slug": "\u003cbitbucket-workspace-slug\u003e"
+                  },
+                  "environment": "\u003cenv-slug\u003e",
+                  "name": "bitbucket-secret-sync",
+                  "project_id": "\u003cyour-infisical-project-id\u003e",
+                  "secret_path": "\u003cinfisical-secret-path\u003e",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "{{secretKey}}-{{environment}}"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the bitbucket Connection to use for syncing.
+            description: (String) An optional description for the Bitbucket sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Bitbucket. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            environment_id: (String) The Bitbucket deployment environment ID (optional).
+            id: (String) The ID of the Bitbucket secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Bitbucket destination.
+            name: (String) The name of the Bitbucket sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            repository_slug: (String) The Bitbucket repository slug to sync secrets to.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            workspace_slug: (String) The Bitbucket workspace slug.
+        importStatements: []
+    infisical_secret_sync_cloudflare_pages:
+        subCategory: ""
+        description: Create and manage Cloudflare Pages secret syncs
+        name: infisical_secret_sync_cloudflare_pages
+        title: infisical_secret_sync_cloudflare_pages Resource - terraform-provider-infisical
+        examples:
+            - name: cloudflare-pages-secret-sync
+              manifest: |-
+                {
+                  "connection_id": "\u003ccloudflare-app-connection-id\u003e",
+                  "description": "Demo of Cloudflare Pages secret sync",
+                  "destination_config": {
+                    "environment": "production",
+                    "project_name": "\u003ccloudflare-pages-project-name\u003e"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "cloudflare-pages-secret-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "\u003ckey-schema\u003e"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the cloudflare Connection to use for syncing.
+            description: (String) An optional description for the Cloudflare Pages sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Cloudflare Pages. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Cloudflare Pages secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Cloudflare Pages destination.
+            name: (String) The name of the Cloudflare Pages sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            project_name: (String) The Cloudflare Pages project name where the secrets will be synced
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+        importStatements: []
+    infisical_secret_sync_cloudflare_workers:
+        subCategory: ""
+        description: Create and manage Cloudflare Workers secret syncs
+        name: infisical_secret_sync_cloudflare_workers
+        title: infisical_secret_sync_cloudflare_workers Resource - terraform-provider-infisical
+        examples:
+            - name: cloudflare-workers-secret-sync
+              manifest: |-
+                {
+                  "connection_id": "\u003ccloudflare-app-connection-id\u003e",
+                  "description": "Demo of Cloudflare Workers secret sync",
+                  "destination_config": {
+                    "script_id": "\u003ccloudflare-workers-script-id\u003e"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "cloudflare-workers-secret-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "\u003ckey-schema\u003e"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the cloudflare Connection to use for syncing.
+            description: (String) An optional description for the Cloudflare Workers sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Cloudflare Workers. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Cloudflare Workers secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Cloudflare Workers destination.
+            name: (String) The name of the Cloudflare Workers sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            script_id: (String) The Cloudflare Workers script ID where the secrets will be synced
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+        importStatements: []
+    infisical_secret_sync_databricks:
+        subCategory: ""
+        description: Create and manage Databricks secret syncs
+        name: infisical_secret_sync_databricks
+        title: infisical_secret_sync_databricks Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "auto_sync_enabled": true,
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Sync secrets to Databricks secret scope",
+                  "destination_config": {
+                    "scope": "\u003cdatabricks-secret-scope\u003e"
+                  },
+                  "environment": "\u003cenv-slug\u003e",
+                  "name": "databricks-secret-sync",
+                  "project_id": "\u003cyour-infisical-project-id\u003e",
+                  "secret_path": "\u003cinfisical-secret-path\u003e",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "{{secretKey}}-{{environment}}"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the databricks Connection to use for syncing.
+            description: (String) An optional description for the Databricks sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Databricks. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Databricks secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Databricks destination.
+            name: (String) The name of the Databricks sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            scope: (String) The Databricks secret scope to sync secrets to.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+        importStatements: []
+    infisical_secret_sync_flyio:
+        subCategory: ""
+        description: Create and manage Fly.io secret syncs
+        name: infisical_secret_sync_flyio
+        title: infisical_secret_sync_flyio Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "auto_sync_enabled": true,
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Sync secrets to Fly.io app",
+                  "destination_config": {
+                    "app_id": "\u003cflyio-app-id\u003e"
+                  },
+                  "environment": "\u003cenv-slug\u003e",
+                  "name": "flyio-secret-sync",
+                  "project_id": "\u003cyour-infisical-project-id\u003e",
+                  "secret_path": "\u003cinfisical-secret-path\u003e",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "{{secretKey}}-{{environment}}"
+                  }
+                }
+        argumentDocs:
+            app_id: (String) The Fly.io app ID to sync secrets to.
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the flyio Connection to use for syncing.
+            description: (String) An optional description for the Fly.io sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Fly.io. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Fly.io secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Fly.io destination.
+            name: (String) The name of the Fly.io sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
         importStatements: []
     infisical_secret_sync_gcp_secret_manager:
         subCategory: ""
@@ -1517,6 +2772,227 @@ resources:
             name: (String) The name of the GCP Secret Manager sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             scope: '(String) The scope of the sync with GCP Secret Manager. Supported options: global'
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+        importStatements: []
+    infisical_secret_sync_github:
+        subCategory: ""
+        description: Create and manage Github secret syncs
+        name: infisical_secret_sync_github
+        title: infisical_secret_sync_github Resource - terraform-provider-infisical
+        examples:
+            - name: example-github-secret-sync
+              manifest: |-
+                {
+                  "connection_id": "\u003cgithub-app-connection-id\u003e",
+                  "description": "Demo of Github secret sync",
+                  "destination_config": {
+                    "repository_name": "\u003cgithub-repository-name\u003e",
+                    "repository_owner": "\u003cgithub-repository-owner\u003e",
+                    "scope": "repository"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "github-secret-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "/",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "INFISICAL_{{secretKey}}"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the github Connection to use for syncing.
+            description: (String) An optional description for the Github sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Github secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Github destination.
+            name: (String) The name of the Github sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            repository_environment: (String) The environment to sync the secrets to, required if scope is repository-environment
+            repository_name: (String) The repository to sync the secrets to, required if scope is repository or repository-environment. This is only the name of the repository, without the repository owner included. As an example if you have a repository called Infisical/go-sdk, you would only need to provide go-sdk here.
+            repository_owner: (String) The owner of the Github repository, required if scope is repository, repository-environment, or organization. This is the organization name, or the username for personal repositories. As an example if you have a repository called Infisical/go-sdk, you would only need to provide Infisical here.
+            scope: (String) The scope to sync the secrets to, repository|organization
+            secret_path: (String) The folder path to sync secrets from.
+            selected_repository_ids: (List of Number) The repository ids to sync the secrets to, required if scope is organization and the visibility field is set to selected
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            visibility: '(String) The visibility of the Github repository, required if scope is organization. Accepted values are: all|private|selected'
+        importStatements: []
+    infisical_secret_sync_gitlab:
+        subCategory: ""
+        description: Create and manage GitLab secret syncs
+        name: infisical_secret_sync_gitlab
+        title: infisical_secret_sync_gitlab Resource - terraform-provider-infisical
+        examples:
+            - name: gitlab-project-sync
+              manifest: |-
+                {
+                  "connection_id": "\u003cgitlab-app-connection-id\u003e",
+                  "description": "Demo of GitLab project secret sync",
+                  "destination_config": {
+                    "project_id": "\u003cgitlab-project-id\u003e",
+                    "project_name": "\u003cgitlab-project-name\u003e",
+                    "scope": "project",
+                    "should_hide_secrets": false,
+                    "should_mask_secrets": true,
+                    "should_protect_secrets": false,
+                    "target_environment": "*"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "gitlab-project-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "/",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "INFISICAL_{{secretKey}}"
+                  }
+                }
+            - name: gitlab-group-sync
+              manifest: |-
+                {
+                  "connection_id": "\u003cgitlab-app-connection-id\u003e",
+                  "description": "Demo of GitLab group secret sync",
+                  "destination_config": {
+                    "group_id": "\u003cgitlab-group-id\u003e",
+                    "group_name": "\u003cgitlab-group-name\u003e",
+                    "scope": "group",
+                    "should_hide_secrets": false,
+                    "should_mask_secrets": true,
+                    "should_protect_secrets": true,
+                    "target_environment": "production"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "gitlab-group-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "/",
+                  "sync_options": {
+                    "disable_secret_deletion": true,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "{{secretKey}}"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the gitlab Connection to use for syncing.
+            description: (String) An optional description for the GitLab sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from GitLab. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            group_id: (String) The GitLab Group ID to sync secrets to. Required when scope is 'group'.
+            group_name: (String) The GitLab Group Name to sync secrets to. Optional when scope is 'group'.
+            id: (String) The ID of the GitLab secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: (String) The format to use for structuring secret keys in the GitLab destination.
+            name: (String) The name of the GitLab sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            project_name: (String) The GitLab Project Name to sync secrets to. Optional when scope is 'project'.
+            scope: '(String) The GitLab scope that secrets should be synced to. Supported options: ''project'', ''group'''
+            secret_path: (String) The folder path to sync secrets from.
+            should_hide_secrets: (Boolean) Whether variables should be hidden
+            should_mask_secrets: (Boolean) Whether variables should be masked in logs
+            should_protect_secrets: (Boolean) Whether variables should be protected
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            target_environment: '(String) The GitLab environment scope that secrets should be synced to. (default: *)'
+        importStatements: []
+    infisical_secret_sync_render:
+        subCategory: ""
+        description: Create and manage Render secret syncs
+        name: infisical_secret_sync_render
+        title: infisical_secret_sync_render Resource - terraform-provider-infisical
+        examples:
+            - name: render-secret-sync-demo
+              manifest: |-
+                {
+                  "connection_id": "${infisical_app_connection_render.render-app-connection-demo.id}",
+                  "description": "This is a demo Render Secret Sync.",
+                  "destination_config": {
+                    "scope": "\u003cscope\u003e",
+                    "service_id": "\u003cservice-id\u003e",
+                    "type": "\u003ctype\u003e"
+                  },
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "render-secret-sync-demo",
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "sync_options": {
+                    "initial_sync_behavior": "\u003cinitial-sync-behavior\u003e",
+                    "key_schema": "\u003ckey-schema\u003e"
+                  }
+                }
+              references:
+                connection_id: infisical_app_connection_render.render-app-connection-demo.id
+              dependencies:
+                infisical_app_connection_render.render-app-connection-demo: |-
+                    {
+                      "credentials": {
+                        "api_key": "\u003capi-key\u003e"
+                      },
+                      "description": "This is a demo Render App Connection.",
+                      "method": "api-key",
+                      "name": "render-app-connection-demo"
+                    }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the render Connection to use for syncing.
+            description: (String) An optional description for the Render sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Render. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Render secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Render destination.
+            name: (String) The name of the Render sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            scope: '(String) The Render scope that secrets should be synced to. Supported options: service'
+            secret_path: (String) The folder path to sync secrets from.
+            service_id: (String) The ID of the Render service to sync secrets to.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            type: '(String) The Render resource type to sync secrets to. Supported options: env, file'
+        importStatements: []
+    infisical_secret_sync_supabase:
+        subCategory: ""
+        description: Create and manage Supabase secret syncs
+        name: infisical_secret_sync_supabase
+        title: infisical_secret_sync_supabase Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "auto_sync_enabled": true,
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Sync secrets to Supabase project",
+                  "destination_config": {
+                    "project_id": "\u003csupabase-project-id\u003e",
+                    "project_name": "\u003csupabase-project-name\u003e"
+                  },
+                  "environment": "\u003cenv-slug\u003e",
+                  "name": "supabase-secret-sync",
+                  "project_id": "\u003cyour-infisical-project-id\u003e",
+                  "secret_path": "\u003cinfisical-secret-path\u003e",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "{{secretKey}}-{{environment}}"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the supabase Connection to use for syncing.
+            description: (String) An optional description for the Supabase sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Supabase. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the Supabase secret sync
+            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: (String) The format to use for structuring secret keys in the Supabase destination.
+            name: (String) The name of the Supabase sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            project_name: (String) The Supabase project name (optional).
             secret_path: (String) The folder path to sync secrets from.
             sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
         importStatements: []

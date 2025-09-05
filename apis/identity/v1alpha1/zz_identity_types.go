@@ -15,6 +15,10 @@ import (
 
 type IdentityInitParameters struct {
 
+	// (Boolean) Whether the identity has delete protection, defaults to false
+	// Whether the identity has delete protection, defaults to false
+	HasDeleteProtection *bool `json:"hasDeleteProtection,omitempty" tf:"has_delete_protection,omitempty"`
+
 	// (String) The name for the identity
 	// The name for the identity
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
@@ -34,6 +38,10 @@ type IdentityObservation struct {
 	// The authentication types of the identity
 	AuthModes []*string `json:"authModes,omitempty" tf:"auth_modes,omitempty"`
 
+	// (Boolean) Whether the identity has delete protection, defaults to false
+	// Whether the identity has delete protection, defaults to false
+	HasDeleteProtection *bool `json:"hasDeleteProtection,omitempty" tf:"has_delete_protection,omitempty"`
+
 	// (String) The ID of the identity
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 
@@ -51,6 +59,11 @@ type IdentityObservation struct {
 }
 
 type IdentityParameters struct {
+
+	// (Boolean) Whether the identity has delete protection, defaults to false
+	// Whether the identity has delete protection, defaults to false
+	// +kubebuilder:validation:Optional
+	HasDeleteProtection *bool `json:"hasDeleteProtection,omitempty" tf:"has_delete_protection,omitempty"`
 
 	// (String) The name for the identity
 	// The name for the identity

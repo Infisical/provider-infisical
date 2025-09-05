@@ -18,6 +18,7 @@ import (
 	projectidentity "github.com/infisical/provider-infisical/internal/controller/project/projectidentity"
 	projectuser "github.com/infisical/provider-infisical/internal/controller/project/projectuser"
 	providerconfig "github.com/infisical/provider-infisical/internal/controller/providerconfig"
+	secret "github.com/infisical/provider-infisical/internal/controller/secret/secret"
 )
 
 // Setup creates all controllers with the supplied logger and adds them to
@@ -33,6 +34,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		projectidentity.Setup,
 		projectuser.Setup,
 		providerconfig.Setup,
+		secret.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err
