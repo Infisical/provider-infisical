@@ -9,6 +9,7 @@
 package v1alpha1
 
 import (
+	"github.com/crossplane/crossplane-runtime/apis/common/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -68,7 +69,21 @@ func (in *SecretInitParameters) DeepCopyInto(out *SecretInitParameters) {
 			}
 		}
 	}
-	out.ValueSecretRef = in.ValueSecretRef
+	if in.ValueSecretRef != nil {
+		in, out := &in.ValueSecretRef, &out.ValueSecretRef
+		*out = new(v1.SecretKeySelector)
+		**out = **in
+	}
+	if in.ValueWo != nil {
+		in, out := &in.ValueWo, &out.ValueWo
+		*out = new(string)
+		**out = **in
+	}
+	if in.ValueWoVersion != nil {
+		in, out := &in.ValueWoVersion, &out.ValueWoVersion
+		*out = new(float64)
+		**out = **in
+	}
 	if in.WorkspaceID != nil {
 		in, out := &in.WorkspaceID, &out.WorkspaceID
 		*out = new(string)
@@ -157,6 +172,16 @@ func (in *SecretObservation) DeepCopyInto(out *SecretObservation) {
 			}
 		}
 	}
+	if in.ValueWo != nil {
+		in, out := &in.ValueWo, &out.ValueWo
+		*out = new(string)
+		**out = **in
+	}
+	if in.ValueWoVersion != nil {
+		in, out := &in.ValueWoVersion, &out.ValueWoVersion
+		*out = new(float64)
+		**out = **in
+	}
 	if in.WorkspaceID != nil {
 		in, out := &in.WorkspaceID, &out.WorkspaceID
 		*out = new(string)
@@ -203,7 +228,21 @@ func (in *SecretParameters) DeepCopyInto(out *SecretParameters) {
 			}
 		}
 	}
-	out.ValueSecretRef = in.ValueSecretRef
+	if in.ValueSecretRef != nil {
+		in, out := &in.ValueSecretRef, &out.ValueSecretRef
+		*out = new(v1.SecretKeySelector)
+		**out = **in
+	}
+	if in.ValueWo != nil {
+		in, out := &in.ValueWo, &out.ValueWo
+		*out = new(string)
+		**out = **in
+	}
+	if in.ValueWoVersion != nil {
+		in, out := &in.ValueWoVersion, &out.ValueWoVersion
+		*out = new(float64)
+		**out = **in
+	}
 	if in.WorkspaceID != nil {
 		in, out := &in.WorkspaceID, &out.WorkspaceID
 		*out = new(string)

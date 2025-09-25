@@ -594,7 +594,7 @@ resources:
             environment_slug: (String) The slug of the environment to create the dynamic secret in.
             id: (String) The ID of the dynamic secret.
             key: (String) The key of the metadata object
-            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
             metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
             method: (String) The authentication method to use. Must be 'access_key' or 'assume_role'.
             name: (String) The name of the dynamic secret.
@@ -659,7 +659,7 @@ resources:
             gateway_id: (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
             id: (String) The ID of the dynamic secret.
             key: (String) The key of the metadata object
-            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
             metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
             name: (String) The name of the dynamic secret.
             namespace: (String) Kubernetes namespace where the service account exists.
@@ -669,6 +669,111 @@ resources:
             role_type: (String) Type of role to assign ('cluster-role' or 'role').
             service_account_name: (String) Name of the service account to generate tokens for.
             static_config: (Attributes) Configuration for the 'static' credential type. (see below for nested schema)
+            username_template: (String) The username template of the dynamic secret
+            value: (String) The value of the metadata object
+        importStatements: []
+    infisical_dynamic_secret_mongo_atlas:
+        subCategory: ""
+        description: Create and manage MongoDB Atlas Dynamic Secret
+        name: infisical_dynamic_secret_mongo_atlas
+        title: infisical_dynamic_secret_mongo_atlas Resource - terraform-provider-infisical
+        examples:
+            - name: mongo-atlas
+              manifest: |-
+                {
+                  "configuration": {
+                    "admin_private_key": "your-admin-private-key",
+                    "admin_public_key": "your-admin-public-key",
+                    "group_id": "your-group-id",
+                    "roles": [
+                      {
+                        "database_name": "my-application-db",
+                        "role_name": "readWrite"
+                      }
+                    ],
+                    "scopes": [
+                      {
+                        "name": "myCluster",
+                        "type": "CLUSTER"
+                      }
+                    ]
+                  },
+                  "default_ttl": "1h",
+                  "environment_slug": "dev",
+                  "max_ttl": "4h",
+                  "name": "mongo-atlas-dynamic-secret-example",
+                  "path": "/",
+                  "project_slug": "your-project-slug",
+                  "username_template": "{{randomUsername}}"
+                }
+        argumentDocs:
+            admin_private_key: (String, Sensitive) Admin user private API key
+            admin_public_key: (String) Admin user public API key
+            collection_name: (String) Collection on which this role applies.
+            configuration: (Attributes) The configuration of the dynamic secret (see below for nested schema)
+            database_name: (String) Database to which the user is granted access privileges.
+            default_ttl: (String) The default TTL that will be applied for all the leases.
+            environment_slug: (String) The slug of the environment to create the dynamic secret in.
+            group_id: (String) Unique 24-hexadecimal digit string that identifies your project. This is the same as the project ID.
+            id: (String) The ID of the dynamic secret.
+            key: (String) The key of the metadata object
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
+            metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
+            name: (String) The name of the dynamic secret.
+            path: (String) The path to create the dynamic secret in.
+            project_slug: (String) The slug of the project to create dynamic secret in.
+            role_name: (String) Human-readable label that identifies a group of privileges assigned to a database user. This value can either be a built-in role or a custom role.
+            roles: (Attributes List) (see below for nested schema)
+            scopes: (Attributes List) (see below for nested schema)
+            type: '(String) Category of resource that this database user can access. Supported options: CLUSTER, DATA_LAKE, STREAM'
+            username_template: (String) The username template of the dynamic secret
+            value: (String) The value of the metadata object
+        importStatements: []
+    infisical_dynamic_secret_mongo_db:
+        subCategory: ""
+        description: Create and manage MongoDB Dynamic Secret
+        name: infisical_dynamic_secret_mongo_db
+        title: infisical_dynamic_secret_mongo_db Resource - terraform-provider-infisical
+        examples:
+            - name: mongo-db
+              manifest: |-
+                {
+                  "configuration": {
+                    "database": "default",
+                    "host": "your-host",
+                    "password": "your-password",
+                    "port": 27017,
+                    "roles": [
+                      "readWrite"
+                    ],
+                    "username": "your-username"
+                  },
+                  "default_ttl": "1h",
+                  "environment_slug": "dev",
+                  "max_ttl": "24h",
+                  "name": "mongo-db-dynamic-secret-example",
+                  "path": "/",
+                  "project_slug": "your-project-slug",
+                  "username_template": "{{randomUsername}}"
+                }
+        argumentDocs:
+            ca: (String) The CA certificate to use to connect to the database.
+            configuration: (Attributes) The configuration of the dynamic secret (see below for nested schema)
+            database: (String) The name of the database to use.
+            default_ttl: (String) The default TTL that will be applied for all the leases.
+            environment_slug: (String) The slug of the environment to create the dynamic secret in.
+            host: (String) The host of the database server.
+            id: (String) The ID of the dynamic secret.
+            key: (String) The key of the metadata object
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
+            metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
+            name: (String) The name of the dynamic secret.
+            password: (String, Sensitive) The password to use to connect to the database.
+            path: (String) The path to create the dynamic secret in.
+            port: (Number) The port of the database server.
+            project_slug: (String) The slug of the project to create dynamic secret in.
+            roles: (List of String) A list of role names to assign to the user. The role names can either be built-in or custom.
+            username: (String) The username to use to connect to the database.
             username_template: (String) The username template of the dynamic secret
             value: (String) The value of the metadata object
         importStatements: []
@@ -726,7 +831,7 @@ resources:
             key: (String) The key of the metadata object
             length: (Number) The length of the password to use to create the dynamic secret lease.
             lowercase: (Number) The number of lowercase characters required in the password.
-            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
             metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
             name: (String) The name of the dynamic secret.
             password: (String, Sensitive) The password to use to connect to the database.
@@ -1823,7 +1928,9 @@ resources:
             repeat_days: (Number) Frequency of secret rotation reminder in days
             secret_reminder: (Attributes) (see below for nested schema)
             tag_ids: (List of String) Tag ids to be attached for the secrets.
-            value: (String, Sensitive) The value of the secret
+            value: (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
+            value_wo: (String) The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if value is not set. Requires Terraform version 1.11.0 or higher.
+            value_wo_version: (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
             workspace_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
         importStatements: []
     infisical_secret_approval_policy:
