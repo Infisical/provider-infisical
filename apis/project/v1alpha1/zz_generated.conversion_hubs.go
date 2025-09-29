@@ -19,4 +19,7 @@ func (tr *ProjectGroup) Hub() {}
 func (tr *ProjectIdentity) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *ProjectRole) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *ProjectUser) Hub() {}

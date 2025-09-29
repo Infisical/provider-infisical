@@ -1717,7 +1717,7 @@ resources:
         importStatements: []
     infisical_project_role:
         subCategory: ""
-        description: Create custom project roles & save to Infisical. Only Machine Identity authentication is supported for this data source.
+        description: Create custom project roles & save to Infisical. Only Machine Identity authentication is supported for this resource.
         name: infisical_project_role
         title: infisical_project_role Resource - terraform-provider-infisical
         examples:
@@ -1726,23 +1726,7 @@ resources:
                 {
                   "description": "A test role",
                   "name": "Tester",
-                  "permissions_v2": [
-                    {
-                      "action": [
-                        "read",
-                        "create"
-                      ],
-                      "subject": "integrations"
-                    },
-                    {
-                      "action": [
-                        "read",
-                        "edit"
-                      ],
-                      "conditions": "${jsonencode({\n        environment = {\n          \"$in\" = [\"dev\", \"prod\"]\n          \"$eq\" = \"dev\"\n        }\n        secretPath = {\n          \"$eq\" = \"/\"\n        }\n      })}",
-                      "subject": "secrets"
-                    }
-                  ],
+                  "permissions": "[{\"action\":[\"read\",\"create\"],\"subject\":\"integrations\"},{\"action\":[\"read\",\"edit\"],\"subject\":\"secrets\",\"conditions\":{\"environment\":{\"$eq\":\"dev\",\"$in\":[\"dev\",\"prod\"]},\"secretPath\":{\"$eq\":\"/\"}}}]",
                   "project_slug": "${infisical_project.example.slug}",
                   "slug": "tester"
                 }
@@ -1755,19 +1739,12 @@ resources:
                       "slug": "example"
                     }
         argumentDocs:
-            action: '(String) Describe what action an entity can take. Enum: create,edit,delete,read'
-            conditions: (Attributes) The conditions to scope permissions (see below for nested schema)
             description: (String) The description for the new role. Defaults to an empty string.
-            environment: (String) The environment slug this permission should allow.
             id: (String) The ID of the role
-            inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
             name: (String) The name for the new role
-            permissions: (Attributes List) (DEPRECATED, USE permissions_v2. Refer to the migration guide in https://infisical.com/docs/internals/permissions#migrating-from-permission-v1-to-permission-v2) The permissions assigned to the project role (see below for nested schema)
-            permissions_v2: (Attributes List) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. (see below for nested schema)
+            permissions: (String) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
             project_slug: (String) The slug of the project to create role
-            secret_path: (String) The secret path this permission should be scoped to
             slug: (String) The slug for the new role
-            subject: '(String) Describe what action an entity can take. Enum: role,member,groups,settings,integrations,webhooks,service-tokens,environments,tags,audit-logs,ip-allowlist,workspace,secrets,secret-rollback,secret-approval,secret-rotation,identity,certificate-authorities,certificates,certificate-templates,kms,pki-alerts,pki-collections'
         importStatements: []
     infisical_project_template:
         subCategory: ""

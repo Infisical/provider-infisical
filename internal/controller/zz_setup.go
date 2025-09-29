@@ -16,6 +16,7 @@ import (
 	projectenvironment "github.com/infisical/provider-infisical/internal/controller/project/projectenvironment"
 	projectgroup "github.com/infisical/provider-infisical/internal/controller/project/projectgroup"
 	projectidentity "github.com/infisical/provider-infisical/internal/controller/project/projectidentity"
+	projectrole "github.com/infisical/provider-infisical/internal/controller/project/projectrole"
 	projectuser "github.com/infisical/provider-infisical/internal/controller/project/projectuser"
 	providerconfig "github.com/infisical/provider-infisical/internal/controller/providerconfig"
 	secret "github.com/infisical/provider-infisical/internal/controller/secret/secret"
@@ -32,6 +33,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		projectenvironment.Setup,
 		projectgroup.Setup,
 		projectidentity.Setup,
+		projectrole.Setup,
 		projectuser.Setup,
 		providerconfig.Setup,
 		secret.Setup,
