@@ -53,6 +53,15 @@ func (l *ProjectRoleList) GetItems() []resource.Managed {
 	return items
 }
 
+// GetItems of this ProjectTemplateList.
+func (l *ProjectTemplateList) GetItems() []resource.Managed {
+	items := make([]resource.Managed, len(l.Items))
+	for i := range l.Items {
+		items[i] = &l.Items[i]
+	}
+	return items
+}
+
 // GetItems of this ProjectUserList.
 func (l *ProjectUserList) GetItems() []resource.Managed {
 	items := make([]resource.Managed, len(l.Items))

@@ -1,0 +1,15 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectTemplate
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/projecttemplate
+  labels:
+    testing.upbound.io/example-name: example-project-template
+  name: example-project-template
+spec:
+  forProvider:
+    description: This is an example project template
+    environments: '[{"name":"development","slug":"dev","position":1}]'
+    name: example-project-template
+    roles: '[{"name":"Test","slug":"test","permissions":[{"action":["edit"],"subject":"secrets","inverted":true},{"action":["read","edit"],"subject":"secrets","conditions":{"environment":{"$in":["dev","prod"],"$eq":"dev"},"secretPath":{"$eq":"/"}}}]}]'
+    type: secret-manager

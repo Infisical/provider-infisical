@@ -55,4 +55,9 @@ func Configure(p *config.Provider) {
 		r.Kind = "ProjectRole"
 		r.ShortGroup = "project"
 	})
+
+	p.AddResourceConfigurator("infisical_project_template", func(r *config.Resource) {
+		r.Kind = "ProjectTemplate"
+		r.ShortGroup = "project"
+	})
 }

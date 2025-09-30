@@ -1756,52 +1756,17 @@ resources:
               manifest: |-
                 {
                   "description": "This is an example project template",
-                  "environments": [
-                    {
-                      "name": "development",
-                      "position": 1,
-                      "slug": "dev"
-                    }
-                  ],
+                  "environments": "[{\"name\":\"development\",\"slug\":\"dev\",\"position\":1}]",
                   "name": "example-project-template",
-                  "roles": [
-                    {
-                      "name": "Test",
-                      "permissions": [
-                        {
-                          "action": [
-                            "edit"
-                          ],
-                          "inverted": true,
-                          "subject": "secret-folders"
-                        },
-                        {
-                          "action": [
-                            "read",
-                            "edit"
-                          ],
-                          "conditions": "${jsonencode({\n          environment = {\n            \"$in\" = [\"dev\", \"prod\"]\n            \"$eq\" = \"dev\"\n          }\n          secretPath = {\n            \"$eq\" = \"/\"\n          }\n        })}",
-                          "subject": "secrets"
-                        }
-                      ],
-                      "slug": "test"
-                    }
-                  ],
+                  "roles": "[{\"name\":\"Test\",\"slug\":\"test\",\"permissions\":[{\"action\":[\"edit\"],\"subject\":\"secrets\",\"inverted\":true},{\"action\":[\"read\",\"edit\"],\"subject\":\"secrets\",\"conditions\":{\"environment\":{\"$in\":[\"dev\",\"prod\"],\"$eq\":\"dev\"},\"secretPath\":{\"$eq\":\"/\"}}}]}]",
                   "type": "secret-manager"
                 }
         argumentDocs:
-            action: (Set of String) Describe what actions an entity can take.
-            conditions: (String) When specified, only matching conditions will be allowed to access given resource. Refer to the documentation in https://infisical.com/docs/internals/permissions#conditions for the complete list of supported properties and operators.
             description: (String) The description of the project template
-            environments: (Attributes List) The environments for the project template (see below for nested schema)
+            environments: (String) The environments for the project template as a JSON string
             id: (String) The ID of the project template
-            inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
             name: (String) The name of the project template
-            permissions: (Attributes List) The permissions assigned to the role. Refer to the documentation here https://infisical.com/docs/api-reference/endpoints/project-templates/create#body-roles-permissions for its usage. (see below for nested schema)
-            position: (Number) The position of the environment
-            roles: (Attributes List) The roles for the project template (see below for nested schema)
-            slug: (String) The slug of the environment
-            subject: (String) Describe the entity the permission pertains to.
+            roles: (String) The roles for the project template
             type: (String) The type of the project template. Refer to the documentation here https://infisical.com/docs/api-reference/endpoints/project-templates/create#body-type for the available options
         importStatements: []
     infisical_project_user:
