@@ -60,4 +60,9 @@ func Configure(p *config.Provider) {
 		r.Kind = "ProjectTemplate"
 		r.ShortGroup = "project"
 	})
+
+	p.AddResourceConfigurator("infisical_secret_sync_github", func(r *config.Resource) {
+		r.Kind = "SecretSyncGithub"
+		r.ShortGroup = "secretsync" // lowercase not allowed
+	})
 }

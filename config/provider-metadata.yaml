@@ -1524,6 +1524,43 @@ resources:
             secret_suffix: (String) The suffix to add to the secret name in GCP Secret Manager.
             service_account_json: (String, Sensitive) Service account json for the GCP project.
         importStatements: []
+    infisical_kms_key:
+        subCategory: ""
+        description: Create and manage KMS keys in Infisical.
+        name: infisical_kms_key
+        title: infisical_kms_key Resource - terraform-provider-infisical
+        examples:
+            - name: encryption_key
+              manifest: |-
+                {
+                  "description": "KMS key for encrypting sensitive data",
+                  "encryption_algorithm": "aes-256-gcm",
+                  "key_usage": "encrypt-decrypt",
+                  "name": "my-encryption-key",
+                  "project_id": "\u003cyour-project-id\u003e"
+                }
+            - name: signing_key
+              manifest: |-
+                {
+                  "description": "KMS key for digital signatures",
+                  "encryption_algorithm": "RSA_4096",
+                  "key_usage": "sign-verify",
+                  "name": "my-signing-key",
+                  "project_id": "\u003cyour-project-id\u003e"
+                }
+        argumentDocs:
+            created_at: (String) The creation timestamp of the key.
+            description: (String) The description of the KMS key. Maximum 500 characters.
+            encryption_algorithm: '(String) The encryption algorithm for the key. Options: aes-256-gcm, aes-128-gcm, RSA_4096, ECC_NIST_P256. Defaults to ''aes-256-gcm''.'
+            id: (String) The ID of the KMS key.
+            is_disabled: (Boolean) Whether the key is disabled. Defaults to false.
+            key_usage: '(String) The usage of the key. Options: encrypt-decrypt, sign-verify. Defaults to ''encrypt-decrypt''.'
+            name: (String) The name of the KMS key. Must be 1-32 characters.
+            org_id: (String) The ID of the organization.
+            project_id: (String) The ID of the project where the KMS key will be created.
+            updated_at: (String) The last update timestamp of the key.
+            version: (Number) The version of the key.
+        importStatements: []
     infisical_project:
         subCategory: ""
         description: Create projects & save to Infisical. Only Machine Identity authentication is supported for this data source.
@@ -1535,20 +1572,24 @@ resources:
                 {
                   "description": "This is a GCP project",
                   "name": "GCP Project",
-                  "slug": "gcp-project"
+                  "slug": "gcp-project",
+                  "type": "secret-manager"
                 }
             - name: aws-project
               manifest: |-
                 {
                   "description": "This is an AWS project",
                   "name": "AWS Project",
-                  "slug": "aws-project"
+                  "slug": "aws-project",
+                  "type": "secret-manager"
                 }
-            - name: azure-project
+            - name: kms-project
               manifest: |-
                 {
-                  "name": "Azure Project",
-                  "slug": "azure-project"
+                  "description": "This is a KMS project for key management",
+                  "name": "KMS Project",
+                  "slug": "kms-project",
+                  "type": "kms"
                 }
         argumentDocs:
             audit_log_retention_days: (Number) The audit log retention in days
@@ -1561,6 +1602,7 @@ resources:
             should_create_default_envs: (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
             slug: (String) The slug of the project
             template_name: (String) The name of the template to use for the project
+            type: '(String) The type of the project. Supported values: secret-manager, kms. Defaults to ''secret-manager''.'
         importStatements: []
     infisical_project_environment:
         subCategory: ""
@@ -2293,50 +2335,31 @@ resources:
             - name: one-password-secret-sync-demo
               manifest: |-
                 {
-                  "connection_id": "${infisical_app_connection_1password.one-password-app-connection-demo.id}",
+                  "connection_id": "\u003capp-connection-id\u003e",
                   "description": "This is a demo 1Password Secret Sync.",
-                  "destination_config": {
-                    "value_label": "\u003cvalue-label\u003e",
-                    "vault_id": "\u003cvault-id\u003e"
-                  },
+                  "destination_config": "{\"vaultId\": \"\u003cvault-id\u003e\", \"valueLabel\": \"\u003cvalue-label\u003e\"}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "1password-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
-                  "sync_options": {
-                    "initial_sync_behavior": "\u003cinitial-sync-behavior\u003e",
-                    "key_schema": "\u003ckey-schema\u003e"
-                  }
+                  "sync_options": "{\"initialSyncBehavior\": \"\u003cinitial-sync-behavior\u003e\", \"keySchema\": \"\u003ckey-schema\u003e\"}"
                 }
-              references:
-                connection_id: infisical_app_connection_1password.one-password-app-connection-demo.id
-              dependencies:
-                infisical_app_connection_1password.one-password-app-connection-demo: |-
-                    {
-                      "credentials": {
-                        "api_token": "\u003cAPI_TOKEN\u003e",
-                        "instance_url": "\u003chttps://1pass.example.com\u003e"
-                      },
-                      "description": "This is a demo 1Password App Connection.",
-                      "method": "api-token",
-                      "name": "1password-app-connection-demo"
-                    }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the 1password Connection to use for syncing.
             description: (String) An optional description for the 1Password sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from 1Password. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from 1Password. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the 1Password secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
-            key_schema: (String) The format to use for structuring secret keys in the 1Password destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the 1Password destination.'
             name: (String) The name of the 1Password sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-            value_label: '(String) The label of the 1Password item field which will hold your secret value. For example, if you were to sync Infisical secret ''foo: bar'', the 1Password item equivalent would have an item title of ''foo'', and a field on that item ''value: bar''. The field label ''value'' is what gets changed by this option'
-            vault_id: (String) The ID of the 1Password vault to sync secrets to
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+            value_label: '(optional): The label of the 1Password item field which will hold your secret value. For example, if you were to sync Infisical secret ''foo: bar'', the 1Password item equivalent would have an item title of ''foo'', and a field on that item ''value: bar''. The field label ''value'' is what gets changed by this option'
+            vault_id: '(required): The ID of the 1Password vault to sync secrets to'
         importStatements: []
     infisical_secret_sync_aws_parameter_store:
         subCategory: ""
@@ -2349,51 +2372,31 @@ resources:
                 {
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "Demo of AWS Parameter Store secret sync",
-                  "destination_config": {
-                    "aws_region": "\u003caws-region\u003e",
-                    "path": "/example/secrets/"
-                  },
+                  "destination_config": "{\"aws_region\":\"\u003caws-region\u003e\",\"path\":\"/example/secrets/\"}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "aws-parameter-store-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
-                  "sync_options": {
-                    "aws_kms_key_id": "\u003caws-kms-key-id\u003e",
-                    "initial_sync_behavior": "overwrite-destination",
-                    "sync_secret_metadata_as_tags": false,
-                    "tags": [
-                      {
-                        "key": "tag-1",
-                        "value": "tag-1-value"
-                      },
-                      {
-                        "key": "tag-2",
-                        "value": "tag-2-value"
-                      }
-                    ]
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"aws_kms_key_id\":\"\u003caws-kms-key-id\u003e\",\"sync_secret_metadata_as_tags\":false,\"tags\":[{\"key\":\"tag-1\",\"value\":\"tag-1-value\"},{\"key\":\"tag-2\",\"value\":\"tag-2-value\"}]}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
-            aws_kms_key_id: (String) The AWS KMS key ID to use for encryption
-            aws_region: (String) The AWS region of your AWS Parameter Store
+            aws_kms_key_id: '(optional): The AWS KMS key ID to use for encryption'
+            aws_region: '(required): The AWS region of your AWS Parameter Store'
             connection_id: (String) The ID of the aws Connection to use for syncing.
             description: (String) An optional description for the AWS Parameter Store sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from AWS Parameter Store. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from AWS Parameter Store. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the AWS Parameter Store secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
-            key: (String) The key of the tag
-            key_schema: (String) The format to use for structuring secret keys in the AWS Parameter Store destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the AWS Parameter Store destination.'
             name: (String) The name of the AWS Parameter Store sync to create. Must be slug-friendly.
-            path: '(String) The path in the AWS Parameter Store where the secrets will be stored, Example: /example/path/'
+            path: '(required): The path in the AWS Parameter Store where the secrets will be stored, Example: /example/path/'
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-            sync_secret_metadata_as_tags: (Boolean) Whether to sync the secret metadata as tags
-            tags: (Attributes Set) The tags to sync to the secret (see below for nested schema)
-            value: (String) The value of the tag
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+            sync_secret_metadata_as_tags: '(optional): Whether to sync the secret metadata as tags'
         importStatements: []
     infisical_secret_sync_aws_secrets_manager:
         subCategory: ""
@@ -2406,53 +2409,32 @@ resources:
                 {
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "Demo of AWS Secrets Manager secret sync",
-                  "destination_config": {
-                    "aws_region": "\u003caws-region\u003e",
-                    "aws_secrets_manager_secret_name": "\u003caws-secret-name\u003e",
-                    "mapping_behavior": "many-to-one"
-                  },
+                  "destination_config": "{\"aws_region\":\"\u003caws-region\u003e\",\"mapping_behavior\":\"many-to-one\",\"aws_secrets_manager_secret_name\":\"\u003caws-secret-name\u003e\"}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "aws-secrets-manager-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
-                  "sync_options": {
-                    "aws_kms_key_id": "\u003caws-kms-key-id\u003e",
-                    "initial_sync_behavior": "overwrite-destination",
-                    "sync_secret_metadata_as_tags": false,
-                    "tags": [
-                      {
-                        "key": "tag-1",
-                        "value": "tag-1-value"
-                      },
-                      {
-                        "key": "tag-2",
-                        "value": "tag-2-value"
-                      }
-                    ]
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"aws_kms_key_id\":\"\u003caws-kms-key-id\u003e\",\"sync_secret_metadata_as_tags\":false,\"tags\":[{\"key\":\"tag-1\",\"value\":\"tag-1-value\"},{\"key\":\"tag-2\",\"value\":\"tag-2-value\"}]}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
-            aws_kms_key_id: (String) The AWS KMS key ID to use for encryption
-            aws_region: (String) The AWS region of your AWS Secrets Manager
-            aws_secrets_manager_secret_name: (String) The name of the AWS secret to map to. This only applies when mapping_behavior is set to 'many-to-one'.
+            aws_kms_key_id: '(optional): The AWS KMS key ID to use for encryption'
+            aws_region: '(required): The AWS region of your AWS Secrets Manager'
+            aws_secrets_manager_secret_name: '(optional): The name of the AWS secret to map to. This only applies when mapping_behavior is set to ''many-to-one''.'
             connection_id: (String) The ID of the aws Connection to use for syncing.
             description: (String) An optional description for the AWS Secrets Manager sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from AWS Secrets Manager. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from AWS Secrets Manager. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the AWS Secrets Manager secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
-            key: (String) The key of the tag
-            key_schema: (String) The format to use for structuring secret keys in the AWS Secrets Manager destination.
-            mapping_behavior: '(String) The behavior of the mapping. Can be ''many-to-one'' or ''one-to-one''. Many to One: All Infisical secrets will be mapped to a single AWS secret. One to One: Each Infisical secret will be mapped to its own AWS secret.'
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the AWS Secrets Manager destination.'
+            mapping_behavior: '(optional): The behavior of the mapping. Can be ''many-to-one'' or ''one-to-one''. Many to One: All Infisical secrets will be mapped to a single AWS secret. One to One: Each Infisical secret will be mapped to its own AWS secret.'
             name: (String) The name of the AWS Secrets Manager sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-            sync_secret_metadata_as_tags: (Boolean) Whether to sync the secret metadata as tags. This is only supported for the 'one-to-one' mapping behavior.
-            tags: (Attributes Set) The tags to sync to the secret (see below for nested schema)
-            value: (String) The value of the tag
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+            sync_secret_metadata_as_tags: '(optional): Whether to sync the secret metadata as tags. This is only supported for the ''one-to-one'' mapping behavior.'
         importStatements: []
     infisical_secret_sync_azure_app_configuration:
         subCategory: ""
@@ -2465,33 +2447,29 @@ resources:
                 {
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "This is a demo sync",
-                  "destination_config": {
-                    "configuration_url": "\u003cazure-configuration-url\u003e"
-                  },
+                  "destination_config": "{\"configuration_url\":\"\u003cazure-configuration-url\u003e\"}",
                   "environment": "dev",
                   "name": "demo-sync",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
-                  "sync_options": {
-                    "initial_sync_behavior": "overwrite-destination"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
-            configuration_url: (String) The URL of your Azure App Configuration
+            configuration_url: '(required): The URL of your Azure App Configuration'
             connection_id: (String) The ID of the azure Connection to use for syncing.
             description: (String) An optional description for the Azure App Configuration sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure App Configuration. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Azure App Configuration. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure App Configuration secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Azure App Configuration destination.
-            label: (String) The label to attach to secrets created in Azure App Configuration
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Azure App Configuration destination.'
+            label: '(optional): The label to attach to secrets created in Azure App Configuration'
             name: (String) The name of the Azure App Configuration sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_azure_devops:
         subCategory: ""
@@ -2499,34 +2477,32 @@ resources:
         name: infisical_secret_sync_azure_devops
         title: infisical_secret_sync_azure_devops Resource - terraform-provider-infisical
         examples:
-            - name: app-configuration-demo
+            - name: demo-azure-devops-sync
               manifest: |-
                 {
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "This is a demo sync.",
-                  "destination_config": {
-                    "devops_project_id": "\u003cdevops-project-id\u003e"
-                  },
+                  "destination_config": "{\"devops_project_id\":\"\u003cdevops-project-id\u003e\"}",
                   "environment": "dev",
                   "name": "demo-sync",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
-                  "sync_options": {}
+                  "sync_options": "{}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the azure Connection to use for syncing.
             description: (String) An optional description for the Azure DevOps sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            devops_project_id: (String) The ID of the Azure DevOps project to sync secrets to.
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure DevOps. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            devops_project_id: '(required): The ID of the Azure DevOps project to sync secrets to.'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Azure DevOps. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure DevOps secret sync
-            key_schema: (String) The format to use for structuring secret keys in the Azure DevOps destination.
+            key_schema: '(optional): The format to use for structuring secret keys in the Azure DevOps destination.'
             name: (String) The name of the Azure DevOps sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_azure_key_vault:
         subCategory: ""
@@ -2534,37 +2510,33 @@ resources:
         name: infisical_secret_sync_azure_key_vault
         title: infisical_secret_sync_azure_key_vault Resource - terraform-provider-infisical
         examples:
-            - name: app-configuration-demo
+            - name: demo-azure-key-vault-sync
               manifest: |-
                 {
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "This is a demo sync.",
-                  "destination_config": {
-                    "vault_base_url": "\u003cvault-base-url\u003e"
-                  },
+                  "destination_config": "{\"vault_base_url\":\"\u003cvault-base-url\u003e\"}",
                   "environment": "dev",
                   "name": "demo-sync",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
-                  "sync_options": {
-                    "initial_sync_behavior": "overwrite-destination"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the azure Connection to use for syncing.
             description: (String) An optional description for the Azure Key Vault sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure Key Vault. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Azure Key Vault. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure Key Vault secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Azure Key Vault destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Azure Key Vault destination.'
             name: (String) The name of the Azure Key Vault sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-            vault_base_url: (String) The base URL of your Azure Key Vault
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+            vault_base_url: '(required): The base URL of your Azure Key Vault'
         importStatements: []
     infisical_secret_sync_bitbucket:
         subCategory: ""
@@ -2578,38 +2550,30 @@ resources:
                   "auto_sync_enabled": true,
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "Sync secrets to Bitbucket repository",
-                  "destination_config": {
-                    "environment_id": "\u003cbitbucket-environment-slug\u003e",
-                    "repository_slug": "\u003cbitbucket-repository-slug\u003e",
-                    "workspace_slug": "\u003cbitbucket-workspace-slug\u003e"
-                  },
+                  "destination_config": "{\"repository_slug\":\"\u003cbitbucket-repository-slug\u003e\",\"workspace_slug\":\"\u003cbitbucket-workspace-slug\u003e\",\"environment_id\":\"\u003cbitbucket-environment-slug\u003e\"}",
                   "environment": "\u003cenv-slug\u003e",
                   "name": "bitbucket-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
-                  "sync_options": {
-                    "disable_secret_deletion": false,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "{{secretKey}}-{{environment}}"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":false,\"key_schema\":\"{{secretKey}}-{{environment}}\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the bitbucket Connection to use for syncing.
             description: (String) An optional description for the Bitbucket sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Bitbucket. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Bitbucket. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
-            environment_id: (String) The Bitbucket deployment environment ID (optional).
+            environment_id: '(optional): The Bitbucket deployment environment ID (optional).'
             id: (String) The ID of the Bitbucket secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Bitbucket destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Bitbucket destination.'
             name: (String) The name of the Bitbucket sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
-            repository_slug: (String) The Bitbucket repository slug to sync secrets to.
+            repository_slug: '(required): The Bitbucket repository slug to sync secrets to.'
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-            workspace_slug: (String) The Bitbucket workspace slug.
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+            workspace_slug: '(required): The Bitbucket workspace slug.'
         importStatements: []
     infisical_secret_sync_cloudflare_pages:
         subCategory: ""
@@ -2622,35 +2586,28 @@ resources:
                 {
                   "connection_id": "\u003ccloudflare-app-connection-id\u003e",
                   "description": "Demo of Cloudflare Pages secret sync",
-                  "destination_config": {
-                    "environment": "production",
-                    "project_name": "\u003ccloudflare-pages-project-name\u003e"
-                  },
+                  "destination_config": "{\"project_name\":\"\u003ccloudflare-pages-project-name\u003e\",\"environment\":\"production\"}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "cloudflare-pages-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
-                  "sync_options": {
-                    "disable_secret_deletion": false,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "\u003ckey-schema\u003e"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":false,\"key_schema\":\"\u003ckey-schema\u003e\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the cloudflare Connection to use for syncing.
             description: (String) An optional description for the Cloudflare Pages sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Cloudflare Pages. Enable this option if you intend to manage some secrets manually outside of Infisical.
-            environment: (String) The slug of the project environment to sync secrets from.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Cloudflare Pages. Enable this option if you intend to manage some secrets manually outside of Infisical.'
+            environment: '(required): The Cloudflare Pages environment (production, preview) where the secrets will be synced'
             id: (String) The ID of the Cloudflare Pages secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Cloudflare Pages destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Cloudflare Pages destination.'
             name: (String) The name of the Cloudflare Pages sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
-            project_name: (String) The Cloudflare Pages project name where the secrets will be synced
+            project_name: '(required): The Cloudflare Pages project name where the secrets will be synced'
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_cloudflare_workers:
         subCategory: ""
@@ -2663,34 +2620,28 @@ resources:
                 {
                   "connection_id": "\u003ccloudflare-app-connection-id\u003e",
                   "description": "Demo of Cloudflare Workers secret sync",
-                  "destination_config": {
-                    "script_id": "\u003ccloudflare-workers-script-id\u003e"
-                  },
+                  "destination_config": "{\"script_id\":\"\u003ccloudflare-workers-script-id\u003e\"}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "cloudflare-workers-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
-                  "sync_options": {
-                    "disable_secret_deletion": false,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "\u003ckey-schema\u003e"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":false,\"key_schema\":\"\u003ckey-schema\u003e\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the cloudflare Connection to use for syncing.
             description: (String) An optional description for the Cloudflare Workers sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Cloudflare Workers. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Cloudflare Workers. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Cloudflare Workers secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Cloudflare Workers destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Cloudflare Workers destination.'
             name: (String) The name of the Cloudflare Workers sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
-            script_id: (String) The Cloudflare Workers script ID where the secrets will be synced
+            script_id: '(required): The Cloudflare Workers script ID where the secrets will be synced'
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_databricks:
         subCategory: ""
@@ -2704,34 +2655,28 @@ resources:
                   "auto_sync_enabled": true,
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "Sync secrets to Databricks secret scope",
-                  "destination_config": {
-                    "scope": "\u003cdatabricks-secret-scope\u003e"
-                  },
+                  "destination_config": "{\"scope\":\"\u003cdatabricks-secret-scope\u003e\"}",
                   "environment": "\u003cenv-slug\u003e",
                   "name": "databricks-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
-                  "sync_options": {
-                    "disable_secret_deletion": false,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "{{secretKey}}-{{environment}}"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":false,\"key_schema\":\"{{secretKey}}-{{environment}}\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the databricks Connection to use for syncing.
             description: (String) An optional description for the Databricks sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Databricks. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Databricks. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Databricks secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Databricks destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Databricks destination.'
             name: (String) The name of the Databricks sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
-            scope: (String) The Databricks secret scope to sync secrets to.
+            scope: '(required): The Databricks secret scope to sync secrets to.'
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_flyio:
         subCategory: ""
@@ -2745,34 +2690,28 @@ resources:
                   "auto_sync_enabled": true,
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "Sync secrets to Fly.io app",
-                  "destination_config": {
-                    "app_id": "\u003cflyio-app-id\u003e"
-                  },
+                  "destination_config": "{\"app_id\":\"\u003cflyio-app-id\u003e\"}",
                   "environment": "\u003cenv-slug\u003e",
                   "name": "flyio-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
-                  "sync_options": {
-                    "disable_secret_deletion": false,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "{{secretKey}}-{{environment}}"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":false,\"key_schema\":\"{{secretKey}}-{{environment}}\"}"
                 }
         argumentDocs:
-            app_id: (String) The Fly.io app ID to sync secrets to.
+            app_id: '(required): The Fly.io app ID to sync secrets to.'
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the flyio Connection to use for syncing.
             description: (String) An optional description for the Fly.io sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Fly.io. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Fly.io. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Fly.io secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Fly.io destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Fly.io destination.'
             name: (String) The name of the Fly.io sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_gcp_secret_manager:
         subCategory: ""
@@ -2783,46 +2722,30 @@ resources:
             - name: secret_manager_test
               manifest: |-
                 {
-                  "connection_id": "${infisical_app_connection_gcp.app-connection-gcp.id}",
+                  "connection_id": "\u003capp-connection-id\u003e",
                   "description": "I am a test secret sync",
-                  "destination_config": {
-                    "project_id": "my-duplicate-project"
-                  },
+                  "destination_config": "{\"project_id\":\"my-duplicate-project\"}",
                   "environment": "prod",
                   "name": "gcp-sync-tests",
                   "project_id": "f4517f4c-8b61-4727-8aef-5ae2807126fb",
                   "secret_path": "/",
-                  "sync_options": {
-                    "initial_sync_behavior": "import-prioritize-destination"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"import-prioritize-destination\"}"
                 }
-              references:
-                connection_id: infisical_app_connection_gcp.app-connection-gcp.id
-              dependencies:
-                infisical_app_connection_gcp.app-connection-gcp: |-
-                    {
-                      "credentials": {
-                        "service_account_email": "service-account-df92581a-0fe9@my-duplicate-project.iam.gserviceaccount.com"
-                      },
-                      "description": "I am a test app connection",
-                      "method": "service-account-impersonation",
-                      "name": "gcp-app-connect"
-                    }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the GCP Connection to use for syncing.
             description: (String) An optional description for the GCP Secret Manager sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from GCP Secret Manager. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from GCP Secret Manager. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the GCP Secret Manager secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
-            key_schema: (String) The format to use for structuring secret keys in the GCP Secret Manager destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the GCP Secret Manager destination.'
             name: (String) The name of the GCP Secret Manager sync to create. Must be slug-friendly.
-            project_id: (String) The ID of the Infisical project to create the sync in.
-            scope: '(String) The scope of the sync with GCP Secret Manager. Supported options: global'
+            project_id: '(required): The ID of the GCP project to sync with'
+            scope: '(optional): The scope of the sync with GCP Secret Manager. Supported options: global'
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_github:
         subCategory: ""
@@ -2835,41 +2758,33 @@ resources:
                 {
                   "connection_id": "\u003cgithub-app-connection-id\u003e",
                   "description": "Demo of Github secret sync",
-                  "destination_config": {
-                    "repository_name": "\u003cgithub-repository-name\u003e",
-                    "repository_owner": "\u003cgithub-repository-owner\u003e",
-                    "scope": "repository"
-                  },
+                  "destination_config": "{\"scope\":\"repository\",\"repository_owner\":\"\u003cgithub-repository-owner\u003e\",\"repository_name\":\"\u003cgithub-repository-name\u003e\"}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "github-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
-                  "sync_options": {
-                    "disable_secret_deletion": false,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "INFISICAL_{{secretKey}}"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":false,\"key_schema\":\"INFISICAL_{{secretKey}}\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the github Connection to use for syncing.
             description: (String) An optional description for the Github sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Github secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Github destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Github destination.'
             name: (String) The name of the Github sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
-            repository_environment: (String) The environment to sync the secrets to, required if scope is repository-environment
-            repository_name: (String) The repository to sync the secrets to, required if scope is repository or repository-environment. This is only the name of the repository, without the repository owner included. As an example if you have a repository called Infisical/go-sdk, you would only need to provide go-sdk here.
-            repository_owner: (String) The owner of the Github repository, required if scope is repository, repository-environment, or organization. This is the organization name, or the username for personal repositories. As an example if you have a repository called Infisical/go-sdk, you would only need to provide Infisical here.
-            scope: (String) The scope to sync the secrets to, repository|organization
+            repository_environment: '(optional): The environment to sync the secrets to, required if scope is repository-environment'
+            repository_name: '(optional): The repository to sync the secrets to, required if scope is repository or repository-environment. This is only the name of the repository, without the repository owner included. As an example if you have a repository called Infisical/go-sdk, you would only need to provide go-sdk here.'
+            repository_owner: '(optional): The owner of the Github repository, required if scope is repository, repository-environment, or organization. This is the organization name, or the username for personal repositories. As an example if you have a repository called Infisical/go-sdk, you would only need to provide Infisical here.'
+            scope: '(required): The scope to sync the secrets to, repository|organization'
             secret_path: (String) The folder path to sync secrets from.
-            selected_repository_ids: (List of Number) The repository ids to sync the secrets to, required if scope is organization and the visibility field is set to selected
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-            visibility: '(String) The visibility of the Github repository, required if scope is organization. Accepted values are: all|private|selected'
+            selected_repository_ids: '(optional): The repository ids to sync the secrets to, required if scope is organization and the visibility field is set to selected'
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+            visibility: '(optional): The visibility of the Github repository, required if scope is organization. Accepted values are: all|private|selected'
         importStatements: []
     infisical_secret_sync_gitlab:
         subCategory: ""
@@ -2882,71 +2797,47 @@ resources:
                 {
                   "connection_id": "\u003cgitlab-app-connection-id\u003e",
                   "description": "Demo of GitLab project secret sync",
-                  "destination_config": {
-                    "project_id": "\u003cgitlab-project-id\u003e",
-                    "project_name": "\u003cgitlab-project-name\u003e",
-                    "scope": "project",
-                    "should_hide_secrets": false,
-                    "should_mask_secrets": true,
-                    "should_protect_secrets": false,
-                    "target_environment": "*"
-                  },
+                  "destination_config": "{\"scope\":\"project\",\"project_id\":\"\u003cgitlab-project-id\u003e\",\"project_name\":\"\u003cgitlab-project-name\u003e\",\"target_environment\":\"*\",\"should_protect_secrets\":false,\"should_mask_secrets\":true,\"should_hide_secrets\":false}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "gitlab-project-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
-                  "sync_options": {
-                    "disable_secret_deletion": false,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "INFISICAL_{{secretKey}}"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":false,\"key_schema\":\"INFISICAL_{{secretKey}}\"}"
                 }
             - name: gitlab-group-sync
               manifest: |-
                 {
                   "connection_id": "\u003cgitlab-app-connection-id\u003e",
                   "description": "Demo of GitLab group secret sync",
-                  "destination_config": {
-                    "group_id": "\u003cgitlab-group-id\u003e",
-                    "group_name": "\u003cgitlab-group-name\u003e",
-                    "scope": "group",
-                    "should_hide_secrets": false,
-                    "should_mask_secrets": true,
-                    "should_protect_secrets": true,
-                    "target_environment": "production"
-                  },
+                  "destination_config": "{\"scope\":\"group\",\"group_id\":\"\u003cgitlab-group-id\u003e\",\"group_name\":\"\u003cgitlab-group-name\u003e\",\"target_environment\":\"production\",\"should_protect_secrets\":true,\"should_mask_secrets\":true,\"should_hide_secrets\":false}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "gitlab-group-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
-                  "sync_options": {
-                    "disable_secret_deletion": true,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "{{secretKey}}"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":true,\"key_schema\":\"{{secretKey}}\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the gitlab Connection to use for syncing.
             description: (String) An optional description for the GitLab sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from GitLab. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from GitLab. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
-            group_id: (String) The GitLab Group ID to sync secrets to. Required when scope is 'group'.
-            group_name: (String) The GitLab Group Name to sync secrets to. Optional when scope is 'group'.
+            group_id: '(optional): The GitLab Group ID to sync secrets to. Required when scope is ''group''.'
+            group_name: '(optional): The GitLab Group Name to sync secrets to. Optional when scope is ''group''.'
             id: (String) The ID of the GitLab secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
-            key_schema: (String) The format to use for structuring secret keys in the GitLab destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the GitLab destination.'
             name: (String) The name of the GitLab sync to create. Must be slug-friendly.
-            project_id: (String) The ID of the Infisical project to create the sync in.
-            project_name: (String) The GitLab Project Name to sync secrets to. Optional when scope is 'project'.
-            scope: '(String) The GitLab scope that secrets should be synced to. Supported options: ''project'', ''group'''
+            project_id: '(optional): The GitLab Project ID to sync secrets to. Required when scope is ''project''.'
+            project_name: '(optional): The GitLab Project Name to sync secrets to. Optional when scope is ''project''.'
+            scope: '(required): The GitLab scope that secrets should be synced to. Supported options: ''project'', ''group'''
             secret_path: (String) The folder path to sync secrets from.
-            should_hide_secrets: (Boolean) Whether variables should be hidden
-            should_mask_secrets: (Boolean) Whether variables should be masked in logs
-            should_protect_secrets: (Boolean) Whether variables should be protected
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-            target_environment: '(String) The GitLab environment scope that secrets should be synced to. (default: *)'
+            should_hide_secrets: '(optional): Whether variables should be hidden'
+            should_mask_secrets: '(optional): Whether variables should be masked in logs'
+            should_protect_secrets: '(optional): Whether variables should be protected'
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+            target_environment: '(required): The GitLab environment scope that secrets should be synced to. (default: *)'
         importStatements: []
     infisical_secret_sync_render:
         subCategory: ""
@@ -2957,51 +2848,32 @@ resources:
             - name: render-secret-sync-demo
               manifest: |-
                 {
-                  "connection_id": "${infisical_app_connection_render.render-app-connection-demo.id}",
+                  "connection_id": "\u003capp-connection-id\u003e",
                   "description": "This is a demo Render Secret Sync.",
-                  "destination_config": {
-                    "scope": "\u003cscope\u003e",
-                    "service_id": "\u003cservice-id\u003e",
-                    "type": "\u003ctype\u003e"
-                  },
+                  "destination_config": "{\"service_id\":\"\u003cservice-id\u003e\",\"scope\":\"\u003cscope\u003e\",\"type\":\"\u003ctype\u003e\"}",
                   "environment": "\u003cenvironment-slug\u003e",
                   "name": "render-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
-                  "sync_options": {
-                    "initial_sync_behavior": "\u003cinitial-sync-behavior\u003e",
-                    "key_schema": "\u003ckey-schema\u003e"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"\u003cinitial-sync-behavior\u003e\",\"key_schema\":\"\u003ckey-schema\u003e\"}"
                 }
-              references:
-                connection_id: infisical_app_connection_render.render-app-connection-demo.id
-              dependencies:
-                infisical_app_connection_render.render-app-connection-demo: |-
-                    {
-                      "credentials": {
-                        "api_key": "\u003capi-key\u003e"
-                      },
-                      "description": "This is a demo Render App Connection.",
-                      "method": "api-key",
-                      "name": "render-app-connection-demo"
-                    }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the render Connection to use for syncing.
             description: (String) An optional description for the Render sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Render. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Render. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Render secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Render destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Render destination.'
             name: (String) The name of the Render sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
-            scope: '(String) The Render scope that secrets should be synced to. Supported options: service'
+            scope: '(required): The Render scope that secrets should be synced to. Supported options: service'
             secret_path: (String) The folder path to sync secrets from.
-            service_id: (String) The ID of the Render service to sync secrets to.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-            type: '(String) The Render resource type to sync secrets to. Supported options: env, file'
+            service_id: '(required): The ID of the Render service to sync secrets to.'
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+            type: '(required): The Render resource type to sync secrets to. Supported options: env, file'
         importStatements: []
     infisical_secret_sync_supabase:
         subCategory: ""
@@ -3015,35 +2887,28 @@ resources:
                   "auto_sync_enabled": true,
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "Sync secrets to Supabase project",
-                  "destination_config": {
-                    "project_id": "\u003csupabase-project-id\u003e",
-                    "project_name": "\u003csupabase-project-name\u003e"
-                  },
+                  "destination_config": "{\"project_id\":\"\u003csupabase-project-id\u003e\",\"project_name\":\"\u003csupabase-project-name\u003e\"}",
                   "environment": "\u003cenv-slug\u003e",
                   "name": "supabase-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
-                  "sync_options": {
-                    "disable_secret_deletion": false,
-                    "initial_sync_behavior": "overwrite-destination",
-                    "key_schema": "{{secretKey}}-{{environment}}"
-                  }
+                  "sync_options": "{\"initial_sync_behavior\":\"overwrite-destination\",\"disable_secret_deletion\":false,\"key_schema\":\"{{secretKey}}-{{environment}}\"}"
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
             connection_id: (String) The ID of the supabase Connection to use for syncing.
             description: (String) An optional description for the Supabase sync.
-            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Supabase. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from Supabase. Enable this option if you intend to manage some secrets manually outside of Infisical.'
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Supabase secret sync
-            initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
-            key_schema: (String) The format to use for structuring secret keys in the Supabase destination.
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the Supabase destination.'
             name: (String) The name of the Supabase sync to create. Must be slug-friendly.
-            project_id: (String) The ID of the Infisical project to create the sync in.
-            project_name: (String) The Supabase project name (optional).
+            project_id: '(required): The Supabase project ID to sync secrets to.'
+            project_name: '(optional): The Supabase project name (optional).'
             secret_path: (String) The folder path to sync secrets from.
-            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_tag Resource - terraform-provider-infisical:
         subCategory: ""

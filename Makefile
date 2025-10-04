@@ -12,7 +12,7 @@ TERRAFORM_VERSION_VALID := $(shell [ "$(TERRAFORM_VERSION)" = "`printf "$(TERRAF
 
 export TERRAFORM_PROVIDER_SOURCE ?= Infisical/infisical
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provider-infisical
-export TERRAFORM_PROVIDER_VERSION ?= 0.0.11
+export TERRAFORM_PROVIDER_VERSION ?= 0.0.12
 export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical-crossplane
 export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_PROVIDER_VERSION)
 export TERRAFORM_DOCS_PATH ?= docs/resources

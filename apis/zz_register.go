@@ -13,6 +13,7 @@ import (
 	v1alpha1 "github.com/infisical/provider-infisical/apis/identity/v1alpha1"
 	v1alpha1project "github.com/infisical/provider-infisical/apis/project/v1alpha1"
 	v1alpha1secret "github.com/infisical/provider-infisical/apis/secret/v1alpha1"
+	v1alpha1secretsync "github.com/infisical/provider-infisical/apis/secretsync/v1alpha1"
 	v1alpha1apis "github.com/infisical/provider-infisical/apis/v1alpha1"
 	v1beta1 "github.com/infisical/provider-infisical/apis/v1beta1"
 )
@@ -23,6 +24,7 @@ func init() {
 		v1alpha1.SchemeBuilder.AddToScheme,
 		v1alpha1project.SchemeBuilder.AddToScheme,
 		v1alpha1secret.SchemeBuilder.AddToScheme,
+		v1alpha1secretsync.SchemeBuilder.AddToScheme,
 		v1alpha1apis.SchemeBuilder.AddToScheme,
 		v1beta1.SchemeBuilder.AddToScheme,
 	)

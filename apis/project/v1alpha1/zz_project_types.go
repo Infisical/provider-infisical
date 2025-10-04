@@ -46,6 +46,10 @@ type ProjectInitParameters struct {
 	// (String) The name of the template to use for the project
 	// The name of the template to use for the project
 	TemplateName *string `json:"templateName,omitempty" tf:"template_name,omitempty"`
+
+	// manager, kms. Defaults to 'secret-manager'.
+	// The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+	Type *string `json:"type,omitempty" tf:"type,omitempty"`
 }
 
 type ProjectObservation struct {
@@ -87,6 +91,10 @@ type ProjectObservation struct {
 	// (String) The name of the template to use for the project
 	// The name of the template to use for the project
 	TemplateName *string `json:"templateName,omitempty" tf:"template_name,omitempty"`
+
+	// manager, kms. Defaults to 'secret-manager'.
+	// The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+	Type *string `json:"type,omitempty" tf:"type,omitempty"`
 }
 
 type ProjectParameters struct {
@@ -130,6 +138,11 @@ type ProjectParameters struct {
 	// The name of the template to use for the project
 	// +kubebuilder:validation:Optional
 	TemplateName *string `json:"templateName,omitempty" tf:"template_name,omitempty"`
+
+	// manager, kms. Defaults to 'secret-manager'.
+	// The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+	// +kubebuilder:validation:Optional
+	Type *string `json:"type,omitempty" tf:"type,omitempty"`
 }
 
 // ProjectSpec defines the desired state of Project

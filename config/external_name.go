@@ -19,6 +19,7 @@ var ExternalNameConfigs = map[string]config.ExternalName{
 	"infisical_identity_kubernetes_auth": config.IdentifierFromProvider,
 	"infisical_project_role":             config.IdentifierFromProvider,
 	"infisical_project_template":         config.IdentifierFromProvider,
+	"infisical_secret_sync_github":       config.IdentifierFromProvider,
 	"infisical_project_identity": func() config.ExternalName {
 		e := config.IdentifierFromProvider
 		e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
