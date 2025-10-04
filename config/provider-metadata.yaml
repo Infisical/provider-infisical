@@ -594,7 +594,7 @@ resources:
             environment_slug: (String) The slug of the environment to create the dynamic secret in.
             id: (String) The ID of the dynamic secret.
             key: (String) The key of the metadata object
-            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
             metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
             method: (String) The authentication method to use. Must be 'access_key' or 'assume_role'.
             name: (String) The name of the dynamic secret.
@@ -659,7 +659,7 @@ resources:
             gateway_id: (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
             id: (String) The ID of the dynamic secret.
             key: (String) The key of the metadata object
-            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
             metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
             name: (String) The name of the dynamic secret.
             namespace: (String) Kubernetes namespace where the service account exists.
@@ -669,6 +669,111 @@ resources:
             role_type: (String) Type of role to assign ('cluster-role' or 'role').
             service_account_name: (String) Name of the service account to generate tokens for.
             static_config: (Attributes) Configuration for the 'static' credential type. (see below for nested schema)
+            username_template: (String) The username template of the dynamic secret
+            value: (String) The value of the metadata object
+        importStatements: []
+    infisical_dynamic_secret_mongo_atlas:
+        subCategory: ""
+        description: Create and manage MongoDB Atlas Dynamic Secret
+        name: infisical_dynamic_secret_mongo_atlas
+        title: infisical_dynamic_secret_mongo_atlas Resource - terraform-provider-infisical
+        examples:
+            - name: mongo-atlas
+              manifest: |-
+                {
+                  "configuration": {
+                    "admin_private_key": "your-admin-private-key",
+                    "admin_public_key": "your-admin-public-key",
+                    "group_id": "your-group-id",
+                    "roles": [
+                      {
+                        "database_name": "my-application-db",
+                        "role_name": "readWrite"
+                      }
+                    ],
+                    "scopes": [
+                      {
+                        "name": "myCluster",
+                        "type": "CLUSTER"
+                      }
+                    ]
+                  },
+                  "default_ttl": "1h",
+                  "environment_slug": "dev",
+                  "max_ttl": "4h",
+                  "name": "mongo-atlas-dynamic-secret-example",
+                  "path": "/",
+                  "project_slug": "your-project-slug",
+                  "username_template": "{{randomUsername}}"
+                }
+        argumentDocs:
+            admin_private_key: (String, Sensitive) Admin user private API key
+            admin_public_key: (String) Admin user public API key
+            collection_name: (String) Collection on which this role applies.
+            configuration: (Attributes) The configuration of the dynamic secret (see below for nested schema)
+            database_name: (String) Database to which the user is granted access privileges.
+            default_ttl: (String) The default TTL that will be applied for all the leases.
+            environment_slug: (String) The slug of the environment to create the dynamic secret in.
+            group_id: (String) Unique 24-hexadecimal digit string that identifies your project. This is the same as the project ID.
+            id: (String) The ID of the dynamic secret.
+            key: (String) The key of the metadata object
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
+            metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
+            name: (String) The name of the dynamic secret.
+            path: (String) The path to create the dynamic secret in.
+            project_slug: (String) The slug of the project to create dynamic secret in.
+            role_name: (String) Human-readable label that identifies a group of privileges assigned to a database user. This value can either be a built-in role or a custom role.
+            roles: (Attributes List) (see below for nested schema)
+            scopes: (Attributes List) (see below for nested schema)
+            type: '(String) Category of resource that this database user can access. Supported options: CLUSTER, DATA_LAKE, STREAM'
+            username_template: (String) The username template of the dynamic secret
+            value: (String) The value of the metadata object
+        importStatements: []
+    infisical_dynamic_secret_mongo_db:
+        subCategory: ""
+        description: Create and manage MongoDB Dynamic Secret
+        name: infisical_dynamic_secret_mongo_db
+        title: infisical_dynamic_secret_mongo_db Resource - terraform-provider-infisical
+        examples:
+            - name: mongo-db
+              manifest: |-
+                {
+                  "configuration": {
+                    "database": "default",
+                    "host": "your-host",
+                    "password": "your-password",
+                    "port": 27017,
+                    "roles": [
+                      "readWrite"
+                    ],
+                    "username": "your-username"
+                  },
+                  "default_ttl": "1h",
+                  "environment_slug": "dev",
+                  "max_ttl": "24h",
+                  "name": "mongo-db-dynamic-secret-example",
+                  "path": "/",
+                  "project_slug": "your-project-slug",
+                  "username_template": "{{randomUsername}}"
+                }
+        argumentDocs:
+            ca: (String) The CA certificate to use to connect to the database.
+            configuration: (Attributes) The configuration of the dynamic secret (see below for nested schema)
+            database: (String) The name of the database to use.
+            default_ttl: (String) The default TTL that will be applied for all the leases.
+            environment_slug: (String) The slug of the environment to create the dynamic secret in.
+            host: (String) The host of the database server.
+            id: (String) The ID of the dynamic secret.
+            key: (String) The key of the metadata object
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
+            metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
+            name: (String) The name of the dynamic secret.
+            password: (String, Sensitive) The password to use to connect to the database.
+            path: (String) The path to create the dynamic secret in.
+            port: (Number) The port of the database server.
+            project_slug: (String) The slug of the project to create dynamic secret in.
+            roles: (List of String) A list of role names to assign to the user. The role names can either be built-in or custom.
+            username: (String) The username to use to connect to the database.
             username_template: (String) The username template of the dynamic secret
             value: (String) The value of the metadata object
         importStatements: []
@@ -726,7 +831,7 @@ resources:
             key: (String) The key of the metadata object
             length: (Number) The length of the password to use to create the dynamic secret lease.
             lowercase: (Number) The number of lowercase characters required in the password.
-            max_ttl: (String) The maximum limit a TTL can be leases or renewed.
+            max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
             metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
             name: (String) The name of the dynamic secret.
             password: (String, Sensitive) The password to use to connect to the database.
@@ -1612,7 +1717,7 @@ resources:
         importStatements: []
     infisical_project_role:
         subCategory: ""
-        description: Create custom project roles & save to Infisical. Only Machine Identity authentication is supported for this data source.
+        description: Create custom project roles & save to Infisical. Only Machine Identity authentication is supported for this resource.
         name: infisical_project_role
         title: infisical_project_role Resource - terraform-provider-infisical
         examples:
@@ -1621,23 +1726,7 @@ resources:
                 {
                   "description": "A test role",
                   "name": "Tester",
-                  "permissions_v2": [
-                    {
-                      "action": [
-                        "read",
-                        "create"
-                      ],
-                      "subject": "integrations"
-                    },
-                    {
-                      "action": [
-                        "read",
-                        "edit"
-                      ],
-                      "conditions": "${jsonencode({\n        environment = {\n          \"$in\" = [\"dev\", \"prod\"]\n          \"$eq\" = \"dev\"\n        }\n        secretPath = {\n          \"$eq\" = \"/\"\n        }\n      })}",
-                      "subject": "secrets"
-                    }
-                  ],
+                  "permissions": "[{\"action\":[\"read\",\"create\"],\"subject\":\"integrations\"},{\"action\":[\"read\",\"edit\"],\"subject\":\"secrets\",\"conditions\":{\"environment\":{\"$eq\":\"dev\",\"$in\":[\"dev\",\"prod\"]},\"secretPath\":{\"$eq\":\"/\"}}}]",
                   "project_slug": "${infisical_project.example.slug}",
                   "slug": "tester"
                 }
@@ -1650,19 +1739,12 @@ resources:
                       "slug": "example"
                     }
         argumentDocs:
-            action: '(String) Describe what action an entity can take. Enum: create,edit,delete,read'
-            conditions: (Attributes) The conditions to scope permissions (see below for nested schema)
             description: (String) The description for the new role. Defaults to an empty string.
-            environment: (String) The environment slug this permission should allow.
             id: (String) The ID of the role
-            inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
             name: (String) The name for the new role
-            permissions: (Attributes List) (DEPRECATED, USE permissions_v2. Refer to the migration guide in https://infisical.com/docs/internals/permissions#migrating-from-permission-v1-to-permission-v2) The permissions assigned to the project role (see below for nested schema)
-            permissions_v2: (Attributes List) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. (see below for nested schema)
+            permissions: (String) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
             project_slug: (String) The slug of the project to create role
-            secret_path: (String) The secret path this permission should be scoped to
             slug: (String) The slug for the new role
-            subject: '(String) Describe what action an entity can take. Enum: role,member,groups,settings,integrations,webhooks,service-tokens,environments,tags,audit-logs,ip-allowlist,workspace,secrets,secret-rollback,secret-approval,secret-rotation,identity,certificate-authorities,certificates,certificate-templates,kms,pki-alerts,pki-collections'
         importStatements: []
     infisical_project_template:
         subCategory: ""
@@ -1674,52 +1756,17 @@ resources:
               manifest: |-
                 {
                   "description": "This is an example project template",
-                  "environments": [
-                    {
-                      "name": "development",
-                      "position": 1,
-                      "slug": "dev"
-                    }
-                  ],
+                  "environments": "[{\"name\":\"development\",\"slug\":\"dev\",\"position\":1}]",
                   "name": "example-project-template",
-                  "roles": [
-                    {
-                      "name": "Test",
-                      "permissions": [
-                        {
-                          "action": [
-                            "edit"
-                          ],
-                          "inverted": true,
-                          "subject": "secret-folders"
-                        },
-                        {
-                          "action": [
-                            "read",
-                            "edit"
-                          ],
-                          "conditions": "${jsonencode({\n          environment = {\n            \"$in\" = [\"dev\", \"prod\"]\n            \"$eq\" = \"dev\"\n          }\n          secretPath = {\n            \"$eq\" = \"/\"\n          }\n        })}",
-                          "subject": "secrets"
-                        }
-                      ],
-                      "slug": "test"
-                    }
-                  ],
+                  "roles": "[{\"name\":\"Test\",\"slug\":\"test\",\"permissions\":[{\"action\":[\"edit\"],\"subject\":\"secrets\",\"inverted\":true},{\"action\":[\"read\",\"edit\"],\"subject\":\"secrets\",\"conditions\":{\"environment\":{\"$in\":[\"dev\",\"prod\"],\"$eq\":\"dev\"},\"secretPath\":{\"$eq\":\"/\"}}}]}]",
                   "type": "secret-manager"
                 }
         argumentDocs:
-            action: (Set of String) Describe what actions an entity can take.
-            conditions: (String) When specified, only matching conditions will be allowed to access given resource. Refer to the documentation in https://infisical.com/docs/internals/permissions#conditions for the complete list of supported properties and operators.
             description: (String) The description of the project template
-            environments: (Attributes List) The environments for the project template (see below for nested schema)
+            environments: (String) The environments for the project template as a JSON string
             id: (String) The ID of the project template
-            inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
             name: (String) The name of the project template
-            permissions: (Attributes List) The permissions assigned to the role. Refer to the documentation here https://infisical.com/docs/api-reference/endpoints/project-templates/create#body-roles-permissions for its usage. (see below for nested schema)
-            position: (Number) The position of the environment
-            roles: (Attributes List) The roles for the project template (see below for nested schema)
-            slug: (String) The slug of the environment
-            subject: (String) Describe the entity the permission pertains to.
+            roles: (String) The roles for the project template
             type: (String) The type of the project template. Refer to the documentation here https://infisical.com/docs/api-reference/endpoints/project-templates/create#body-type for the available options
         importStatements: []
     infisical_project_user:
@@ -1823,7 +1870,9 @@ resources:
             repeat_days: (Number) Frequency of secret rotation reminder in days
             secret_reminder: (Attributes) (see below for nested schema)
             tag_ids: (List of String) Tag ids to be attached for the secrets.
-            value: (String, Sensitive) The value of the secret
+            value: (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
+            value_wo: (String) The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if value is not set. Requires Terraform version 1.11.0 or higher.
+            value_wo_version: (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
             workspace_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
         importStatements: []
     infisical_secret_approval_policy:

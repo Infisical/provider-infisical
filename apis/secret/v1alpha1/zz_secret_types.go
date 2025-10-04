@@ -31,9 +31,17 @@ type SecretInitParameters struct {
 	// Tag ids to be attached for the secrets.
 	TagIds []*string `json:"tagIds,omitempty" tf:"tag_ids,omitempty"`
 
-	// (String, Sensitive) The value of the secret
-	// The value of the secret
-	ValueSecretRef v1.SecretKeySelector `json:"valueSecretRef" tf:"-"`
+	// (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
+	// The value of the secret in plain text. This is required if `value_wo` is not set.
+	ValueSecretRef *v1.SecretKeySelector `json:"valueSecretRef,omitempty" tf:"-"`
+
+	// only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
+	// The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if `value` is not set.11.0 or higher.
+	ValueWo *string `json:"valueWo,omitempty" tf:"value_wo,omitempty"`
+
+	// (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
+	// Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
+	ValueWoVersion *float64 `json:"valueWoVersion,omitempty" tf:"value_wo_version,omitempty"`
 
 	// (String) The Infisical project ID
 	// The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
@@ -64,6 +72,14 @@ type SecretObservation struct {
 	// Tag ids to be attached for the secrets.
 	TagIds []*string `json:"tagIds,omitempty" tf:"tag_ids,omitempty"`
 
+	// only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
+	// The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if `value` is not set.11.0 or higher.
+	ValueWo *string `json:"valueWo,omitempty" tf:"value_wo,omitempty"`
+
+	// (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
+	// Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
+	ValueWoVersion *float64 `json:"valueWoVersion,omitempty" tf:"value_wo_version,omitempty"`
+
 	// (String) The Infisical project ID
 	// The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
 	WorkspaceID *string `json:"workspaceId,omitempty" tf:"workspace_id,omitempty"`
@@ -91,10 +107,20 @@ type SecretParameters struct {
 	// +kubebuilder:validation:Optional
 	TagIds []*string `json:"tagIds,omitempty" tf:"tag_ids,omitempty"`
 
-	// (String, Sensitive) The value of the secret
-	// The value of the secret
+	// (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
+	// The value of the secret in plain text. This is required if `value_wo` is not set.
 	// +kubebuilder:validation:Optional
-	ValueSecretRef v1.SecretKeySelector `json:"valueSecretRef" tf:"-"`
+	ValueSecretRef *v1.SecretKeySelector `json:"valueSecretRef,omitempty" tf:"-"`
+
+	// only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
+	// The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if `value` is not set.11.0 or higher.
+	// +kubebuilder:validation:Optional
+	ValueWo *string `json:"valueWo,omitempty" tf:"value_wo,omitempty"`
+
+	// (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
+	// Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
+	// +kubebuilder:validation:Optional
+	ValueWoVersion *float64 `json:"valueWoVersion,omitempty" tf:"value_wo_version,omitempty"`
 
 	// (String) The Infisical project ID
 	// The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
@@ -141,7 +167,6 @@ type Secret struct {
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.envSlug) || (has(self.initProvider) && has(self.initProvider.envSlug))",message="spec.forProvider.envSlug is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.folderPath) || (has(self.initProvider) && has(self.initProvider.folderPath))",message="spec.forProvider.folderPath is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.name) || (has(self.initProvider) && has(self.initProvider.name))",message="spec.forProvider.name is a required parameter"
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.valueSecretRef)",message="spec.forProvider.valueSecretRef is a required parameter"
 	Spec   SecretSpec   `json:"spec"`
 	Status SecretStatus `json:"status,omitempty"`
 }

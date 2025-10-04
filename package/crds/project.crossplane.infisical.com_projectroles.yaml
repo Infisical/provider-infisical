@@ -4,18 +4,18 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: secrets.secret.crossplane.infisical.com
+  name: projectroles.project.crossplane.infisical.com
 spec:
-  group: secret.crossplane.infisical.com
+  group: project.crossplane.infisical.com
   names:
     categories:
     - crossplane
     - managed
     - infisical
-    kind: Secret
-    listKind: SecretList
-    plural: secrets
-    singular: secret
+    kind: ProjectRole
+    listKind: ProjectRoleList
+    plural: projectroles
+    singular: projectrole
   scope: Cluster
   versions:
   - additionalPrinterColumns:
@@ -34,8 +34,9 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Secret is the Schema for the Secrets API. Create secrets & save
-          to Infisical
+        description: ProjectRole is the Schema for the ProjectRoles API. Create custom
+          project roles & save to Infisical. Only Machine Identity authentication
+          is supported for this resource.
         properties:
           apiVersion:
             description: |-
@@ -55,7 +56,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: SecretSpec defines the desired state of Secret
+            description: ProjectRoleSpec defines the desired state of ProjectRole
             properties:
               deletionPolicy:
                 default: Delete
@@ -73,61 +74,30 @@ spec:
                 type: string
               forProvider:
                 properties:
-                  envSlug:
+                  description:
                     description: |-
-                      (String) The environment slug of the secret to modify/create
-                      The environment slug of the secret to modify/create
-                    type: string
-                  folderPath:
-                    description: |-
-                      (String) The path to the folder where the given secret resides
-                      The path to the folder where the given secret resides
+                      (String) The description for the new role. Defaults to an empty string.
+                      The description for the new role. Defaults to an empty string.
                     type: string
                   name:
                     description: |-
-                      (String) The name of the secret
-                      The name of the secret
+                      (String) The name for the new role
+                      The name for the new role
                     type: string
-                  tagIds:
+                  permissions:
                     description: |-
-                      (List of String) Tag ids to be attached for the secrets.
-                      Tag ids to be attached for the secrets.
-                    items:
-                      type: string
-                    type: array
-                  valueSecretRef:
-                    description: |-
-                      (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
-                      The value of the secret in plain text. This is required if `value_wo` is not set.
-                    properties:
-                      key:
-                        description: The key to select.
-                        type: string
-                      name:
-                        description: Name of the secret.
-                        type: string
-                      namespace:
-                        description: Namespace of the secret.
-                        type: string
-                    required:
-                    - key
-                    - name
-                    - namespace
-                    type: object
-                  valueWo:
-                    description: |-
-                      only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
-                      The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if `value` is not set.11.0 or higher.
+                      (String) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
+                      The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
                     type: string
-                  valueWoVersion:
+                  projectSlug:
                     description: |-
-                      (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
-                      Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
-                    type: number
-                  workspaceId:
+                      (String) The slug of the project to create role
+                      The slug of the project to create role
+                    type: string
+                  slug:
                     description: |-
-                      (String) The Infisical project ID
-                      The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
+                      (String) The slug for the new role
+                      The slug for the new role
                     type: string
                 type: object
               initProvider:
@@ -143,61 +113,30 @@ spec:
                   for example because of an external controller is managing them, like an
                   autoscaler.
                 properties:
-                  envSlug:
+                  description:
                     description: |-
-                      (String) The environment slug of the secret to modify/create
-                      The environment slug of the secret to modify/create
-                    type: string
-                  folderPath:
-                    description: |-
-                      (String) The path to the folder where the given secret resides
-                      The path to the folder where the given secret resides
+                      (String) The description for the new role. Defaults to an empty string.
+                      The description for the new role. Defaults to an empty string.
                     type: string
                   name:
                     description: |-
-                      (String) The name of the secret
-                      The name of the secret
+                      (String) The name for the new role
+                      The name for the new role
                     type: string
-                  tagIds:
+                  permissions:
                     description: |-
-                      (List of String) Tag ids to be attached for the secrets.
-                      Tag ids to be attached for the secrets.
-                    items:
-                      type: string
-                    type: array
-                  valueSecretRef:
-                    description: |-
-                      (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
-                      The value of the secret in plain text. This is required if `value_wo` is not set.
-                    properties:
-                      key:
-                        description: The key to select.
-                        type: string
-                      name:
-                        description: Name of the secret.
-                        type: string
-                      namespace:
-                        description: Namespace of the secret.
-                        type: string
-                    required:
-                    - key
-                    - name
-                    - namespace
-                    type: object
-                  valueWo:
-                    description: |-
-                      only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
-                      The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if `value` is not set.11.0 or higher.
+                      (String) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
+                      The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
                     type: string
-                  valueWoVersion:
+                  projectSlug:
                     description: |-
-                      (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
-                      Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
-                    type: number
-                  workspaceId:
+                      (String) The slug of the project to create role
+                      The slug of the project to create role
+                    type: string
+                  slug:
                     description: |-
-                      (String) The Infisical project ID
-                      The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
+                      (String) The slug for the new role
+                      The slug for the new role
                     type: string
                 type: object
               managementPolicies:
@@ -368,65 +307,50 @@ spec:
             - forProvider
             type: object
             x-kubernetes-validations:
-            - message: spec.forProvider.envSlug is a required parameter
-              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
-                || ''Update'' in self.managementPolicies) || has(self.forProvider.envSlug)
-                || (has(self.initProvider) && has(self.initProvider.envSlug))'
-            - message: spec.forProvider.folderPath is a required parameter
-              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
-                || ''Update'' in self.managementPolicies) || has(self.forProvider.folderPath)
-                || (has(self.initProvider) && has(self.initProvider.folderPath))'
             - message: spec.forProvider.name is a required parameter
               rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
                 || ''Update'' in self.managementPolicies) || has(self.forProvider.name)
                 || (has(self.initProvider) && has(self.initProvider.name))'
+            - message: spec.forProvider.projectSlug is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.projectSlug)
+                || (has(self.initProvider) && has(self.initProvider.projectSlug))'
+            - message: spec.forProvider.slug is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.slug)
+                || (has(self.initProvider) && has(self.initProvider.slug))'
           status:
-            description: SecretStatus defines the observed state of Secret.
+            description: ProjectRoleStatus defines the observed state of ProjectRole.
             properties:
               atProvider:
                 properties:
-                  envSlug:
+                  description:
                     description: |-
-                      (String) The environment slug of the secret to modify/create
-                      The environment slug of the secret to modify/create
-                    type: string
-                  folderPath:
-                    description: |-
-                      (String) The path to the folder where the given secret resides
-                      The path to the folder where the given secret resides
+                      (String) The description for the new role. Defaults to an empty string.
+                      The description for the new role. Defaults to an empty string.
                     type: string
                   id:
-                    description: (String) The ID of the secret
-                    type: string
-                  lastUpdated:
-                    description: (String)
+                    description: (String) The ID of the role
                     type: string
                   name:
                     description: |-
-                      (String) The name of the secret
-                      The name of the secret
+                      (String) The name for the new role
+                      The name for the new role
                     type: string
-                  tagIds:
+                  permissions:
                     description: |-
-                      (List of String) Tag ids to be attached for the secrets.
-                      Tag ids to be attached for the secrets.
-                    items:
-                      type: string
-                    type: array
-                  valueWo:
-                    description: |-
-                      only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
-                      The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if `value` is not set.11.0 or higher.
+                      (String) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
+                      The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
                     type: string
-                  valueWoVersion:
+                  projectSlug:
                     description: |-
-                      (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
-                      Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
-                    type: number
-                  workspaceId:
+                      (String) The slug of the project to create role
+                      The slug of the project to create role
+                    type: string
+                  slug:
                     description: |-
-                      (String) The Infisical project ID
-                      The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
+                      (String) The slug for the new role
+                      The slug for the new role
                     type: string
                 type: object
               conditions:
