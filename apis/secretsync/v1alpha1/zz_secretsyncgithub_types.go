@@ -48,7 +48,16 @@ type SecretSyncGithubInitParameters struct {
 
 	// (String) The ID of the Infisical project to create the sync in.
 	// The ID of the Infisical project to create the sync in.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha1.Project
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
+
+	// Reference to a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+
+	// Selector for a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) The folder path to sync secrets from.
 	// The folder path to sync secrets from.
@@ -157,8 +166,17 @@ type SecretSyncGithubParameters struct {
 
 	// (String) The ID of the Infisical project to create the sync in.
 	// The ID of the Infisical project to create the sync in.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha1.Project
 	// +kubebuilder:validation:Optional
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
+
+	// Reference to a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+
+	// Selector for a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) The folder path to sync secrets from.
 	// The folder path to sync secrets from.
@@ -215,7 +233,6 @@ type SecretSyncGithub struct {
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.destinationConfig) || (has(self.initProvider) && has(self.initProvider.destinationConfig))",message="spec.forProvider.destinationConfig is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.environment) || (has(self.initProvider) && has(self.initProvider.environment))",message="spec.forProvider.environment is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.name) || (has(self.initProvider) && has(self.initProvider.name))",message="spec.forProvider.name is a required parameter"
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.projectId) || (has(self.initProvider) && has(self.initProvider.projectId))",message="spec.forProvider.projectId is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.secretPath) || (has(self.initProvider) && has(self.initProvider.secretPath))",message="spec.forProvider.secretPath is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.syncOptions) || (has(self.initProvider) && has(self.initProvider.syncOptions))",message="spec.forProvider.syncOptions is a required parameter"
 	Spec   SecretSyncGithubSpec   `json:"spec"`

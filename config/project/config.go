@@ -61,8 +61,13 @@ func Configure(p *config.Provider) {
 		r.ShortGroup = "project"
 	})
 
+	// This is whats not working!
 	p.AddResourceConfigurator("infisical_secret_sync_github", func(r *config.Resource) {
 		r.Kind = "SecretSyncGithub"
 		r.ShortGroup = "secretsync" // lowercase not allowed
+
+		r.References["project_id"] = config.Reference{
+			TerraformName: "infisical_project",
+		}
 	})
 }
