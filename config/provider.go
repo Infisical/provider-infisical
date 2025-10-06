@@ -11,6 +11,8 @@ import (
 	ujconfig "github.com/crossplane/upjet/pkg/config"
 	"github.com/infisical/provider-infisical/config/identity"
 	"github.com/infisical/provider-infisical/config/project"
+	"github.com/infisical/provider-infisical/config/secret"
+	"github.com/infisical/provider-infisical/config/secretsync"
 )
 
 const (
@@ -38,6 +40,8 @@ func GetProvider() *ujconfig.Provider {
 		// add custom config functions
 		project.Configure,
 		identity.Configure,
+		secretsync.Configure,
+		secret.Configure,
 	} {
 		configure(pc)
 	}

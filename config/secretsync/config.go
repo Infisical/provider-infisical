@@ -1,4 +1,4 @@
-package project
+package secretsync
 
 import (
 	"github.com/crossplane/upjet/pkg/config"

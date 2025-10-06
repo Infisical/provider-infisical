@@ -1,4 +1,4 @@
-package project
+package secret
 
 import (
 	"github.com/crossplane/upjet/pkg/config"
