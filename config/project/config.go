@@ -45,12 +45,6 @@ func Configure(p *config.Provider) {
 		}
 	})
 
-	p.AddResourceConfigurator("infisical_secret", func(r *config.Resource) {
-		r.Kind = "Secret"
-		r.ShortGroup = "secret"
-		r.ExternalName.OmittedFields = []string{"secret_reminder"}
-	})
-
 	p.AddResourceConfigurator("infisical_project_role", func(r *config.Resource) {
 		r.Kind = "ProjectRole"
 		r.ShortGroup = "project"
@@ -59,15 +53,5 @@ func Configure(p *config.Provider) {
 	p.AddResourceConfigurator("infisical_project_template", func(r *config.Resource) {
 		r.Kind = "ProjectTemplate"
 		r.ShortGroup = "project"
-	})
-
-	// This is whats not working!
-	p.AddResourceConfigurator("infisical_secret_sync_github", func(r *config.Resource) {
-		r.Kind = "SecretSyncGithub"
-		r.ShortGroup = "secretsync" // lowercase not allowed
-
-		r.References["project_id"] = config.Reference{
-			TerraformName: "infisical_project",
-		}
 	})
 }
