@@ -114,6 +114,11 @@ spec:
                       (String) The name of the template to use for the project
                       The name of the template to use for the project
                     type: string
+                  type:
+                    description: |-
+                      manager, kms. Defaults to 'secret-manager'.
+                      The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+                    type: string
                 type: object
               initProvider:
                 description: |-
@@ -167,6 +172,11 @@ spec:
                     description: |-
                       (String) The name of the template to use for the project
                       The name of the template to use for the project
+                    type: string
+                  type:
+                    description: |-
+                      manager, kms. Defaults to 'secret-manager'.
+                      The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
                     type: string
                 type: object
               managementPolicies:
@@ -395,6 +405,11 @@ spec:
                     description: |-
                       (String) The name of the template to use for the project
                       The name of the template to use for the project
+                    type: string
+                  type:
+                    description: |-
+                      manager, kms. Defaults to 'secret-manager'.
+                      The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
                     type: string
                 type: object
               conditions:

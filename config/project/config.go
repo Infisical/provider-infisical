@@ -45,12 +45,6 @@ func Configure(p *config.Provider) {
 		}
 	})
 
-	p.AddResourceConfigurator("infisical_secret", func(r *config.Resource) {
-		r.Kind = "Secret"
-		r.ShortGroup = "secret"
-		r.ExternalName.OmittedFields = []string{"secret_reminder"}
-	})
-
 	p.AddResourceConfigurator("infisical_project_role", func(r *config.Resource) {
 		r.Kind = "ProjectRole"
 		r.ShortGroup = "project"
