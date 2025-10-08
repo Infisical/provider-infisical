@@ -12,6 +12,7 @@ import (
 	identity "github.com/infisical/provider-infisical/internal/controller/identity/identity"
 	kubernetesauth "github.com/infisical/provider-infisical/internal/controller/identity/kubernetesauth"
 	universalauth "github.com/infisical/provider-infisical/internal/controller/identity/universalauth"
+	accessapprovalpolicy "github.com/infisical/provider-infisical/internal/controller/project/accessapprovalpolicy"
 	project "github.com/infisical/provider-infisical/internal/controller/project/project"
 	projectenvironment "github.com/infisical/provider-infisical/internal/controller/project/projectenvironment"
 	projectgroup "github.com/infisical/provider-infisical/internal/controller/project/projectgroup"
@@ -31,6 +32,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		identity.Setup,
 		kubernetesauth.Setup,
 		universalauth.Setup,
+		accessapprovalpolicy.Setup,
 		project.Setup,
 		projectenvironment.Setup,
 		projectgroup.Setup,

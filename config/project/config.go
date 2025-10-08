@@ -54,4 +54,13 @@ func Configure(p *config.Provider) {
 		r.Kind = "ProjectTemplate"
 		r.ShortGroup = "project"
 	})
+
+	p.AddResourceConfigurator("infisical_access_approval_policy", func(r *config.Resource) {
+		r.Kind = "AccessApprovalPolicy"
+		r.ShortGroup = "project"
+
+		r.References["project_id"] = config.Reference{
+			TerraformName: "infisical_project",
+		}
+	})
 }

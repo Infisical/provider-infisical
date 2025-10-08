@@ -1,0 +1,23 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: AccessApprovalPolicy
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha1/accessapprovalpolicy
+  labels:
+    testing.upbound.io/example-name: prod-policy
+  name: prod-policy
+spec:
+  forProvider:
+    enforcementLevel: soft
+    environmentSlugs:
+    - prod
+    groupApprovers:
+    - 60782603-18bd-4f83-a312-6a9c501f4914
+    name: my-approval-policy
+    projectIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+    requiredApprovals: 1
+    secretPath: /
+    userApprovers:
+    - vlad@infisical.com
