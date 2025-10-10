@@ -7,6 +7,9 @@
 package v1alpha1
 
 // Hub marks this type as a conversion hub.
+func (tr *AccessApprovalPolicy) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *Project) Hub() {}
 
 // Hub marks this type as a conversion hub.

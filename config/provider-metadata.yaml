@@ -9,45 +9,31 @@ resources:
             - name: prod-policy
               manifest: |-
                 {
-                  "approvers": [
-                    {
-                      "id": "52c70c28-9504-4b88-b5af-ca2495dd277d",
-                      "type": "group"
-                    },
-                    {
-                      "type": "user",
-                      "username": "name@infisical.com"
-                    }
-                  ],
                   "enforcement_level": "soft",
                   "environment_slugs": [
                     "prod"
                   ],
+                  "group_approvers": [
+                    "60782603-18bd-4f83-a312-6a9c501f4914"
+                  ],
                   "name": "my-approval-policy",
-                  "project_id": "${infisical_project.example.id}",
+                  "project_id": "5156a345-e460-416b-84fc-b14b426b1cb3",
                   "required_approvals": 1,
-                  "secret_path": "/"
+                  "secret_path": "/",
+                  "user_approvers": [
+                    "vlad@infisical.com"
+                  ]
                 }
-              references:
-                project_id: infisical_project.example.id
-              dependencies:
-                infisical_project.example: |-
-                    {
-                      "name": "example",
-                      "slug": "example"
-                    }
         argumentDocs:
-            approvers: (Attributes Set) The required approvers (see below for nested schema)
             enforcement_level: (String) The enforcement level of the policy. This can either be hard or soft
-            environment_slug: (String) (DEPRECATED, Use environment_slugs instead) The environment to apply the access approval policy to
             environment_slugs: (List of String) The environments to apply the access approval policy to
+            group_approvers: (List of String) Array of group IDs belonging to the groups to assign as approvers. Note either group IDs, usernames, or both must be provided.
             id: (String) The ID of the access approval policy
             name: (String) The name of the access approval policy
             project_id: (String) The ID of the project to add the access approval policy
             required_approvals: (Number) The number of required approvers
             secret_path: (String) The secret path to apply the access approval policy to
-            type: (String) The type of approver. Either group or user
-            username: (String) The username of the approver. By default, this is the email
+            user_approvers: (List of String) Array of usernames belonging to the users to assign as approvers
         importStatements: []
     infisical_app_connection_1password:
         subCategory: ""
@@ -1603,7 +1589,10 @@ resources:
             slug: (String) The slug of the project
             template_name: (String) The name of the template to use for the project
             type: '(String) The type of the project. Supported values: secret-manager, kms. Defaults to ''secret-manager''.'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the project by the project ID
+              terraform import infisical_project.example <project_id>
     infisical_project_environment:
         subCategory: ""
         description: Create project environment
@@ -1633,7 +1622,10 @@ resources:
             position: (Number) The position of the environment
             project_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
             slug: (String) The slug of the environment
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the project environment by the project environment ID
+              terraform import infisical_project_environment.example <project_environment_id>
     infisical_project_group:
         subCategory: ""
         description: Create project groups & save to Infisical. Only Machine Identity authentication is supported for this data source
@@ -1894,6 +1886,8 @@ resources:
                   "value": "\u003csome value\u003e",
                   "workspace_id": "PROJECT_ID"
                 }
+              references:
+                tag_ids: infisical_secret_tag.terraform.id
               dependencies:
                 infisical_secret_tag.terraform: |-
                     {
