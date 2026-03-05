@@ -1,7 +1,7 @@
 name: Infisical/infisical
 resources:
     infisical_access_approval_policy:
-        subCategory: ""
+        subCategory: Approval
         description: Create access approval policy for your projects
         name: infisical_access_approval_policy
         title: infisical_access_approval_policy Resource - terraform-provider-infisical
@@ -36,7 +36,7 @@ resources:
             user_approvers: (List of String) Array of usernames belonging to the users to assign as approvers
         importStatements: []
     infisical_app_connection_1password:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage 1Password App Connection
         name: infisical_app_connection_1password
         title: infisical_app_connection_1password Resource - terraform-provider-infisical
@@ -61,9 +61,10 @@ resources:
             instance_url: (String, Sensitive) The URL of the 1Password Connect instance to connect to. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/1password
             method: '(String) The method used to authenticate with 1Password. Possible values are: api-token'
             name: (String) The name of the 1Password App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
     infisical_app_connection_aws:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage AWS App Connection
         name: infisical_app_connection_aws
         title: infisical_app_connection_aws Resource - terraform-provider-infisical
@@ -97,11 +98,42 @@ resources:
             id: (String) The ID of the app connection
             method: '(String) The method used to authenticate with AWS. Possible values are: assume-role, access-key'
             name: (String) The name of the AWS App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             role_arn: (String, Sensitive) The Amazon Resource Name (ARN) of the IAM role to assume for performing operations. Infisical will assume this role using AWS Security Token Service (STS). Required for assume-role access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#assume-role-recommended
             secret_access_key: (String, Sensitive) The AWS Secret Access Key associated with the Access Key ID to authenticate requests to AWS services. Required for access-key access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#access-key
         importStatements: []
+    infisical_app_connection_azure_app_configuration:
+        subCategory: App Connections
+        description: Create and manage Azure App Configuration App Connection
+        name: infisical_app_connection_azure_app_configuration
+        title: infisical_app_connection_azure_app_configuration Resource - terraform-provider-infisical
+        examples:
+            - name: app_connection_azure_app_configuration
+              manifest: |-
+                {
+                  "credentials": {
+                    "client_id": "\u003cazure-client-id\u003e",
+                    "client_secret": "\u003cazure-client-secret\u003e",
+                    "tenant_id": "\u003cazure-tenant-id\u003e"
+                  },
+                  "description": "I am a test Azure app configuration app connection using client credentials",
+                  "method": "client-secret",
+                  "name": "app-connection-azure-app-configuration"
+                }
+        argumentDocs:
+            client_id: (String, Sensitive) The Azure application (client) ID. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-app-configuration
+            client_secret: (String, Sensitive) The Azure client secret. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-app-configuration
+            credentials: (Attributes) The credentials for the Azure App Configuration App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Azure App Configuration App Connection credentials
+            description: (String) An optional description for the Azure App Configuration App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Azure App Configuration. Possible values are: client-secret'
+            name: (String) The name of the Azure App Configuration App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            tenant_id: (String) The Azure Active Directory (AAD) tenant ID. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-app-configuration
+        importStatements: []
     infisical_app_connection_azure_client_secrets:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage Azure Client Secrets App Connection
         name: infisical_app_connection_azure_client_secrets
         title: infisical_app_connection_azure_client_secrets Resource - terraform-provider-infisical
@@ -127,10 +159,85 @@ resources:
             id: (String) The ID of the app connection
             method: '(String) The method used to authenticate with Azure Client Secrets. Possible values are: client-secret'
             name: (String) The name of the Azure Client Secrets App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             tenant_id: (String) The Azure Active Directory (AAD) tenant ID. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-client-secrets
         importStatements: []
+    infisical_app_connection_azure_devops:
+        subCategory: App Connections
+        description: Create and manage Azure DevOps App Connection
+        name: infisical_app_connection_azure_devops
+        title: infisical_app_connection_azure_devops Resource - terraform-provider-infisical
+        examples:
+            - name: app_connection_azure_devops_client_secret
+              manifest: |-
+                {
+                  "credentials": {
+                    "client_id": "\u003cazure-client-id\u003e",
+                    "client_secret": "\u003cazure-client-secret\u003e",
+                    "organization_name": "\u003cazure-devops-organization-name\u003e",
+                    "tenant_id": "\u003cazure-tenant-id\u003e"
+                  },
+                  "description": "I am a test Azure DevOps app connection using client credentials",
+                  "method": "client-secret",
+                  "name": "app-connection-azure-devops-client-secret"
+                }
+            - name: app_connection_azure_devops_access_token
+              manifest: |-
+                {
+                  "credentials": {
+                    "access_token": "\u003cazure-devops-access-token\u003e",
+                    "organization_name": "\u003cazure-devops-organization-name\u003e"
+                  },
+                  "description": "I am a test Azure DevOps app connection using access token",
+                  "method": "access-token",
+                  "name": "app-connection-azure-devops-access-token"
+                }
+        argumentDocs:
+            access_token: (String, Sensitive) The Azure DevOps access token. Required for access-token method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-devops
+            client_id: (String, Sensitive) The Azure application (client) ID. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-client-secrets
+            client_secret: (String, Sensitive) The Azure client secret. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-client-secrets
+            credentials: (Attributes) The credentials for the Azure DevOps App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Azure DevOps App Connection credentials
+            description: (String) An optional description for the Azure DevOps App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Azure DevOps. Possible values are: access-token, client-secret'
+            name: (String) The name of the Azure DevOps App Connection to create. Must be slug-friendly
+            organization_name: (String) The name of the Azure DevOps organization. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-devops
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            tenant_id: (String) The Azure Active Directory (AAD) tenant ID. Required for client-secret method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-client-secrets
+        importStatements: []
+    infisical_app_connection_azure_key_vault:
+        subCategory: App Connections
+        description: Create and manage Azure Key Vault App Connection
+        name: infisical_app_connection_azure_key_vault
+        title: infisical_app_connection_azure_key_vault Resource - terraform-provider-infisical
+        examples:
+            - name: app_connection_azure_key_vault
+              manifest: |-
+                {
+                  "credentials": {
+                    "client_id": "\u003cazure-client-id\u003e",
+                    "client_secret": "\u003cazure-client-secret\u003e",
+                    "tenant_id": "\u003cazure-tenant-id\u003e"
+                  },
+                  "description": "I am a test Azure key vault app connection using client credentials",
+                  "method": "client-secret",
+                  "name": "app-connection-azure-key-vault"
+                }
+        argumentDocs:
+            client_id: (String, Sensitive) The Azure application (client) ID. Required for key-vault method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-key-vault
+            client_secret: (String, Sensitive) The Azure client secret. Required for key-vault method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-key-vault
+            credentials: (Attributes) The credentials for the Azure Key Vault App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Azure Key Vault App Connection credentials
+            description: (String) An optional description for the Azure Key Vault App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Azure Key Vault. Possible values are: client-secret'
+            name: (String) The name of the Azure Key Vault App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            tenant_id: (String) The Azure Active Directory (AAD) tenant ID. Required for key-vault method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/azure-key-vault
+        importStatements: []
     infisical_app_connection_bitbucket:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage Bitbucket App Connection
         name: infisical_app_connection_bitbucket
         title: infisical_app_connection_bitbucket Resource - terraform-provider-infisical
@@ -155,9 +262,10 @@ resources:
             id: (String) The ID of the app connection
             method: '(String) The method used to authenticate with Bitbucket. Possible values are: api-token'
             name: (String) The name of the Bitbucket App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
     infisical_app_connection_cloudflare:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage Cloudflare App Connection
         name: infisical_app_connection_cloudflare
         title: infisical_app_connection_cloudflare Resource - terraform-provider-infisical
@@ -182,9 +290,10 @@ resources:
             id: (String) The ID of the app connection
             method: '(String) The method used to authenticate with Cloudflare. Possible values are: api-token'
             name: (String) The name of the Cloudflare App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
     infisical_app_connection_databricks:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage Databricks App Connection
         name: infisical_app_connection_databricks
         title: infisical_app_connection_databricks Resource - terraform-provider-infisical
@@ -210,10 +319,11 @@ resources:
             id: (String) The ID of the app connection
             method: '(String) The method used to authenticate with Databricks. Possible values are: service-principal'
             name: (String) The name of the Databricks App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             workspace_url: (String) The workspace URL of the Databricks instance.
         importStatements: []
     infisical_app_connection_flyio:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage Fly.io App Connection
         name: infisical_app_connection_flyio
         title: infisical_app_connection_flyio Resource - terraform-provider-infisical
@@ -236,9 +346,10 @@ resources:
             id: (String) The ID of the app connection
             method: '(String) The method used to authenticate with Fly.io. Possible values are: access-token'
             name: (String) The name of the Fly.io App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
     infisical_app_connection_gcp:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage GCP App Connection
         name: infisical_app_connection_gcp
         title: infisical_app_connection_gcp Resource - terraform-provider-infisical
@@ -260,10 +371,39 @@ resources:
             id: (String) The ID of the app connection
             method: '(String) The method used to authenticate with GCP. Possible values are: service-account-impersonation'
             name: (String) The name of the GCP App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             service_account_email: (String, Sensitive) The service account email to connect with GCP. The service account ID (the part of the email before '@') must be suffixed with the first two sections of your organization ID e.g. service-account-df92581a-0fe9@my-project.iam.gserviceaccount.com. For more details, refer to the documentation here https://infisical.com/docs/integrations/app-connections/gcp#configure-service-account-for-infisical
         importStatements: []
+    infisical_app_connection_github:
+        subCategory: App Connections
+        description: Create and manage GitHub App Connection
+        name: infisical_app_connection_github
+        title: infisical_app_connection_github Resource - terraform-provider-infisical
+        examples:
+            - name: github_connection
+              manifest: |-
+                {
+                  "credentials": {
+                    "personal_access_token": "\u003cpersonal-access-token\u003e"
+                  },
+                  "description": "GitHub connection for Actions secrets sync",
+                  "method": "pat",
+                  "name": "github-connection"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the GitHub App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the GitHub App Connection credentials
+            description: (String) An optional description for the GitHub App Connection.
+            host: (String) The hostname of your GitHub Enterprise instance. Required when instance_type is 'server'.
+            id: (String) The ID of the app connection
+            instance_type: (String) The type of GitHub instance. Use 'cloud' for GitHub.com (default) or 'server' for GitHub Enterprise. When 'server', host is required.
+            method: '(String) The method used to authenticate with GitHub. Possible values are: pat'
+            name: (String) The name of the GitHub App Connection to create. Must be slug-friendly
+            personal_access_token: (String, Sensitive) The Personal Access Token used to access GitHub.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+        importStatements: []
     infisical_app_connection_gitlab:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage GitLab App Connection
         name: infisical_app_connection_gitlab
         title: infisical_app_connection_gitlab Resource - terraform-provider-infisical
@@ -290,9 +430,10 @@ resources:
             instance_url: '(String) The GitLab instance URL to connect with. (default: https://gitlab.com)'
             method: '(String) The method used to authenticate with GitLab. Possible values are: access-token'
             name: (String) The name of the GitLab App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
     infisical_app_connection_ldap:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage LDAP App Connection
         name: infisical_app_connection_ldap
         title: infisical_app_connection_ldap Resource - terraform-provider-infisical
@@ -335,13 +476,14 @@ resources:
             method: '(String) The method used to authenticate with LDAP. Possible values are: simple-bind'
             name: (String) The name of the LDAP App Connection to create. Must be slug-friendly
             password: (String, Sensitive) The password to bind with for authentication.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             provider: (String) The LDAP provider (e.g., 'active-directory').
             ssl_certificate: (String) The SSL certificate (PEM format) to use for secure connection when using ldaps:// with a self-signed certificate.
             ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates (true/false) when using ldaps://. Set to false only in test environments.
             url: (String) The LDAP server URL (e.g., 'ldap://example.com:389' or 'ldaps://example.com:636').
         importStatements: []
     infisical_app_connection_mssql:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage MsSQL App Connection
         name: infisical_app_connection_mssql
         title: infisical_app_connection_mssql Resource - terraform-provider-infisical
@@ -372,13 +514,14 @@ resources:
             name: (String) The name of the MsSQL App Connection to create. Must be slug-friendly
             password: (String, Sensitive) The password to connect to the database with.
             port: (Number) The port number of the database.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             ssl_certificate: (String) The SSL certificate to use for connection.
             ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
             ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
             username: (String) The username to connect to the database with.
         importStatements: []
     infisical_app_connection_mysql:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage MySQL App Connection
         name: infisical_app_connection_mysql
         title: infisical_app_connection_mysql Resource - terraform-provider-infisical
@@ -409,13 +552,14 @@ resources:
             name: (String) The name of the MySQL App Connection to create. Must be slug-friendly
             password: (String, Sensitive) The password to connect to the database with.
             port: (Number) The port number of the database.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             ssl_certificate: (String) The SSL certificate to use for connection.
             ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
             ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
             username: (String) The username to connect to the database with.
         importStatements: []
     infisical_app_connection_oracledb:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage Oracle Database App Connection
         name: infisical_app_connection_oracledb
         title: infisical_app_connection_oracledb Resource - terraform-provider-infisical
@@ -446,13 +590,14 @@ resources:
             name: (String) The name of the Oracle Database App Connection to create. Must be slug-friendly
             password: (String, Sensitive) The password to connect to the database with.
             port: (Number) The port number of the database.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             ssl_certificate: (String) The SSL certificate to use for connection.
             ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
             ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
             username: (String) The username to connect to the database with.
         importStatements: []
     infisical_app_connection_postgres:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage PostgreSQL App Connection
         name: infisical_app_connection_postgres
         title: infisical_app_connection_postgres Resource - terraform-provider-infisical
@@ -483,13 +628,14 @@ resources:
             name: (String) The name of the PostgreSQL App Connection to create. Must be slug-friendly
             password: (String, Sensitive) The password to connect to the database with.
             port: (Number) The port number of the database.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             ssl_certificate: (String) The SSL certificate to use for connection.
             ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
             ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
             username: (String) The username to connect to the database with.
         importStatements: []
     infisical_app_connection_render:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage Render App Connection
         name: infisical_app_connection_render
         title: infisical_app_connection_render Resource - terraform-provider-infisical
@@ -512,9 +658,10 @@ resources:
             id: (String) The ID of the app connection
             method: '(String) The method used to authenticate with Render. Possible values are: api-key'
             name: (String) The name of the Render App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
     infisical_app_connection_supabase:
-        subCategory: ""
+        subCategory: App Connections
         description: Create and manage Supabase App Connection
         name: infisical_app_connection_supabase
         title: infisical_app_connection_supabase Resource - terraform-provider-infisical
@@ -539,9 +686,1290 @@ resources:
             instance_url: (String) The Supabase instance URL (e.g., https://your-domain.com).
             method: '(String) The method used to authenticate with Supabase. Possible values are: access-token'
             name: (String) The name of the Supabase App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
+    infisical_cert_manager_ca_certificate:
+        subCategory: Certificate Management
+        description: Create and manage CA certificates in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_ca_certificate
+        title: infisical_cert_manager_ca_certificate Resource - terraform-provider-infisical
+        examples:
+            - name: root_cert
+              manifest: |-
+                {
+                  "ca_id": "${infisical_cert_manager_internal_ca.root.id}",
+                  "max_path_length": 1,
+                  "not_after": "2034-01-01T00:00:00Z",
+                  "not_before": "2024-01-01T00:00:00Z"
+                }
+              references:
+                ca_id: infisical_cert_manager_internal_ca.root.id
+              dependencies:
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "intermediate"
+                    }
+                infisical_cert_manager_internal_ca.root: |-
+                    {
+                      "common_name": "Enterprise Root Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-root-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "root"
+                    }
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+            - name: issuing_cert
+              manifest: |-
+                {
+                  "ca_id": "${infisical_cert_manager_internal_ca.issuing.id}",
+                  "depends_on": [
+                    "${infisical_cert_manager_ca_certificate.root_cert}"
+                  ],
+                  "max_path_length": 0,
+                  "not_after": "2029-01-01T00:00:00Z",
+                  "not_before": "2024-01-01T00:00:00Z",
+                  "parent_ca_id": "${infisical_cert_manager_internal_ca.root.id}"
+                }
+              references:
+                ca_id: infisical_cert_manager_internal_ca.issuing.id
+                parent_ca_id: infisical_cert_manager_internal_ca.root.id
+              dependencies:
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "intermediate"
+                    }
+                infisical_cert_manager_internal_ca.root: |-
+                    {
+                      "common_name": "Enterprise Root Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-root-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "root"
+                    }
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+            - name: dev_cert
+              manifest: |-
+                {
+                  "ca_id": "${infisical_cert_manager_internal_ca.root.id}",
+                  "max_path_length": -1,
+                  "not_after": "2025-01-01T00:00:00Z",
+                  "not_before": "2024-01-01T00:00:00Z"
+                }
+              references:
+                ca_id: infisical_cert_manager_internal_ca.root.id
+              dependencies:
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "intermediate"
+                    }
+                infisical_cert_manager_internal_ca.root: |-
+                    {
+                      "common_name": "Enterprise Root Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-root-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "root"
+                    }
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+        argumentDocs:
+            ca_id: (String) The ID of the certificate authority to generate a certificate for
+            certificate: (String, Sensitive) The generated CA certificate in PEM format
+            certificate_chain: (String, Sensitive) The certificate chain of the CA in PEM format
+            id: (String) The unique identifier for this CA certificate resource
+            max_path_length: (Number) The maximum number of intermediate CAs that may follow this CA in the certificate chain. Use -1 for no path limit
+            not_after: (String) The date and time when the CA expires in RFC3339 format (e.g., '2034-01-01T00:00:00Z')
+            not_before: (String) The date and time when the CA becomes valid in RFC3339 format (e.g., '2024-01-01T00:00:00Z')
+            parent_ca_id: (String) The ID of the parent CA (required for intermediate CAs)
+            serial_number: (String) The serial number of the CA certificate
+        importStatements: []
+    infisical_cert_manager_certificate:
+        subCategory: Certificate Management
+        description: Request and manage certificates from Infisical certificate profiles. Supports both CSR-based and direct field requests. The resource will poll until the certificate is issued or a timeout is reached. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_certificate
+        title: infisical_cert_manager_certificate Resource - terraform-provider-infisical
+        examples:
+            - name: my_cert
+              manifest: |-
+                {
+                  "alt_names": [
+                    "api.example.com",
+                    "api-internal.example.com"
+                  ],
+                  "common_name": "api.example.com",
+                  "country": "US",
+                  "key_algorithm": "RSA_2048",
+                  "organization": "Example Corp",
+                  "profile_id": "\u003cinternal-ca-profile-id\u003e",
+                  "signature_algorithm": "RSA-SHA256",
+                  "timeout_seconds": 300,
+                  "ttl": "90d"
+                }
+            - name: csr_based_cert
+              manifest: |-
+                {
+                  "csr": "${file(\"./my-certificate.csr\")}",
+                  "profile_id": "\u003cprofile-id\u003e",
+                  "timeout_seconds": 300,
+                  "ttl": "90d"
+                }
+            - name: inline_csr_cert
+              manifest: |-
+                {
+                  "csr": "-----BEGIN CERTIFICATE REQUEST-----\nMIICljCCAX4CAQAwGDEWMBQGA1UEAwwNaW5maXNpY2FsLmNvbTCCASIwDQYJKoZI\nhvcNAQEBBQADggEPADCCAQoCggEBAL7c6thewe78xVXyBQ0ZgmSjlkYCGeJgxot/\nQqB1+z3mlMr/tViy8UFBThO69i532ZgWyuJ24YWVeF67WBQPYXnkXlUMJKYGM6UA\nka6dOjCeSJHNXkxbLHI3yljvXP/Kn6w+WczeSuJXYNH5Uet9TtTEuXIqTgWjnAhD\nTAWqtyHPbtw3jVWy7xkSc/JuqVGha05snjPPmF9lkdoztG3gosN0TnwTGaQ382sr\ngiUBkkfdBK0eGmTwJlG9xLZMm3hDyAFz2/iw6GR57uvp/h9RDZVZcuisUQf2T8NZ\nCCVPTSGpfYxbQ4KviDghL2/GDY9NVudHSyeCCA0zOPZW9tg7hAECAwEAAaA5MDcG\nCSqGSIb3DQEJDjEqMCgwJgYDVR0RBB8wHYINaW5maXNpY2FsLmNvbYIMaW5maXNp\nY2FsLmVzMA0GCSqGSIb3DQEBCwUAA4IBAQBZy+AYPWeZVs+ZPP/9Zj0cl7BchwZV\nphEPIezIdKqDyLcyjCf168rbTEqch9gz5CvyIPL3kBohicI/k+/RYPnRKsTdiYNE\nXrpeaarHqlvpGzjsrQUv6iJgrDGZXMVJn+op3cDChNPet9RJ1utH96S6W6Ent4QU\n90XNi6fBSja8wThfj0AAl51OycHwfNg5/CtygT0eM16/bZl0knJ884Bf35LNE731\nAwp8H6ELyXOX1tRKNZRPMKr2Nw/qn6QK611R9aSA+maa25YZa8K0cvSVAJQOfdei\n0A7YVKj492nqnN/xS5kzIidZuaCBLocLo5j615xh/79YgMZjrGo3wvnk\n-----END CERTIFICATE REQUEST-----\n",
+                  "profile_id": "\u003cprofile-id\u003e",
+                  "timeout_seconds": 300,
+                  "ttl": "90d"
+                }
+        argumentDocs:
+            alt_names: (List of String) Subject alternative names (SANs) for the certificate
+            certificate: (String) The issued certificate in PEM format
+            certificate_chain: (String) The certificate chain in PEM format
+            certificate_request_id: (String) The ID of the certificate request
+            common_name: (String) The common name (CN) for the certificate. Required when not using CSR
+            country: (String) The country (C) for the certificate (2-letter code)
+            csr: (String) Certificate Signing Request (CSR) in PEM format. If provided, the certificate will be issued based on the CSR. Use Terraform's file() function to read from a file (e.g., file("./my-certificate.csr"))
+            extended_key_usages: '(List of String) Extended key usages for the certificate. Supported: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
+            id: (String) The ID of the certificate
+            key_algorithm: '(String) The key algorithm for the certificate. Supported: RSA_2048, RSA_3072, RSA_4096, ECDSA_P256, ECDSA_P384, ECDSA_P521'
+            key_usages: '(List of String) Key usages for the certificate. Supported: digital_signature, key_encipherment, non_repudiation, data_encipherment, key_agreement, key_cert_sign, crl_sign, encipher_only, decipher_only'
+            locality: (String) The locality (L) for the certificate
+            not_after: (String) The not-after (expiration) date of the certificate (RFC3339 format)
+            not_before: (String) The not-before date of the certificate (RFC3339 format)
+            organization: (String) The organization (O) for the certificate
+            ou: (String) The organizational unit (OU) for the certificate
+            private_key: (String, Sensitive) The private key in PEM format (only available for direct field requests, not CSR-based)
+            profile_id: (String) The ID of the certificate profile to use for issuance
+            province: (String) The state/province (ST) for the certificate
+            serial_number: (String) The serial number of the issued certificate
+            signature_algorithm: '(String) The signature algorithm for the certificate. Supported: RSA-SHA256, RSA-SHA384, RSA-SHA512, ECDSA-SHA256, ECDSA-SHA384, ECDSA-SHA512'
+            status: (String) The status of the certificate (pending, issued, failed)
+            timeout_seconds: (Number) Maximum time to wait for certificate issuance in seconds. Defaults to 3600 (1 hour)
+            ttl: (String) Time to live for the certificate (e.g., '30d', '90d', '1y')
+        importStatements: []
+    infisical_cert_manager_certificate_policy:
+        subCategory: Certificate Management
+        description: Create and manage certificate policies in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_certificate_policy
+        title: infisical_cert_manager_certificate_policy Resource - terraform-provider-infisical
+        examples:
+            - name: web_server
+              manifest: |-
+                {
+                  "algorithms": [
+                    {
+                      "key_algorithm": [
+                        "RSA-2048",
+                        "RSA-3072",
+                        "ECDSA-P256",
+                        "ECDSA-P384"
+                      ],
+                      "signature": [
+                        "SHA256-RSA",
+                        "SHA256-ECDSA",
+                        "SHA384-ECDSA"
+                      ]
+                    }
+                  ],
+                  "description": "Policy for web server certificates",
+                  "extended_key_usages": [
+                    {
+                      "allowed": [
+                        "server_auth",
+                        "client_auth"
+                      ]
+                    }
+                  ],
+                  "key_usages": [
+                    {
+                      "allowed": [
+                        "digital_signature",
+                        "key_encipherment"
+                      ]
+                    }
+                  ],
+                  "name": "web-server-policy",
+                  "project_slug": "${infisical_project.pki.slug}",
+                  "sans": [
+                    {
+                      "allowed": [
+                        "*.example.com",
+                        "*.internal.example.com"
+                      ],
+                      "required": [
+                        "*.example.com"
+                      ],
+                      "type": "dns_name"
+                    },
+                    {
+                      "allowed": [
+                        "*@example.com"
+                      ],
+                      "type": "email"
+                    },
+                    {
+                      "allowed": [
+                        "10.0.0.0/8",
+                        "192.168.0.0/16"
+                      ],
+                      "type": "ip_address"
+                    }
+                  ],
+                  "subject": [
+                    {
+                      "allowed": [
+                        "*.example.com",
+                        "*.internal.example.com"
+                      ],
+                      "required": [
+                        "*.example.com"
+                      ],
+                      "type": "common_name"
+                    },
+                    {
+                      "required": [
+                        "Example Corp"
+                      ],
+                      "type": "organization"
+                    },
+                    {
+                      "required": [
+                        "US"
+                      ],
+                      "type": "country"
+                    }
+                  ],
+                  "validity": [
+                    {
+                      "max": "90d"
+                    }
+                  ]
+                }
+              references:
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+            - name: code_signing
+              manifest: |-
+                {
+                  "algorithms": [
+                    {
+                      "key_algorithm": [
+                        "RSA-2048",
+                        "RSA-3072",
+                        "ECDSA-P256"
+                      ],
+                      "signature": [
+                        "SHA256-RSA",
+                        "SHA256-ECDSA"
+                      ]
+                    }
+                  ],
+                  "description": "Policy for code signing certificates",
+                  "extended_key_usages": [
+                    {
+                      "allowed": [
+                        "code_signing"
+                      ]
+                    }
+                  ],
+                  "key_usages": [
+                    {
+                      "allowed": [
+                        "digital_signature"
+                      ]
+                    }
+                  ],
+                  "name": "code-signing-policy",
+                  "project_slug": "${infisical_project.pki.slug}",
+                  "subject": [
+                    {
+                      "allowed": [
+                        "Example Corp Code Signing"
+                      ],
+                      "required": [
+                        "Example Corp Code Signing"
+                      ],
+                      "type": "common_name"
+                    },
+                    {
+                      "required": [
+                        "Example Corp"
+                      ],
+                      "type": "organization"
+                    },
+                    {
+                      "required": [
+                        "US"
+                      ],
+                      "type": "country"
+                    }
+                  ],
+                  "validity": [
+                    {
+                      "max": "1y"
+                    }
+                  ]
+                }
+              references:
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+        argumentDocs:
+            algorithms: (Block, Optional) Algorithm constraints for the certificate policy. At least one signature algorithm and one key algorithm must be specified. (see below for nested schema)
+            allowed: '(List of String) List of allowed extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
+            denied: '(List of String) List of denied extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
+            description: (String) The description of the certificate policy
+            extended_key_usages: (Block, Optional) Extended key usage policies for the certificate policy (see below for nested schema)
+            id: (String) The ID of the certificate policy
+            key_algorithm: '(List of String) List of allowed key algorithms (at least one required). Supported values: RSA-2048, RSA-3072, RSA-4096, ECDSA-P256, ECDSA-P521, ECDSA-P384'
+            key_usages: (Block, Optional) Key usage policies for the certificate policy (see below for nested schema)
+            max: (String) Maximum validity period (e.g., '90d', '2y', '6m')
+            name: (String) The name of the certificate policy
+            project_slug: (String) The slug of the cert-manager project
+            required: '(List of String) List of required extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
+            sans: (Block List) Subject alternative name (SAN) policies for the certificate policy (see below for nested schema)
+            signature: '(List of String) List of allowed signature algorithms (at least one required). Supported values: SHA256-RSA, SHA512-RSA, SHA384-ECDSA, SHA384-RSA, SHA256-ECDSA, SHA512-ECDSA'
+            subject: (Block List) Subject attribute policies for the certificate policy (see below for nested schema)
+            type: '(String) The SAN type. Possible values: dns_name, ip_address, email, uri'
+            validity: (Block, Optional) Validity constraints for the certificate policy (see below for nested schema)
+        importStatements: []
+    infisical_cert_manager_certificate_profile:
+        subCategory: Certificate Management
+        description: Create and manage certificate profiles in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_certificate_profile
+        title: infisical_cert_manager_certificate_profile Resource - terraform-provider-infisical
+        examples:
+            - name: web_server_api
+              manifest: |-
+                {
+                  "api_config": [
+                    {
+                      "auto_renew": true,
+                      "renew_before_days": 7
+                    }
+                  ],
+                  "ca_id": "${infisical_cert_manager_internal_ca.issuing.id}",
+                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
+                  "description": "API enrollment for web server certificates",
+                  "enrollment_type": "api",
+                  "issuer_type": "ca",
+                  "name": "web-server-api",
+                  "project_slug": "${infisical_project.pki.slug}"
+                }
+              references:
+                ca_id: infisical_cert_manager_internal_ca.issuing.id
+                certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_cert_manager_certificate_policy.web_server: |-
+                    {
+                      "algorithms": [
+                        {
+                          "key_algorithm": [
+                            "RSA-2048",
+                            "RSA-3072",
+                            "ECDSA-P256",
+                            "ECDSA-P384"
+                          ],
+                          "signature": [
+                            "SHA256-RSA",
+                            "SHA256-ECDSA",
+                            "SHA384-ECDSA"
+                          ]
+                        }
+                      ],
+                      "description": "Policy for web server certificates",
+                      "extended_key_usages": [
+                        {
+                          "allowed": [
+                            "server_auth",
+                            "client_auth"
+                          ]
+                        }
+                      ],
+                      "key_usages": [
+                        {
+                          "allowed": [
+                            "digital_signature",
+                            "key_encipherment"
+                          ]
+                        }
+                      ],
+                      "name": "web-server-policy",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "sans": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "dns_name"
+                        },
+                        {
+                          "allowed": [
+                            "*@example.com"
+                          ],
+                          "type": "email"
+                        }
+                      ],
+                      "subject": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "common_name"
+                        },
+                        {
+                          "required": [
+                            "Example Corp"
+                          ],
+                          "type": "organization"
+                        },
+                        {
+                          "required": [
+                            "US"
+                          ],
+                          "type": "country"
+                        }
+                      ],
+                      "validity": [
+                        {
+                          "max": "90d"
+                        }
+                      ]
+                    }
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "intermediate"
+                    }
+                infisical_cert_manager_internal_ca.root: |-
+                    {
+                      "common_name": "Enterprise Root Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-root-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "root"
+                    }
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+            - name: web_server_est
+              manifest: |-
+                {
+                  "ca_id": "${infisical_cert_manager_internal_ca.issuing.id}",
+                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
+                  "description": "EST enrollment for web server certificates",
+                  "enrollment_type": "est",
+                  "est_config": [
+                    {
+                      "ca_chain": "${var.encrypted_ca_chain}",
+                      "disable_bootstrap_ca_validation": false,
+                      "passphrase": "${var.est_passphrase}"
+                    }
+                  ],
+                  "issuer_type": "ca",
+                  "name": "web-server-est",
+                  "project_slug": "${infisical_project.pki.slug}"
+                }
+              references:
+                ca_id: infisical_cert_manager_internal_ca.issuing.id
+                certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
+                est_config.ca_chain: var.encrypted_ca_chain
+                est_config.passphrase: var.est_passphrase
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_cert_manager_certificate_policy.web_server: |-
+                    {
+                      "algorithms": [
+                        {
+                          "key_algorithm": [
+                            "RSA-2048",
+                            "RSA-3072",
+                            "ECDSA-P256",
+                            "ECDSA-P384"
+                          ],
+                          "signature": [
+                            "SHA256-RSA",
+                            "SHA256-ECDSA",
+                            "SHA384-ECDSA"
+                          ]
+                        }
+                      ],
+                      "description": "Policy for web server certificates",
+                      "extended_key_usages": [
+                        {
+                          "allowed": [
+                            "server_auth",
+                            "client_auth"
+                          ]
+                        }
+                      ],
+                      "key_usages": [
+                        {
+                          "allowed": [
+                            "digital_signature",
+                            "key_encipherment"
+                          ]
+                        }
+                      ],
+                      "name": "web-server-policy",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "sans": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "dns_name"
+                        },
+                        {
+                          "allowed": [
+                            "*@example.com"
+                          ],
+                          "type": "email"
+                        }
+                      ],
+                      "subject": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "common_name"
+                        },
+                        {
+                          "required": [
+                            "Example Corp"
+                          ],
+                          "type": "organization"
+                        },
+                        {
+                          "required": [
+                            "US"
+                          ],
+                          "type": "country"
+                        }
+                      ],
+                      "validity": [
+                        {
+                          "max": "90d"
+                        }
+                      ]
+                    }
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "intermediate"
+                    }
+                infisical_cert_manager_internal_ca.root: |-
+                    {
+                      "common_name": "Enterprise Root Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-root-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "root"
+                    }
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+            - name: self_signed_dev
+              manifest: |-
+                {
+                  "api_config": [
+                    {
+                      "auto_renew": false,
+                      "renew_before_days": 7
+                    }
+                  ],
+                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
+                  "description": "Self-signed certificates for development",
+                  "enrollment_type": "api",
+                  "issuer_type": "self-signed",
+                  "name": "self-signed-dev",
+                  "project_slug": "${infisical_project.pki.slug}"
+                }
+              references:
+                certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_cert_manager_certificate_policy.web_server: |-
+                    {
+                      "algorithms": [
+                        {
+                          "key_algorithm": [
+                            "RSA-2048",
+                            "RSA-3072",
+                            "ECDSA-P256",
+                            "ECDSA-P384"
+                          ],
+                          "signature": [
+                            "SHA256-RSA",
+                            "SHA256-ECDSA",
+                            "SHA384-ECDSA"
+                          ]
+                        }
+                      ],
+                      "description": "Policy for web server certificates",
+                      "extended_key_usages": [
+                        {
+                          "allowed": [
+                            "server_auth",
+                            "client_auth"
+                          ]
+                        }
+                      ],
+                      "key_usages": [
+                        {
+                          "allowed": [
+                            "digital_signature",
+                            "key_encipherment"
+                          ]
+                        }
+                      ],
+                      "name": "web-server-policy",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "sans": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "dns_name"
+                        },
+                        {
+                          "allowed": [
+                            "*@example.com"
+                          ],
+                          "type": "email"
+                        }
+                      ],
+                      "subject": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "common_name"
+                        },
+                        {
+                          "required": [
+                            "Example Corp"
+                          ],
+                          "type": "organization"
+                        },
+                        {
+                          "required": [
+                            "US"
+                          ],
+                          "type": "country"
+                        }
+                      ],
+                      "validity": [
+                        {
+                          "max": "90d"
+                        }
+                      ]
+                    }
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "intermediate"
+                    }
+                infisical_cert_manager_internal_ca.root: |-
+                    {
+                      "common_name": "Enterprise Root Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-root-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "root"
+                    }
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+            - name: acme_profile
+              manifest: |-
+                {
+                  "ca_id": "${var.acme_ca_id}",
+                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
+                  "description": "Let's Encrypt ACME certificates",
+                  "enrollment_type": "acme",
+                  "issuer_type": "ca",
+                  "name": "acme-letsencrypt",
+                  "project_slug": "${infisical_project.pki.slug}"
+                }
+              references:
+                ca_id: var.acme_ca_id
+                certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_cert_manager_certificate_policy.web_server: |-
+                    {
+                      "algorithms": [
+                        {
+                          "key_algorithm": [
+                            "RSA-2048",
+                            "RSA-3072",
+                            "ECDSA-P256",
+                            "ECDSA-P384"
+                          ],
+                          "signature": [
+                            "SHA256-RSA",
+                            "SHA256-ECDSA",
+                            "SHA384-ECDSA"
+                          ]
+                        }
+                      ],
+                      "description": "Policy for web server certificates",
+                      "extended_key_usages": [
+                        {
+                          "allowed": [
+                            "server_auth",
+                            "client_auth"
+                          ]
+                        }
+                      ],
+                      "key_usages": [
+                        {
+                          "allowed": [
+                            "digital_signature",
+                            "key_encipherment"
+                          ]
+                        }
+                      ],
+                      "name": "web-server-policy",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "sans": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "dns_name"
+                        },
+                        {
+                          "allowed": [
+                            "*@example.com"
+                          ],
+                          "type": "email"
+                        }
+                      ],
+                      "subject": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "common_name"
+                        },
+                        {
+                          "required": [
+                            "Example Corp"
+                          ],
+                          "type": "organization"
+                        },
+                        {
+                          "required": [
+                            "US"
+                          ],
+                          "type": "country"
+                        }
+                      ],
+                      "validity": [
+                        {
+                          "max": "90d"
+                        }
+                      ]
+                    }
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "intermediate"
+                    }
+                infisical_cert_manager_internal_ca.root: |-
+                    {
+                      "common_name": "Enterprise Root Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-root-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "root"
+                    }
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+            - name: adcs_profile
+              manifest: |-
+                {
+                  "api_config": [
+                    {
+                      "auto_renew": true,
+                      "renew_before_days": 14
+                    }
+                  ],
+                  "ca_id": "${var.adcs_ca_id}",
+                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
+                  "description": "Corporate ADCS certificates",
+                  "enrollment_type": "api",
+                  "external_configs": [
+                    {
+                      "template": "WebServerTemplate"
+                    }
+                  ],
+                  "issuer_type": "ca",
+                  "name": "adcs-corporate",
+                  "project_slug": "${infisical_project.pki.slug}"
+                }
+              references:
+                ca_id: var.adcs_ca_id
+                certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_cert_manager_certificate_policy.web_server: |-
+                    {
+                      "algorithms": [
+                        {
+                          "key_algorithm": [
+                            "RSA-2048",
+                            "RSA-3072",
+                            "ECDSA-P256",
+                            "ECDSA-P384"
+                          ],
+                          "signature": [
+                            "SHA256-RSA",
+                            "SHA256-ECDSA",
+                            "SHA384-ECDSA"
+                          ]
+                        }
+                      ],
+                      "description": "Policy for web server certificates",
+                      "extended_key_usages": [
+                        {
+                          "allowed": [
+                            "server_auth",
+                            "client_auth"
+                          ]
+                        }
+                      ],
+                      "key_usages": [
+                        {
+                          "allowed": [
+                            "digital_signature",
+                            "key_encipherment"
+                          ]
+                        }
+                      ],
+                      "name": "web-server-policy",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "sans": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "dns_name"
+                        },
+                        {
+                          "allowed": [
+                            "*@example.com"
+                          ],
+                          "type": "email"
+                        }
+                      ],
+                      "subject": [
+                        {
+                          "allowed": [
+                            "*.example.com",
+                            "*.internal.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "common_name"
+                        },
+                        {
+                          "required": [
+                            "Example Corp"
+                          ],
+                          "type": "organization"
+                        },
+                        {
+                          "required": [
+                            "US"
+                          ],
+                          "type": "country"
+                        }
+                      ],
+                      "validity": [
+                        {
+                          "max": "90d"
+                        }
+                      ]
+                    }
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "intermediate"
+                    }
+                infisical_cert_manager_internal_ca.root: |-
+                    {
+                      "common_name": "Enterprise Root Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "locality": "San Francisco",
+                      "name": "enterprise-root-ca",
+                      "organization": "Example Corp",
+                      "ou": "IT Security",
+                      "project_slug": "${infisical_project.pki.slug}",
+                      "province": "California",
+                      "type": "root"
+                    }
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for PKI certificate management",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+        argumentDocs:
+            api_config: (Block, Optional) API configuration (required when enrollment_type is 'api') (see below for nested schema)
+            auto_renew: (Boolean) Whether to automatically renew certificates
+            ca_chain: (String, Sensitive) The CA certificate chain for EST enrollment
+            ca_id: (String) The ID of the certificate authority to use (required unless issuer_type is 'self-signed')
+            certificate_policy_id: (String) The ID of the certificate policy to use
+            description: (String) The description of the certificate profile
+            disable_bootstrap_ca_validation: (Boolean) Whether to disable bootstrap CA validation
+            enrollment_type: '(String) The enrollment type for the profile. Supported values: api, est, acme'
+            est_config: (Block, Optional) EST configuration (required when enrollment_type is 'est') (see below for nested schema)
+            external_configs: (Block, Optional) External configuration for external CA types (e.g., ADCS template name) (see below for nested schema)
+            id: (String) The ID of the certificate profile
+            issuer_type: '(String) The issuer type for the profile. Supported values: ca, self-signed. Defaults to ''ca''.'
+            name: (String) The unique name of the certificate profile
+            passphrase: (String, Sensitive) The passphrase for EST enrollment
+            project_slug: (String) The slug of the cert-manager project
+            renew_before_days: (Number) Number of days before expiration to renew certificates (1-30)
+            template: (String) Certificate template name for Azure AD CS
+        importStatements: []
+    infisical_cert_manager_external_ca_acme:
+        subCategory: Certificate Management
+        description: Create and manage external ACME certificate authorities in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_external_ca_acme
+        title: infisical_cert_manager_external_ca_acme Resource - terraform-provider-infisical
+        examples:
+            - name: letsencrypt
+              manifest: |-
+                {
+                  "account_email": "admin@acme.com",
+                  "directory_url": "https://acme-v02.api.letsencrypt.org/directory",
+                  "dns_app_connection_id": "your-route53-connection-id",
+                  "dns_hosted_zone_id": "Z123456789ABCDEFGH",
+                  "dns_provider": "route53",
+                  "name": "letsencrypt-prod",
+                  "project_slug": "${infisical_project.pki.slug}",
+                  "status": "active"
+                }
+              references:
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for managing SSL/TLS certificates",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+        argumentDocs:
+            account_email: (String) The email address for ACME account registration
+            directory_url: (String) The ACME directory URL
+            dns_app_connection_id: (String) The ID of the DNS app connection for ACME challenge validation
+            dns_hosted_zone_id: (String) The hosted zone ID for DNS-01 challenge validation
+            dns_provider: '(String) The DNS provider for ACME challenge validation. Supported values: route53, cloudflare, dns-made-easy'
+            eab_hmac_key: (String, Sensitive) External Account Binding (EAB) HMAC key (optional)
+            eab_kid: (String) External Account Binding (EAB) Key ID (optional)
+            id: (String) The ID of the ACME CA
+            name: (String) The name of the ACME CA
+            project_slug: (String) The slug of the cert-manager project
+            status: '(String) The status of the CA. Supported values: active, disabled. Defaults to ''active''.'
+        importStatements: []
+    infisical_cert_manager_external_ca_adcs:
+        subCategory: Certificate Management
+        description: Create and manage external ADCS (Microsoft Active Directory Certificate Services) certificate authorities in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_external_ca_adcs
+        title: infisical_cert_manager_external_ca_adcs Resource - terraform-provider-infisical
+        examples:
+            - name: adcs
+              manifest: |-
+                {
+                  "azure_adcs_connection_id": "your-azure-adcs-connection-id",
+                  "name": "corporate-adcs",
+                  "project_slug": "${infisical_project.pki.slug}",
+                  "status": "active"
+                }
+              references:
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for managing SSL/TLS certificates",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+        argumentDocs:
+            azure_adcs_connection_id: (String) The ID of the Azure ADCS app connection for certificate issuance
+            id: (String) The ID of the ADCS CA
+            name: (String) The name of the ADCS CA
+            project_slug: (String) The slug of the cert-manager project
+            status: '(String) The status of the CA. Supported values: active, disabled. Defaults to ''active''.'
+        importStatements: []
+    infisical_cert_manager_internal_ca:
+        subCategory: Certificate Management
+        description: Create and manage internal certificate authorities (root or intermediate) in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_internal_ca
+        title: infisical_cert_manager_internal_ca Resource - terraform-provider-infisical
+        examples:
+            - name: root
+              manifest: |-
+                {
+                  "common_name": "Enterprise Root Certificate Authority",
+                  "country": "US",
+                  "key_algorithm": "RSA_2048",
+                  "locality": "San Francisco",
+                  "name": "enterprise-root-ca",
+                  "organization": "Acme Corp",
+                  "ou": "IT Security",
+                  "project_slug": "${infisical_project.pki.slug}",
+                  "province": "California",
+                  "type": "root"
+                }
+              references:
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for managing SSL/TLS certificates",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+            - name: issuing
+              manifest: |-
+                {
+                  "common_name": "Enterprise Issuing Certificate Authority",
+                  "country": "US",
+                  "key_algorithm": "RSA_2048",
+                  "locality": "San Francisco",
+                  "name": "enterprise-issuing-ca",
+                  "organization": "Acme Corp",
+                  "ou": "IT Security",
+                  "project_slug": "${infisical_project.pki.slug}",
+                  "province": "California",
+                  "type": "intermediate"
+                }
+              references:
+                project_slug: infisical_project.pki.slug
+              dependencies:
+                infisical_project.pki: |-
+                    {
+                      "description": "Project for managing SSL/TLS certificates",
+                      "name": "PKI Project",
+                      "slug": "pki-project",
+                      "type": "cert-manager"
+                    }
+        argumentDocs:
+            common_name: (String) The common name (CN) of the CA certificate
+            country: (String) The country (C) of the CA certificate
+            id: (String) The ID of the CA
+            key_algorithm: '(String) The key algorithm for the CA. Supported values: RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1. Defaults to ''RSA_2048''.'
+            locality: (String) The locality (L) of the CA certificate
+            name: (String) The name of the CA
+            organization: (String) The organization (O) of the CA certificate
+            ou: (String) The organizational unit (OU) of the CA certificate
+            project_slug: (String) The slug of the cert-manager project
+            province: (String) The state/province (ST) of the CA certificate
+            status: '(String) The status of the CA. Supported values: active, disabled. Defaults to ''active''.'
+            type: '(String) The type of the CA. Supported values: root, intermediate'
+        importStatements:
+            - |-
+              # This will import the internal CA by its ID
+              terraform import infisical_cert_manager_internal_ca.example <ca_id>
     infisical_dynamic_secret_aws_iam:
-        subCategory: ""
+        subCategory: Dynamic Secrets
         description: Create and manage AWS IAM Dynamic Secret
         name: infisical_dynamic_secret_aws_iam
         title: infisical_dynamic_secret_aws_iam Resource - terraform-provider-infisical
@@ -597,7 +2025,7 @@ resources:
             value: (String) The value of the metadata object
         importStatements: []
     infisical_dynamic_secret_kubernetes:
-        subCategory: ""
+        subCategory: Dynamic Secrets
         description: Create and manage Kubernetes Dynamic Secret
         name: infisical_dynamic_secret_kubernetes
         title: infisical_dynamic_secret_kubernetes Resource - terraform-provider-infisical
@@ -659,7 +2087,7 @@ resources:
             value: (String) The value of the metadata object
         importStatements: []
     infisical_dynamic_secret_mongo_atlas:
-        subCategory: ""
+        subCategory: Dynamic Secrets
         description: Create and manage MongoDB Atlas Dynamic Secret
         name: infisical_dynamic_secret_mongo_atlas
         title: infisical_dynamic_secret_mongo_atlas Resource - terraform-provider-infisical
@@ -716,7 +2144,7 @@ resources:
             value: (String) The value of the metadata object
         importStatements: []
     infisical_dynamic_secret_mongo_db:
-        subCategory: ""
+        subCategory: Dynamic Secrets
         description: Create and manage MongoDB Dynamic Secret
         name: infisical_dynamic_secret_mongo_db
         title: infisical_dynamic_secret_mongo_db Resource - terraform-provider-infisical
@@ -764,7 +2192,7 @@ resources:
             value: (String) The value of the metadata object
         importStatements: []
     infisical_dynamic_secret_sql_database:
-        subCategory: ""
+        subCategory: Dynamic Secrets
         description: Create and manage SQL Database Dynamic Secret
         name: infisical_dynamic_secret_sql_database
         title: infisical_dynamic_secret_sql_database Resource - terraform-provider-infisical
@@ -779,7 +2207,7 @@ resources:
                     "host": "host.docker.internal",
                     "password": "infisical",
                     "password_requirements": {
-                      "allowed_symbols": "!@#$%^\u0026*()_+-=[]{}|;:,.\u003c\u003e?`~",
+                      "allowed_symbols": "!@#$%^\u0026*()_+-=[]{}|:,.\u003c\u003e?`~",
                       "length": 32,
                       "required": {
                         "digits": 3,
@@ -834,8 +2262,59 @@ resources:
             username_template: (String) The username template of the dynamic secret
             value: (String) The value of the metadata object
         importStatements: []
+    infisical_external_kms_aws:
+        subCategory: External KMS
+        description: Create and manage AWS External KMS
+        name: infisical_external_kms_aws
+        title: infisical_external_kms_aws Resource - terraform-provider-infisical
+        examples:
+            - name: external-kms-aws-assume-role
+              manifest: |-
+                {
+                  "configuration": {
+                    "aws_kms_key_id": "\u003caws-kms-key-id\u003e",
+                    "aws_region": "us-east-1",
+                    "credential": {
+                      "role_arn": "\u003cassume-role-arn\u003e",
+                      "role_external_id": "\u003crole-external-id\u003e"
+                    },
+                    "type": "assume-role"
+                  },
+                  "description": "AWS External KMS using assume-role type",
+                  "name": "aws-assume-role-external-kms"
+                }
+            - name: external-kms-aws-access-key
+              manifest: |-
+                {
+                  "configuration": {
+                    "aws_kms_key_id": "\u003caws-kms-key-id\u003e",
+                    "aws_region": "us-east-1",
+                    "credential": {
+                      "access_key_id": "\u003caccess-key-id\u003e",
+                      "secret_access_key": "\u003csecret-access-key\u003e"
+                    },
+                    "type": "access-key"
+                  },
+                  "description": "AWS External KMS using access-key type",
+                  "name": "aws-access-key-external-kms"
+                }
+        argumentDocs:
+            access_key_id: (String, Sensitive) The AWS Access Key ID used to authenticate requests to AWS services. Required for access-key type. For more details, refer to the documentation here https://infisical.com/docs/documentation/platform/kms-configuration/aws-kms#param-access-key-id
+            aws_kms_key_id: (String) The AWS KMS key ID to use for the external KMS. For more details, refer to the documentation here https://infisical.com/docs/documentation/platform/kms-configuration/aws-kms#param-aws-kms-key-id
+            aws_region: (String) The AWS region where the KMS key is located
+            configuration: (Attributes) The configuration for the AWS External KMS (see below for nested schema)
+            credential: (Attributes) The AWS credentials for the external KMS (see below for nested schema)
+            credentials_hash: (String) The hash of the AWS External KMS credentials
+            description: (String) An optional description for the KMS.
+            id: (String) The ID of the KMS
+            name: (String) The name of the KMS to create. Must be slug-friendly
+            role_arn: (String, Sensitive) The Amazon Resource Name (ARN) of the IAM role to assume for performing operations. Infisical will assume this role using AWS Security Token Service (STS). Required for assume-role type. For more details, refer to the documentation here https://infisical.com/docs/documentation/platform/kms-configuration/aws-kms#param-iam-role-arn-for-role-assumption
+            role_external_id: (String, Sensitive) The external ID of the role to assume for performing operations. Required for assume-role type. For more details, refer to the documentation here https://infisical.com/docs/documentation/platform/kms-configuration/aws-kms#param-assume-role-external-id
+            secret_access_key: (String, Sensitive) The AWS Secret Access Key associated with the Access Key ID to authenticate requests to AWS services. Required for access-key type. For more details, refer to the documentation here https://infisical.com/docs/documentation/platform/kms-configuration/aws-kms#param-secret-access-key
+            type: (String) The Authentication Type to use. Must be access-key or assume-role
+        importStatements: []
     infisical_group:
-        subCategory: ""
+        subCategory: Groups
         description: Create groups & save to Infisical. Only Machine Identity authentication is supported for this resource
         name: infisical_group
         title: infisical_group Resource - terraform-provider-infisical
@@ -857,7 +2336,7 @@ resources:
               # This will import the resource by its group ID
               terraform import infisical_group.example <group_id>
     infisical_identity:
-        subCategory: ""
+        subCategory: Identities
         description: Create and manage identity in Infisical.
         name: infisical_identity
         title: infisical_identity Resource - terraform-provider-infisical
@@ -913,6 +2392,18 @@ resources:
                       "identity_id": "${infisical_identity.k8-auth.id}",
                       "kubernetes_host": "http://example.com",
                       "token_reviewer_jwt": "ey\u003cexample\u003e"
+                    }
+                infisical_identity_token_auth.token-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.token-auth.id}"
+                    }
+                infisical_identity_token_auth_token.token-auth-token: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_token_auth.token-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.token-auth.id}",
+                      "name": "token-auth-token"
                     }
                 infisical_identity_universal_auth.ua-auth: |-
                     {
@@ -970,6 +2461,18 @@ resources:
                       "kubernetes_host": "http://example.com",
                       "token_reviewer_jwt": "ey\u003cexample\u003e"
                     }
+                infisical_identity_token_auth.token-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.token-auth.id}"
+                    }
+                infisical_identity_token_auth_token.token-auth-token: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_token_auth.token-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.token-auth.id}",
+                      "name": "token-auth-token"
+                    }
                 infisical_identity_universal_auth.ua-auth: |-
                     {
                       "access_token_max_ttl": "${2592000 * 2}",
@@ -1025,6 +2528,18 @@ resources:
                       "identity_id": "${infisical_identity.k8-auth.id}",
                       "kubernetes_host": "http://example.com",
                       "token_reviewer_jwt": "ey\u003cexample\u003e"
+                    }
+                infisical_identity_token_auth.token-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.token-auth.id}"
+                    }
+                infisical_identity_token_auth_token.token-auth-token: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_token_auth.token-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.token-auth.id}",
+                      "name": "token-auth-token"
                     }
                 infisical_identity_universal_auth.ua-auth: |-
                     {
@@ -1082,6 +2597,18 @@ resources:
                       "kubernetes_host": "http://example.com",
                       "token_reviewer_jwt": "ey\u003cexample\u003e"
                     }
+                infisical_identity_token_auth.token-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.token-auth.id}"
+                    }
+                infisical_identity_token_auth_token.token-auth-token: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_token_auth.token-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.token-auth.id}",
+                      "name": "token-auth-token"
+                    }
                 infisical_identity_universal_auth.ua-auth: |-
                     {
                       "access_token_max_ttl": "${2592000 * 2}",
@@ -1138,6 +2665,86 @@ resources:
                       "kubernetes_host": "http://example.com",
                       "token_reviewer_jwt": "ey\u003cexample\u003e"
                     }
+                infisical_identity_token_auth.token-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.token-auth.id}"
+                    }
+                infisical_identity_token_auth_token.token-auth-token: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_token_auth.token-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.token-auth.id}",
+                      "name": "token-auth-token"
+                    }
+                infisical_identity_universal_auth.ua-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+                infisical_identity_universal_auth_client_secret.client-secret: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_universal_auth.ua-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.universal-auth.id}"
+                    }
+            - name: token-auth
+              manifest: |-
+                {
+                  "name": "token-auth",
+                  "org_id": "\u003corg_id\u003e",
+                  "role": "member"
+                }
+              dependencies:
+                infisical_identity_aws_auth.aws-auth: |-
+                    {
+                      "access_token_max_ttl": "${2592000 * 2}",
+                      "access_token_num_uses_limit": 3,
+                      "access_token_ttl": 2592000,
+                      "allowed_account_ids": [
+                        "123456789012",
+                        "123456789013"
+                      ],
+                      "allowed_principal_arns": [
+                        "arn:aws:iam::123456789012:user/MyUserName"
+                      ],
+                      "identity_id": "${infisical_identity.aws-auth.id}"
+                    }
+                infisical_identity_azure_auth.azure-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.azure-auth.id}",
+                      "tenant_id": "TENANT_ID"
+                    }
+                infisical_identity_gcp_auth.gcp-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.gcp-auth.id}",
+                      "type": "gce"
+                    }
+                infisical_identity_kubernetes_auth.k8-auth: |-
+                    {
+                      "allowed_namespaces": [
+                        "namespace-a",
+                        "namespace-b"
+                      ],
+                      "identity_id": "${infisical_identity.k8-auth.id}",
+                      "kubernetes_host": "http://example.com",
+                      "token_reviewer_jwt": "ey\u003cexample\u003e"
+                    }
+                infisical_identity_token_auth.token-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.token-auth.id}"
+                    }
+                infisical_identity_token_auth_token.token-auth-token: |-
+                    {
+                      "depends_on": [
+                        "${infisical_identity_token_auth.token-auth}"
+                      ],
+                      "identity_id": "${infisical_identity.token-auth.id}",
+                      "name": "token-auth-token"
+                    }
                 infisical_identity_universal_auth.ua-auth: |-
                     {
                       "access_token_max_ttl": "${2592000 * 2}",
@@ -1167,7 +2774,7 @@ resources:
               # This will import the resource by its identity ID
               terraform import infisical_identity.example <identity_id>
     infisical_identity_aws_auth Resource - terraform-provider-infisical:
-        subCategory: ""
+        subCategory: Identities
         description: Create and manage identity aws auth in Infisical.
         name: infisical_identity_aws_auth Resource - terraform-provider-infisical
         title: infisical_identity_aws_auth Resource - terraform-provider-infisical
@@ -1184,7 +2791,7 @@ resources:
             sts_endpoint: (String) The endpoint URL for the AWS STS API. This value should be adjusted based on the AWS region you are operating in (e.g. https://sts.us-east-1.amazonaws.com/); refer to the list of regional STS endpoints here.
         importStatements: []
     infisical_identity_azure_auth:
-        subCategory: ""
+        subCategory: Identities
         description: Create and manage identity azure auth in Infisical.
         name: infisical_identity_azure_auth
         title: infisical_identity_azure_auth Resource - terraform-provider-infisical
@@ -1227,7 +2834,7 @@ resources:
               # This will import the resource by its identity ID
               terraform import infisical_identity_azure_auth.example <identity_id>
     infisical_identity_gcp_auth Resource - terraform-provider-infisical:
-        subCategory: ""
+        subCategory: Identities
         description: Create and manage identity gcp auth in Infisical.
         name: infisical_identity_gcp_auth Resource - terraform-provider-infisical
         title: infisical_identity_gcp_auth Resource - terraform-provider-infisical
@@ -1244,11 +2851,76 @@ resources:
             ip_address: (String)
             type: '(String) The Type of GCP Auth Method to use: Options are gce, iam. Default:gce'
         importStatements: []
-    infisical_identity_kubernetes_auth Resource - terraform-provider-infisical:
-        subCategory: ""
+    infisical_identity_kubernetes_auth:
+        subCategory: Identities
         description: Create and manage identity kubernetes auth in Infisical.
-        name: infisical_identity_kubernetes_auth Resource - terraform-provider-infisical
+        name: infisical_identity_kubernetes_auth
         title: infisical_identity_kubernetes_auth Resource - terraform-provider-infisical
+        examples:
+            - name: kubernetes-auth-demo-1
+              manifest: |-
+                {
+                  "access_token_max_ttl": 2592000,
+                  "access_token_ttl": 2592000,
+                  "allowed_namespaces": [
+                    "infisical-ns"
+                  ],
+                  "allowed_service_account_names": [
+                    "infisical-sa",
+                    "infisical-sa-2"
+                  ],
+                  "identity_id": "${infisical_identity.machine-identity-demo-1.id}",
+                  "kubernetes_ca_certificate": "\u003cyour-kubernetes-ca-certificate\u003e",
+                  "kubernetes_host": "http://\u003cyour-kubernetes-host\u003e",
+                  "token_reviewer_jwt": "ey\u003cexample\u003e",
+                  "token_reviewer_mode": "api"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-demo-1.id
+              dependencies:
+                infisical_identity.machine-identity-demo-1: |-
+                    {
+                      "name": "machine-identity-demo-1",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+                infisical_identity.machine-identity-demo-2: |-
+                    {
+                      "name": "machine-identity-demo-2",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+            - name: kubernetes-auth-demo-2
+              manifest: |-
+                {
+                  "access_token_max_ttl": 2592000,
+                  "access_token_ttl": 2592000,
+                  "allowed_namespaces": [
+                    "infisical-ns"
+                  ],
+                  "allowed_service_account_names": [
+                    "infisical-sa",
+                    "infisical-sa-2"
+                  ],
+                  "gateway_id": "\u003cyour-gateway-id\u003e",
+                  "identity_id": "${infisical_identity.machine-identity-demo-2.id}",
+                  "token_reviewer_mode": "gateway"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-demo-2.id
+              dependencies:
+                infisical_identity.machine-identity-demo-1: |-
+                    {
+                      "name": "machine-identity-demo-1",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+                infisical_identity.machine-identity-demo-2: |-
+                    {
+                      "name": "machine-identity-demo-2",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
         argumentDocs:
             access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
             access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
@@ -1257,15 +2929,20 @@ resources:
             allowed_audience: (String) An optional audience claim that the service account JWT token must have to authenticate with Infisical.
             allowed_namespaces: (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
             allowed_service_account_names: (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
+            gateway_id: (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
             id: (String) The ID of the kubernetes auth
             identity_id: (String) The ID of the identity to attach the configuration onto.
             ip_address: (String)
             kubernetes_ca_certificate: (String) The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
             kubernetes_host: (String) The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running kubectl cluster-info.
             token_reviewer_jwt: (String) A long-lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
-        importStatements: []
+            token_reviewer_mode: (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+        importStatements:
+            - |-
+              # This will import the resource by its identity ID
+              terraform import infisical_identity_kubernetes_auth.example <identity_id>
     infisical_identity_oidc_auth:
-        subCategory: ""
+        subCategory: Identities
         description: Create and manage identity oidc auth in Infisical.
         name: infisical_identity_oidc_auth
         title: infisical_identity_oidc_auth Resource - terraform-provider-infisical
@@ -1306,8 +2983,83 @@ resources:
             oidc_ca_certificate: (String) The PEM-encoded CA cert for establishing secure communication with the Identity Provider endpoints
             oidc_discovery_url: (String) The URL used to retrieve the OpenID Connect configuration from the identity provider.
         importStatements: []
+    infisical_identity_token_auth:
+        subCategory: Identities
+        description: Create and manage identity token auth in Infisical.
+        name: infisical_identity_token_auth
+        title: infisical_identity_token_auth Resource - terraform-provider-infisical
+        examples:
+            - name: token-auth
+              manifest: |-
+                {
+                  "identity_id": "${infisical_identity.machine-identity-1.id}"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-1.id
+              dependencies:
+                infisical_identity.machine-identity-1: |-
+                    {
+                      "name": "machine-identity-1",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address... (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            id: (String) The ID of the token auth.
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+        importStatements:
+            - |-
+              # This will import the resource by its identity ID
+              terraform import infisical_identity_token_auth.example <identity_id>
+    infisical_identity_token_auth_token:
+        subCategory: Identities
+        description: Create and manage identity token auth token in Infisical.
+        name: infisical_identity_token_auth_token
+        title: infisical_identity_token_auth_token Resource - terraform-provider-infisical
+        examples:
+            - name: token-auth-token
+              manifest: |-
+                {
+                  "depends_on": [
+                    "${infisical_identity_token_auth.token-auth}"
+                  ],
+                  "identity_id": "${infisical_identity.machine-identity-1.id}",
+                  "name": "token-auth-token"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-1.id
+              dependencies:
+                infisical_identity.machine-identity-1: |-
+                    {
+                      "name": "machine-identity-1",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+                infisical_identity_token_auth.token-auth: |-
+                    {
+                      "identity_id": "${infisical_identity.machine-identity-1.id}"
+                    }
+        argumentDocs:
+            created_at: (String) The UTC timestamp of the created at date.
+            id: (String) The ID of the token auth token
+            identity_id: (String) The ID of the identity to create a token for
+            is_revoked: (Boolean) A flag indicating token has been revoked
+            name: (String) The name of the token auth token
+            number_of_uses: (Number) The number of times that the token is used
+            number_of_uses_limit: '(Number) The maximum number of times that the token can be used; a value of 0 implies infinite number of uses. Default: 0'
+            token: (String, Sensitive) The token.
+            ttl: '(Number) The lifetime for the token in seconds. Default: 0 - not expiring'
+        importStatements:
+            - |-
+              # This will import the resource by its token ID
+              # Note: The token value itself cannot be retrieved during import for security reasons
+              terraform import infisical_identity_token_auth_token.example <token-id>
     infisical_identity_universal_auth Resource - terraform-provider-infisical:
-        subCategory: ""
+        subCategory: Identities
         description: Create and manage identity universal auth in Infisical.
         name: infisical_identity_universal_auth Resource - terraform-provider-infisical
         title: infisical_identity_universal_auth Resource - terraform-provider-infisical
@@ -1322,14 +3074,14 @@ resources:
             ip_address: (String)
         importStatements: []
     infisical_identity_universal_auth_client_secret Resource - terraform-provider-infisical:
-        subCategory: ""
+        subCategory: Identities
         description: Create and manage identity universal auth client secret in Infisical.
         name: infisical_identity_universal_auth_client_secret Resource - terraform-provider-infisical
         title: infisical_identity_universal_auth_client_secret Resource - terraform-provider-infisical
         argumentDocs:
             client_id: (String) The client ID of the secret.
             client_secret: (String, Sensitive) The client secret.
-            created_at: (String) The UTC timestamp of the created at.
+            created_at: (String) The UTC timestamp of the created at date.
             description: (String) The description of the client secret.
             id: (String) The ID of the universal auth client secret
             identity_id: (String) The ID of the identity to create a client secret for
@@ -1339,8 +3091,8 @@ resources:
             ttl: '(Number) The lifetime for the client secret in seconds. Default: 0 - not expiring'
         importStatements: []
     infisical_integration_aws_parameter_store:
-        subCategory: ""
-        description: Create AWS Parameter Store integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        subCategory: Native Integrations - DEPRECATED
+        description: 'Deprecated: This resource is deprecated and will be removed in a future version. Use infisical_secret_sync_aws_parameter_store instead. Create AWS Parameter Store integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_aws_parameter_store
         title: infisical_integration_aws_parameter_store Resource - terraform-provider-infisical
         examples:
@@ -1383,8 +3135,8 @@ resources:
             value: (String) The value of the tag.
         importStatements: []
     infisical_integration_aws_secrets_manager:
-        subCategory: ""
-        description: Create AWS Secrets Manager integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        subCategory: Native Integrations - DEPRECATED
+        description: 'Deprecated: This resource is deprecated and will be removed in a future version. Use infisical_secret_sync_aws_secrets_manager instead. Create AWS Secrets Manager integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_aws_secrets_manager
         title: infisical_integration_aws_secrets_manager Resource - terraform-provider-infisical
         examples:
@@ -1430,7 +3182,7 @@ resources:
             value: (String) The value of the tag.
         importStatements: []
     infisical_integration_circleci:
-        subCategory: ""
+        subCategory: Native Integrations - DEPRECATED
         description: Create CircleCI integration & save to Infisical. Only Machine Identity authentication is supported for this data source
         name: infisical_integration_circleci
         title: infisical_integration_circleci Resource - terraform-provider-infisical
@@ -1456,8 +3208,8 @@ resources:
             secret_path: (String) The secret path in Infisical to sync secrets from.
         importStatements: []
     infisical_integration_databricks:
-        subCategory: ""
-        description: Create Databricks integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        subCategory: Native Integrations - DEPRECATED
+        description: 'Deprecated: This resource is deprecated and will be removed in a future version. Use infisical_secret_sync_databricks instead. Create Databricks integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_databricks
         title: infisical_integration_databricks Resource - terraform-provider-infisical
         examples:
@@ -1482,8 +3234,8 @@ resources:
             secret_path: (String) The secret path in Infisical to sync secrets from.
         importStatements: []
     infisical_integration_gcp_secret_manager:
-        subCategory: ""
-        description: Create GCP Secret Manager integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        subCategory: Native Integrations - DEPRECATED
+        description: 'Deprecated: This resource is deprecated and will be removed in a future version. Use infisical_secret_sync_gcp_secret_manager instead. Create GCP Secret Manager integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_gcp_secret_manager
         title: infisical_integration_gcp_secret_manager Resource - terraform-provider-infisical
         examples:
@@ -1511,7 +3263,7 @@ resources:
             service_account_json: (String, Sensitive) Service account json for the GCP project.
         importStatements: []
     infisical_kms_key:
-        subCategory: ""
+        subCategory: KMS
         description: Create and manage KMS keys in Infisical.
         name: infisical_kms_key
         title: infisical_kms_key Resource - terraform-provider-infisical
@@ -1547,8 +3299,48 @@ resources:
             updated_at: (String) The last update timestamp of the key.
             version: (Number) The version of the key.
         importStatements: []
+    infisical_org_role:
+        subCategory: Organization
+        description: Create custom organization roles & save to Infisical. Only Machine Identity authentication is supported for this data source.
+        name: infisical_org_role
+        title: infisical_org_role Resource - terraform-provider-infisical
+        examples:
+            - name: tester
+              manifest: |-
+                {
+                  "description": "A test role",
+                  "name": "Tester",
+                  "permissions": [
+                    {
+                      "action": [
+                        "create"
+                      ],
+                      "subject": "project"
+                    },
+                    {
+                      "action": [
+                        "read",
+                        "create"
+                      ],
+                      "conditions": "${jsonencode({\n        connectionId = {\n          \"$eq\" = \"\u003cconnection-id\u003e\"\n        }\n      })}",
+                      "subject": "app-connections"
+                    }
+                  ],
+                  "slug": "tester"
+                }
+        argumentDocs:
+            action: (Set of String) Describe what actions an entity can take.
+            conditions: (String) When specified, only matching conditions will be allowed to access given resource. Refer to the documentation in https://infisical.com/docs/internals/permissions#conditions for the complete list of supported properties and operators.
+            description: (String) The description for the new role. Defaults to an empty string.
+            id: (String) The ID of the role
+            inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
+            name: (String) The name for the new role
+            permissions: (Attributes List) The permissions assigned to the organization role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. (see below for nested schema)
+            slug: (String) The slug for the new role
+            subject: (String) Describe the entity the permission pertains to.
+        importStatements: []
     infisical_project:
-        subCategory: ""
+        subCategory: Projects
         description: Create projects & save to Infisical. Only Machine Identity authentication is supported for this data source.
         name: infisical_project
         title: infisical_project Resource - terraform-provider-infisical
@@ -1577,6 +3369,14 @@ resources:
                   "slug": "kms-project",
                   "type": "kms"
                 }
+            - name: certificate-project
+              manifest: |-
+                {
+                  "description": "This is a certificates project for certificate management",
+                  "name": "Certificates Project",
+                  "slug": "certificate-project",
+                  "type": "cert-manager"
+                }
         argumentDocs:
             audit_log_retention_days: (Number) The audit log retention in days
             description: (String) The description of the project
@@ -1588,13 +3388,13 @@ resources:
             should_create_default_envs: (Boolean) Whether to create default environments for the project (dev, staging, prod), defaults to true
             slug: (String) The slug of the project
             template_name: (String) The name of the template to use for the project
-            type: '(String) The type of the project. Supported values: secret-manager, kms. Defaults to ''secret-manager''.'
+            type: '(String) The type of the project. Supported values: secret-manager, cert-manager, kms. Defaults to ''secret-manager''.'
         importStatements:
             - |-
               # This will import the project by the project ID
               terraform import infisical_project.example <project_id>
     infisical_project_environment:
-        subCategory: ""
+        subCategory: Projects
         description: Create project environment
         name: infisical_project_environment
         title: infisical_project_environment Resource - terraform-provider-infisical
@@ -1627,7 +3427,7 @@ resources:
               # This will import the project environment by the project environment ID
               terraform import infisical_project_environment.example <project_environment_id>
     infisical_project_group:
-        subCategory: ""
+        subCategory: Projects
         description: Create project groups & save to Infisical. Only Machine Identity authentication is supported for this data source
         name: infisical_project_group
         title: infisical_project_group Resource - terraform-provider-infisical
@@ -1655,7 +3455,7 @@ resources:
             roles: '(String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].'
         importStatements: []
     infisical_project_identity:
-        subCategory: ""
+        subCategory: Projects
         description: Create project identities & save to Infisical. Only Machine Identity authentication is supported for this data source
         name: infisical_project_identity
         title: infisical_project_identity Resource - terraform-provider-infisical
@@ -1682,7 +3482,7 @@ resources:
             roles: '(String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].'
         importStatements: []
     infisical_project_identity_specific_privilege:
-        subCategory: ""
+        subCategory: Projects
         description: Create additional privileges for identities & save to Infisical. Only Machine Identity authentication is supported for this data source.
         name: infisical_project_identity_specific_privilege
         title: infisical_project_identity_specific_privilege Resource - terraform-provider-infisical
@@ -1743,14 +3543,14 @@ resources:
             project_slug: (String) The slug of the project to create identity specific privilege
             secret_path: (String) The secret path this permission should be scoped to
             slug: (String) The slug for the new privilege
-            subject: '(String) Describe what action an entity can take. Enum: role,member,groups,settings,integrations,webhooks,service-tokens,environments,tags,audit-logs,ip-allowlist,workspace,secrets,secret-rollback,secret-approval,secret-rotation,identity,certificate-authorities,certificates,certificate-templates,kms,pki-alerts,pki-collections'
+            subject: '(String) Describe what action an entity can take. Enum: role,member,groups,settings,integrations,webhooks,service-tokens,environments,tags,audit-logs,ip-allowlist,workspace,secrets,secret-rollback,secret-approval,secret-rotation,identity,certificate-authorities,certificates,certificate-policies,kms,pki-alerts,pki-collections'
             temporary_access_end_time: (String) ISO time for which temporary access will end. Computed based on temporary_range and temporary_access_start_time
             temporary_access_start_time: (String) ISO time for which temporary access should begin. The current time is used by default.
             temporary_mode: '(String) Type of temporary access given. Types: relative. Default: relative'
             temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
         importStatements: []
     infisical_project_role:
-        subCategory: ""
+        subCategory: Projects
         description: Create custom project roles & save to Infisical. Only Machine Identity authentication is supported for this resource.
         name: infisical_project_role
         title: infisical_project_role Resource - terraform-provider-infisical
@@ -1781,7 +3581,7 @@ resources:
             slug: (String) The slug for the new role
         importStatements: []
     infisical_project_template:
-        subCategory: ""
+        subCategory: Projects
         description: Create project templates & save to Infisical. Only Machine Identity authentication is supported for this resource.
         name: infisical_project_template
         title: infisical_project_template Resource - terraform-provider-infisical
@@ -1804,7 +3604,7 @@ resources:
             type: (String) The type of the project template. Refer to the documentation here https://infisical.com/docs/api-reference/endpoints/project-templates/create#body-type for the available options
         importStatements: []
     infisical_project_user:
-        subCategory: ""
+        subCategory: Projects
         description: Create project users & save to Infisical. Only Machine Identity authentication is supported for this resource
         name: infisical_project_user
         title: infisical_project_user Resource - terraform-provider-infisical
@@ -1831,7 +3631,7 @@ resources:
             username: (String) The usename of the user. By default its the email
         importStatements: []
     infisical_secret:
-        subCategory: ""
+        subCategory: Secrets
         description: Create secrets & save to Infisical
         name: infisical_secret
         title: infisical_secret Resource - terraform-provider-infisical
@@ -1901,6 +3701,7 @@ resources:
             folder_path: (String) The path to the folder where the given secret resides
             id: (String) The ID of the secret
             last_updated: (String)
+            metadata: (Map of String) Metadata associated with the secret as key-value pairs.
             name: (String) The name of the secret
             note: (String) Note for the secret rotation reminder
             repeat_days: (Number) Frequency of secret rotation reminder in days
@@ -1912,7 +3713,7 @@ resources:
             workspace_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
         importStatements: []
     infisical_secret_approval_policy:
-        subCategory: ""
+        subCategory: Approval
         description: Create secret approval policy for your projects
         name: infisical_secret_approval_policy
         title: infisical_secret_approval_policy Resource - terraform-provider-infisical
@@ -1962,7 +3763,7 @@ resources:
             username: (String) The username of the approver. By default, this is the email
         importStatements: []
     infisical_secret_folder Resource - terraform-provider-infisical:
-        subCategory: ""
+        subCategory: Secrets
         description: Create secret folder & save to Infisical.
         name: infisical_secret_folder Resource - terraform-provider-infisical
         title: infisical_secret_folder Resource - terraform-provider-infisical
@@ -1970,13 +3771,14 @@ resources:
             environment_id: (String) The ID of the environment
             environment_slug: (String) The environment slug of the folder to modify/create
             folder_path: (String) The path where the folder should be created/updated
+            force_delete: (Boolean) Whether to force delete the folder even if it contains resources.
             id: (String) The ID of the folder
             name: (String) The name for the folder
             path: (String) The full path of the folder, including its name.
             project_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
         importStatements: []
     infisical_secret_import Resource - terraform-provider-infisical:
-        subCategory: ""
+        subCategory: Secrets
         description: Create secret import & save to Infisical.
         name: infisical_secret_import Resource - terraform-provider-infisical
         title: infisical_secret_import Resource - terraform-provider-infisical
@@ -1990,7 +3792,7 @@ resources:
             project_id: (String) The Infisical project ID
         importStatements: []
     infisical_secret_rotation_aws_iam_user_secret:
-        subCategory: ""
+        subCategory: Secret Rotations
         description: Create and manage AWS IAM User Secret Secret Rotations
         name: infisical_secret_rotation_aws_iam_user_secret
         title: infisical_secret_rotation_aws_iam_user_secret Resource - terraform-provider-infisical
@@ -2034,7 +3836,7 @@ resources:
             user_name: (String) The name of the client to rotate credentials for.
         importStatements: []
     infisical_secret_rotation_azure_client_secret:
-        subCategory: ""
+        subCategory: Secret Rotations
         description: Create and manage Azure Client Secret Secret Rotations
         name: infisical_secret_rotation_azure_client_secret
         title: infisical_secret_rotation_azure_client_secret Resource - terraform-provider-infisical
@@ -2077,7 +3879,7 @@ resources:
             temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
         importStatements: []
     infisical_secret_rotation_ldap_password:
-        subCategory: ""
+        subCategory: Secret Rotations
         description: Create and manage LDAP Password Secret Rotations
         name: infisical_secret_rotation_ldap_password
         title: infisical_secret_rotation_ldap_password Resource - terraform-provider-infisical
@@ -2145,7 +3947,7 @@ resources:
             uppercase: (Number) Minimum number of uppercase letters required in the password.
         importStatements: []
     infisical_secret_rotation_mssql_credentials:
-        subCategory: ""
+        subCategory: Secret Rotations
         description: Create and manage MsSQL Credentials Secret Rotations
         name: infisical_secret_rotation_mssql_credentials
         title: infisical_secret_rotation_mssql_credentials Resource - terraform-provider-infisical
@@ -2189,7 +3991,7 @@ resources:
             username2: (String) The username of the second login to rotate passwords for. This user must already exists in your database.
         importStatements: []
     infisical_secret_rotation_mysql_credentials:
-        subCategory: ""
+        subCategory: Secret Rotations
         description: Create and manage MySQL Credentials Secret Rotations
         name: infisical_secret_rotation_mysql_credentials
         title: infisical_secret_rotation_mysql_credentials Resource - terraform-provider-infisical
@@ -2233,7 +4035,7 @@ resources:
             username2: (String) The username of the second login to rotate passwords for. This user must already exists in your database.
         importStatements: []
     infisical_secret_rotation_oracledb_credentials:
-        subCategory: ""
+        subCategory: Secret Rotations
         description: Create and manage Oracle Database Credentials Secret Rotations
         name: infisical_secret_rotation_oracledb_credentials
         title: infisical_secret_rotation_oracledb_credentials Resource - terraform-provider-infisical
@@ -2277,7 +4079,7 @@ resources:
             username2: (String) The username of the second login to rotate passwords for. This user must already exists in your database.
         importStatements: []
     infisical_secret_rotation_postgres_credentials:
-        subCategory: ""
+        subCategory: Secret Rotations
         description: Create and manage PostgreSQL Credentials Secret Rotations
         name: infisical_secret_rotation_postgres_credentials
         title: infisical_secret_rotation_postgres_credentials Resource - terraform-provider-infisical
@@ -2321,7 +4123,7 @@ resources:
             username2: (String) The username of the second login to rotate passwords for. This user must already exists in your database.
         importStatements: []
     infisical_secret_sync_1password:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage 1Password secret syncs
         name: infisical_secret_sync_1password
         title: infisical_secret_sync_1password Resource - terraform-provider-infisical
@@ -2356,7 +4158,7 @@ resources:
             vault_id: '(required): The ID of the 1Password vault to sync secrets to'
         importStatements: []
     infisical_secret_sync_aws_parameter_store:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage AWS Parameter Store secret syncs
         name: infisical_secret_sync_aws_parameter_store
         title: infisical_secret_sync_aws_parameter_store Resource - terraform-provider-infisical
@@ -2393,7 +4195,7 @@ resources:
             sync_secret_metadata_as_tags: '(optional): Whether to sync the secret metadata as tags'
         importStatements: []
     infisical_secret_sync_aws_secrets_manager:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage AWS Secrets Manager secret syncs
         name: infisical_secret_sync_aws_secrets_manager
         title: infisical_secret_sync_aws_secrets_manager Resource - terraform-provider-infisical
@@ -2431,7 +4233,7 @@ resources:
             sync_secret_metadata_as_tags: '(optional): Whether to sync the secret metadata as tags. This is only supported for the ''one-to-one'' mapping behavior.'
         importStatements: []
     infisical_secret_sync_azure_app_configuration:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Azure App Configuration secret syncs
         name: infisical_secret_sync_azure_app_configuration
         title: infisical_secret_sync_azure_app_configuration Resource - terraform-provider-infisical
@@ -2466,7 +4268,7 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_azure_devops:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Azure DevOps secret syncs
         name: infisical_secret_sync_azure_devops
         title: infisical_secret_sync_azure_devops Resource - terraform-provider-infisical
@@ -2485,7 +4287,7 @@ resources:
                 }
         argumentDocs:
             auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
-            connection_id: (String) The ID of the azure Connection to use for syncing.
+            connection_id: (String) The ID of the azure-devops Connection to use for syncing.
             description: (String) An optional description for the Azure DevOps sync.
             destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
             devops_project_id: '(required): The ID of the Azure DevOps project to sync secrets to.'
@@ -2499,7 +4301,7 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_azure_key_vault:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Azure Key Vault secret syncs
         name: infisical_secret_sync_azure_key_vault
         title: infisical_secret_sync_azure_key_vault Resource - terraform-provider-infisical
@@ -2533,7 +4335,7 @@ resources:
             vault_base_url: '(required): The base URL of your Azure Key Vault'
         importStatements: []
     infisical_secret_sync_bitbucket:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Bitbucket secret syncs
         name: infisical_secret_sync_bitbucket
         title: infisical_secret_sync_bitbucket Resource - terraform-provider-infisical
@@ -2570,7 +4372,7 @@ resources:
             workspace_slug: '(required): The Bitbucket workspace slug.'
         importStatements: []
     infisical_secret_sync_cloudflare_pages:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Cloudflare Pages secret syncs
         name: infisical_secret_sync_cloudflare_pages
         title: infisical_secret_sync_cloudflare_pages Resource - terraform-provider-infisical
@@ -2604,7 +4406,7 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_cloudflare_workers:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Cloudflare Workers secret syncs
         name: infisical_secret_sync_cloudflare_workers
         title: infisical_secret_sync_cloudflare_workers Resource - terraform-provider-infisical
@@ -2638,7 +4440,7 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_databricks:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Databricks secret syncs
         name: infisical_secret_sync_databricks
         title: infisical_secret_sync_databricks Resource - terraform-provider-infisical
@@ -2673,7 +4475,7 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_flyio:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Fly.io secret syncs
         name: infisical_secret_sync_flyio
         title: infisical_secret_sync_flyio Resource - terraform-provider-infisical
@@ -2708,7 +4510,7 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_gcp_secret_manager:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage GCP Secret Manager secret syncs
         name: infisical_secret_sync_gcp_secret_manager
         title: infisical_secret_sync_gcp_secret_manager Resource - terraform-provider-infisical
@@ -2742,7 +4544,7 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_sync_github:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Github secret syncs
         name: infisical_secret_sync_github
         title: infisical_secret_sync_github Resource - terraform-provider-infisical
@@ -2781,7 +4583,7 @@ resources:
             visibility: '(optional): The visibility of the Github repository, required if scope is organization. Accepted values are: all|private|selected'
         importStatements: []
     infisical_secret_sync_gitlab:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage GitLab secret syncs
         name: infisical_secret_sync_gitlab
         title: infisical_secret_sync_gitlab Resource - terraform-provider-infisical
@@ -2834,7 +4636,7 @@ resources:
             target_environment: '(required): The GitLab environment scope that secrets should be synced to. (default: *)'
         importStatements: []
     infisical_secret_sync_render:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Render secret syncs
         name: infisical_secret_sync_render
         title: infisical_secret_sync_render Resource - terraform-provider-infisical
@@ -2870,7 +4672,7 @@ resources:
             type: '(required): The Render resource type to sync secrets to. Supported options: env, file'
         importStatements: []
     infisical_secret_sync_supabase:
-        subCategory: ""
+        subCategory: Secret Syncs
         description: Create and manage Supabase secret syncs
         name: infisical_secret_sync_supabase
         title: infisical_secret_sync_supabase Resource - terraform-provider-infisical
@@ -2905,7 +4707,7 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
     infisical_secret_tag Resource - terraform-provider-infisical:
-        subCategory: ""
+        subCategory: Secrets
         description: Create secret tag & save to Infisical.
         name: infisical_secret_tag Resource - terraform-provider-infisical
         title: infisical_secret_tag Resource - terraform-provider-infisical
