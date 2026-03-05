@@ -23,6 +23,11 @@ type SecretInitParameters struct {
 	// The path to the folder where the given secret resides
 	FolderPath *string `json:"folderPath,omitempty" tf:"folder_path,omitempty"`
 
+	// value pairs.
+	// Metadata associated with the secret as key-value pairs.
+	// +mapType=granular
+	Metadata map[string]*string `json:"metadata,omitempty" tf:"metadata,omitempty"`
+
 	// (String) The name of the secret
 	// The name of the secret
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
@@ -64,6 +69,11 @@ type SecretObservation struct {
 	// (String)
 	LastUpdated *string `json:"lastUpdated,omitempty" tf:"last_updated,omitempty"`
 
+	// value pairs.
+	// Metadata associated with the secret as key-value pairs.
+	// +mapType=granular
+	Metadata map[string]*string `json:"metadata,omitempty" tf:"metadata,omitempty"`
+
 	// (String) The name of the secret
 	// The name of the secret
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
@@ -96,6 +106,12 @@ type SecretParameters struct {
 	// The path to the folder where the given secret resides
 	// +kubebuilder:validation:Optional
 	FolderPath *string `json:"folderPath,omitempty" tf:"folder_path,omitempty"`
+
+	// value pairs.
+	// Metadata associated with the secret as key-value pairs.
+	// +kubebuilder:validation:Optional
+	// +mapType=granular
+	Metadata map[string]*string `json:"metadata,omitempty" tf:"metadata,omitempty"`
 
 	// (String) The name of the secret
 	// The name of the secret

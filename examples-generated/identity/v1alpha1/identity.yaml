@@ -11,3 +11,24 @@ spec:
     name: universal-auth
     orgId: <org_id>
     role: member
+
+---
+
+apiVersion: identity.crossplane.infisical.com/v1alpha1
+kind: KubernetesAuth
+metadata:
+  annotations:
+    meta.upbound.io/example-id: identity/v1alpha1/identity
+  labels:
+    testing.upbound.io/example-name: k8-auth
+  name: k8-auth
+spec:
+  forProvider:
+    allowedNamespaces:
+    - namespace-a
+    - namespace-b
+    identityIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: k8-auth
+    kubernetesHost: http://example.com
+    tokenReviewerJwt: ey<example>

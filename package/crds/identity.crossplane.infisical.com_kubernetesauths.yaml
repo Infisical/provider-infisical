@@ -34,8 +34,8 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: KubernetesAuth is the Schema for the KubernetesAuths API. <no
-          value>
+        description: KubernetesAuth is the Schema for the KubernetesAuths API. Create
+          and manage identity kubernetes auth in Infisical.
         properties:
           apiVersion:
             description: |-
@@ -74,36 +74,48 @@ spec:
               forProvider:
                 properties:
                   accessTokenMaxTtl:
-                    description: 'The maximum lifetime for an access token in seconds.
-                      This value will be referenced at renewal time. Default: 2592000'
+                    description: |-
+                      (Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
+                      The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
                     type: number
                   accessTokenNumUsesLimit:
-                    description: The maximum number of times that an access token
-                      can be used; a value of 0 implies infinite number of uses. Default:0
+                    description: |-
+                      (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+                      The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
                     type: number
                   accessTokenTtl:
-                    description: 'The lifetime for an access token in seconds. This
-                      value will be referenced at renewal time. Default: 2592000'
+                    description: |-
+                      (Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
+                      The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
                     type: number
                   allowedAudience:
-                    description: An optional audience claim that the service account
-                      JWT token must have to authenticate with Infisical.
+                    description: |-
+                      (String) An optional audience claim that the service account JWT token must have to authenticate with Infisical.
+                      An optional audience claim that the service account JWT token must have to authenticate with Infisical.
                     type: string
                   allowedNamespaces:
-                    description: List of trusted namespaces that service accounts
-                      must belong to authenticate with Infisical.
+                    description: |-
+                      (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
+                      List of trusted namespaces that service accounts must belong to authenticate with Infisical.
                     items:
                       type: string
                     type: array
                   allowedServiceAccountNames:
-                    description: List of trusted service account names that are allowed
-                      to authenticate with Infisical.
+                    description: |-
+                      (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
+                      List of trusted service account names that are allowed to authenticate with Infisical.
                     items:
                       type: string
                     type: array
+                  gatewayId:
+                    description: |-
+                      (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+                      Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+                    type: string
                   identityId:
-                    description: The ID of the identity to attach the configuration
-                      onto.
+                    description: |-
+                      (String) The ID of the identity to attach the configuration onto.
+                      The ID of the identity to attach the configuration onto.
                     type: string
                   identityIdRef:
                     description: Reference to a Identity in identity to populate identityId.
@@ -180,20 +192,24 @@ spec:
                         type: object
                     type: object
                   kubernetesCaCertificate:
-                    description: The PEM-encoded CA cert for the Kubernetes API server.
-                      This is used by the TLS client for secure communication with
-                      the Kubernetes API server.
+                    description: |-
+                      encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
+                      The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
                     type: string
                   kubernetesHost:
-                    description: The host string, host:port pair, or URL to the base
-                      of the Kubernetes API server. This can usually be obtained by
-                      running `kubectl cluster-info`.
+                    description: |-
+                      info.
+                      The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running `kubectl cluster-info`.
                     type: string
                   tokenReviewerJwt:
-                    description: A long-lived service account JWT token for Infisical
-                      to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/)
-                      to validate other service account JWT tokens submitted by applications/pods.
-                      This is the JWT token obtained from step 1.5.
+                    description: |-
+                      lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
+                      A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
+                    type: string
+                  tokenReviewerMode:
+                    description: |-
+                      (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+                      Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
                     type: string
                 type: object
               initProvider:
@@ -210,36 +226,48 @@ spec:
                   autoscaler.
                 properties:
                   accessTokenMaxTtl:
-                    description: 'The maximum lifetime for an access token in seconds.
-                      This value will be referenced at renewal time. Default: 2592000'
+                    description: |-
+                      (Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
+                      The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
                     type: number
                   accessTokenNumUsesLimit:
-                    description: The maximum number of times that an access token
-                      can be used; a value of 0 implies infinite number of uses. Default:0
+                    description: |-
+                      (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+                      The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
                     type: number
                   accessTokenTtl:
-                    description: 'The lifetime for an access token in seconds. This
-                      value will be referenced at renewal time. Default: 2592000'
+                    description: |-
+                      (Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
+                      The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
                     type: number
                   allowedAudience:
-                    description: An optional audience claim that the service account
-                      JWT token must have to authenticate with Infisical.
+                    description: |-
+                      (String) An optional audience claim that the service account JWT token must have to authenticate with Infisical.
+                      An optional audience claim that the service account JWT token must have to authenticate with Infisical.
                     type: string
                   allowedNamespaces:
-                    description: List of trusted namespaces that service accounts
-                      must belong to authenticate with Infisical.
+                    description: |-
+                      (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
+                      List of trusted namespaces that service accounts must belong to authenticate with Infisical.
                     items:
                       type: string
                     type: array
                   allowedServiceAccountNames:
-                    description: List of trusted service account names that are allowed
-                      to authenticate with Infisical.
+                    description: |-
+                      (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
+                      List of trusted service account names that are allowed to authenticate with Infisical.
                     items:
                       type: string
                     type: array
+                  gatewayId:
+                    description: |-
+                      (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+                      Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+                    type: string
                   identityId:
-                    description: The ID of the identity to attach the configuration
-                      onto.
+                    description: |-
+                      (String) The ID of the identity to attach the configuration onto.
+                      The ID of the identity to attach the configuration onto.
                     type: string
                   identityIdRef:
                     description: Reference to a Identity in identity to populate identityId.
@@ -316,20 +344,24 @@ spec:
                         type: object
                     type: object
                   kubernetesCaCertificate:
-                    description: The PEM-encoded CA cert for the Kubernetes API server.
-                      This is used by the TLS client for secure communication with
-                      the Kubernetes API server.
+                    description: |-
+                      encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
+                      The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
                     type: string
                   kubernetesHost:
-                    description: The host string, host:port pair, or URL to the base
-                      of the Kubernetes API server. This can usually be obtained by
-                      running `kubectl cluster-info`.
+                    description: |-
+                      info.
+                      The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running `kubectl cluster-info`.
                     type: string
                   tokenReviewerJwt:
-                    description: A long-lived service account JWT token for Infisical
-                      to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/)
-                      to validate other service account JWT tokens submitted by applications/pods.
-                      This is the JWT token obtained from step 1.5.
+                    description: |-
+                      lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
+                      A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
+                    type: string
+                  tokenReviewerMode:
+                    description: |-
+                      (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+                      Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
                     type: string
                 type: object
               managementPolicies:
@@ -499,69 +531,77 @@ spec:
             required:
             - forProvider
             type: object
-            x-kubernetes-validations:
-            - message: spec.forProvider.kubernetesHost is a required parameter
-              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
-                || ''Update'' in self.managementPolicies) || has(self.forProvider.kubernetesHost)
-                || (has(self.initProvider) && has(self.initProvider.kubernetesHost))'
-            - message: spec.forProvider.tokenReviewerJwt is a required parameter
-              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
-                || ''Update'' in self.managementPolicies) || has(self.forProvider.tokenReviewerJwt)
-                || (has(self.initProvider) && has(self.initProvider.tokenReviewerJwt))'
           status:
             description: KubernetesAuthStatus defines the observed state of KubernetesAuth.
             properties:
               atProvider:
                 properties:
                   accessTokenMaxTtl:
-                    description: 'The maximum lifetime for an access token in seconds.
-                      This value will be referenced at renewal time. Default: 2592000'
+                    description: |-
+                      (Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
+                      The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
                     type: number
                   accessTokenNumUsesLimit:
-                    description: The maximum number of times that an access token
-                      can be used; a value of 0 implies infinite number of uses. Default:0
+                    description: |-
+                      (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+                      The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
                     type: number
                   accessTokenTtl:
-                    description: 'The lifetime for an access token in seconds. This
-                      value will be referenced at renewal time. Default: 2592000'
+                    description: |-
+                      (Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
+                      The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
                     type: number
                   allowedAudience:
-                    description: An optional audience claim that the service account
-                      JWT token must have to authenticate with Infisical.
+                    description: |-
+                      (String) An optional audience claim that the service account JWT token must have to authenticate with Infisical.
+                      An optional audience claim that the service account JWT token must have to authenticate with Infisical.
                     type: string
                   allowedNamespaces:
-                    description: List of trusted namespaces that service accounts
-                      must belong to authenticate with Infisical.
+                    description: |-
+                      (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
+                      List of trusted namespaces that service accounts must belong to authenticate with Infisical.
                     items:
                       type: string
                     type: array
                   allowedServiceAccountNames:
-                    description: List of trusted service account names that are allowed
-                      to authenticate with Infisical.
+                    description: |-
+                      (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
+                      List of trusted service account names that are allowed to authenticate with Infisical.
                     items:
                       type: string
                     type: array
+                  gatewayId:
+                    description: |-
+                      (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+                      Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+                    type: string
                   id:
+                    description: (String) The ID of the kubernetes auth
                     type: string
                   identityId:
-                    description: The ID of the identity to attach the configuration
-                      onto.
+                    description: |-
+                      (String) The ID of the identity to attach the configuration onto.
+                      The ID of the identity to attach the configuration onto.
                     type: string
                   kubernetesCaCertificate:
-                    description: The PEM-encoded CA cert for the Kubernetes API server.
-                      This is used by the TLS client for secure communication with
-                      the Kubernetes API server.
+                    description: |-
+                      encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
+                      The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
                     type: string
                   kubernetesHost:
-                    description: The host string, host:port pair, or URL to the base
-                      of the Kubernetes API server. This can usually be obtained by
-                      running `kubectl cluster-info`.
+                    description: |-
+                      info.
+                      The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running `kubectl cluster-info`.
                     type: string
                   tokenReviewerJwt:
-                    description: A long-lived service account JWT token for Infisical
-                      to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/)
-                      to validate other service account JWT tokens submitted by applications/pods.
-                      This is the JWT token obtained from step 1.5.
+                    description: |-
+                      lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
+                      A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
+                    type: string
+                  tokenReviewerMode:
+                    description: |-
+                      (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+                      Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
                     type: string
                 type: object
               conditions:

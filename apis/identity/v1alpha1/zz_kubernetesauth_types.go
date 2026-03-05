@@ -15,24 +15,35 @@ import (
 
 type KubernetesAuthInitParameters struct {
 
+	// (Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	// The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	AccessTokenMaxTTL *float64 `json:"accessTokenMaxTtl,omitempty" tf:"access_token_max_ttl,omitempty"`
 
+	// (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
 	// The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
 	AccessTokenNumUsesLimit *float64 `json:"accessTokenNumUsesLimit,omitempty" tf:"access_token_num_uses_limit,omitempty"`
 
+	// (Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	// The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	AccessTokenTTL *float64 `json:"accessTokenTtl,omitempty" tf:"access_token_ttl,omitempty"`
 
+	// (String) An optional audience claim that the service account JWT token must have to authenticate with Infisical.
 	// An optional audience claim that the service account JWT token must have to authenticate with Infisical.
 	AllowedAudience *string `json:"allowedAudience,omitempty" tf:"allowed_audience,omitempty"`
 
+	// (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
 	// List of trusted namespaces that service accounts must belong to authenticate with Infisical.
 	AllowedNamespaces []*string `json:"allowedNamespaces,omitempty" tf:"allowed_namespaces,omitempty"`
 
+	// (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
 	// List of trusted service account names that are allowed to authenticate with Infisical.
 	AllowedServiceAccountNames []*string `json:"allowedServiceAccountNames,omitempty" tf:"allowed_service_account_names,omitempty"`
 
+	// (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+	// Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+	GatewayID *string `json:"gatewayId,omitempty" tf:"gateway_id,omitempty"`
+
+	// (String) The ID of the identity to attach the configuration onto.
 	// The ID of the identity to attach the configuration onto.
 	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/identity/v1alpha1.Identity
 	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
@@ -45,77 +56,115 @@ type KubernetesAuthInitParameters struct {
 	// +kubebuilder:validation:Optional
 	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 
+	// encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
 	// The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
 	KubernetesCACertificate *string `json:"kubernetesCaCertificate,omitempty" tf:"kubernetes_ca_certificate,omitempty"`
 
+	// info.
 	// The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running `kubectl cluster-info`.
 	KubernetesHost *string `json:"kubernetesHost,omitempty" tf:"kubernetes_host,omitempty"`
 
+	// lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
 	// A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
 	TokenReviewerJwt *string `json:"tokenReviewerJwt,omitempty" tf:"token_reviewer_jwt,omitempty"`
+
+	// (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+	// Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+	TokenReviewerMode *string `json:"tokenReviewerMode,omitempty" tf:"token_reviewer_mode,omitempty"`
 }
 
 type KubernetesAuthObservation struct {
 
+	// (Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	// The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	AccessTokenMaxTTL *float64 `json:"accessTokenMaxTtl,omitempty" tf:"access_token_max_ttl,omitempty"`
 
+	// (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
 	// The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
 	AccessTokenNumUsesLimit *float64 `json:"accessTokenNumUsesLimit,omitempty" tf:"access_token_num_uses_limit,omitempty"`
 
+	// (Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	// The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	AccessTokenTTL *float64 `json:"accessTokenTtl,omitempty" tf:"access_token_ttl,omitempty"`
 
+	// (String) An optional audience claim that the service account JWT token must have to authenticate with Infisical.
 	// An optional audience claim that the service account JWT token must have to authenticate with Infisical.
 	AllowedAudience *string `json:"allowedAudience,omitempty" tf:"allowed_audience,omitempty"`
 
+	// (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
 	// List of trusted namespaces that service accounts must belong to authenticate with Infisical.
 	AllowedNamespaces []*string `json:"allowedNamespaces,omitempty" tf:"allowed_namespaces,omitempty"`
 
+	// (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
 	// List of trusted service account names that are allowed to authenticate with Infisical.
 	AllowedServiceAccountNames []*string `json:"allowedServiceAccountNames,omitempty" tf:"allowed_service_account_names,omitempty"`
 
+	// (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+	// Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+	GatewayID *string `json:"gatewayId,omitempty" tf:"gateway_id,omitempty"`
+
+	// (String) The ID of the kubernetes auth
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 
+	// (String) The ID of the identity to attach the configuration onto.
 	// The ID of the identity to attach the configuration onto.
 	IdentityID *string `json:"identityId,omitempty" tf:"identity_id,omitempty"`
 
+	// encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
 	// The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
 	KubernetesCACertificate *string `json:"kubernetesCaCertificate,omitempty" tf:"kubernetes_ca_certificate,omitempty"`
 
+	// info.
 	// The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running `kubectl cluster-info`.
 	KubernetesHost *string `json:"kubernetesHost,omitempty" tf:"kubernetes_host,omitempty"`
 
+	// lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
 	// A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
 	TokenReviewerJwt *string `json:"tokenReviewerJwt,omitempty" tf:"token_reviewer_jwt,omitempty"`
+
+	// (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+	// Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+	TokenReviewerMode *string `json:"tokenReviewerMode,omitempty" tf:"token_reviewer_mode,omitempty"`
 }
 
 type KubernetesAuthParameters struct {
 
+	// (Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	// The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	// +kubebuilder:validation:Optional
 	AccessTokenMaxTTL *float64 `json:"accessTokenMaxTtl,omitempty" tf:"access_token_max_ttl,omitempty"`
 
+	// (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
 	// The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
 	// +kubebuilder:validation:Optional
 	AccessTokenNumUsesLimit *float64 `json:"accessTokenNumUsesLimit,omitempty" tf:"access_token_num_uses_limit,omitempty"`
 
+	// (Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	// The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000
 	// +kubebuilder:validation:Optional
 	AccessTokenTTL *float64 `json:"accessTokenTtl,omitempty" tf:"access_token_ttl,omitempty"`
 
+	// (String) An optional audience claim that the service account JWT token must have to authenticate with Infisical.
 	// An optional audience claim that the service account JWT token must have to authenticate with Infisical.
 	// +kubebuilder:validation:Optional
 	AllowedAudience *string `json:"allowedAudience,omitempty" tf:"allowed_audience,omitempty"`
 
+	// (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
 	// List of trusted namespaces that service accounts must belong to authenticate with Infisical.
 	// +kubebuilder:validation:Optional
 	AllowedNamespaces []*string `json:"allowedNamespaces,omitempty" tf:"allowed_namespaces,omitempty"`
 
+	// (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
 	// List of trusted service account names that are allowed to authenticate with Infisical.
 	// +kubebuilder:validation:Optional
 	AllowedServiceAccountNames []*string `json:"allowedServiceAccountNames,omitempty" tf:"allowed_service_account_names,omitempty"`
 
+	// (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+	// Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
+	// +kubebuilder:validation:Optional
+	GatewayID *string `json:"gatewayId,omitempty" tf:"gateway_id,omitempty"`
+
+	// (String) The ID of the identity to attach the configuration onto.
 	// The ID of the identity to attach the configuration onto.
 	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/identity/v1alpha1.Identity
 	// +kubebuilder:validation:Optional
@@ -129,17 +178,25 @@ type KubernetesAuthParameters struct {
 	// +kubebuilder:validation:Optional
 	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 
+	// encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
 	// The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
 	// +kubebuilder:validation:Optional
 	KubernetesCACertificate *string `json:"kubernetesCaCertificate,omitempty" tf:"kubernetes_ca_certificate,omitempty"`
 
+	// info.
 	// The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running `kubectl cluster-info`.
 	// +kubebuilder:validation:Optional
 	KubernetesHost *string `json:"kubernetesHost,omitempty" tf:"kubernetes_host,omitempty"`
 
+	// lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
 	// A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
 	// +kubebuilder:validation:Optional
 	TokenReviewerJwt *string `json:"tokenReviewerJwt,omitempty" tf:"token_reviewer_jwt,omitempty"`
+
+	// (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+	// Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster.
+	// +kubebuilder:validation:Optional
+	TokenReviewerMode *string `json:"tokenReviewerMode,omitempty" tf:"token_reviewer_mode,omitempty"`
 }
 
 // KubernetesAuthSpec defines the desired state of KubernetesAuth
@@ -169,7 +226,7 @@ type KubernetesAuthStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 
-// KubernetesAuth is the Schema for the KubernetesAuths API. <no value>
+// KubernetesAuth is the Schema for the KubernetesAuths API. Create and manage identity kubernetes auth in Infisical.
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
@@ -178,10 +235,8 @@ type KubernetesAuthStatus struct {
 type KubernetesAuth struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.kubernetesHost) || (has(self.initProvider) && has(self.initProvider.kubernetesHost))",message="spec.forProvider.kubernetesHost is a required parameter"
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.tokenReviewerJwt) || (has(self.initProvider) && has(self.initProvider.tokenReviewerJwt))",message="spec.forProvider.tokenReviewerJwt is a required parameter"
-	Spec   KubernetesAuthSpec   `json:"spec"`
-	Status KubernetesAuthStatus `json:"status,omitempty"`
+	Spec              KubernetesAuthSpec   `json:"spec"`
+	Status            KubernetesAuthStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
