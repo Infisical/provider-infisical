@@ -116,8 +116,8 @@ spec:
                     type: string
                   type:
                     description: |-
-                      manager, kms. Defaults to 'secret-manager'.
-                      The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+                      manager, cert-manager, kms. Defaults to 'secret-manager'.
+                      The type of the project. Supported values: secret-manager, cert-manager, kms. Defaults to 'secret-manager'.
                     type: string
                 type: object
               initProvider:
@@ -175,8 +175,8 @@ spec:
                     type: string
                   type:
                     description: |-
-                      manager, kms. Defaults to 'secret-manager'.
-                      The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+                      manager, cert-manager, kms. Defaults to 'secret-manager'.
+                      The type of the project. Supported values: secret-manager, cert-manager, kms. Defaults to 'secret-manager'.
                     type: string
                 type: object
               managementPolicies:
@@ -408,8 +408,8 @@ spec:
                     type: string
                   type:
                     description: |-
-                      manager, kms. Defaults to 'secret-manager'.
-                      The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+                      manager, cert-manager, kms. Defaults to 'secret-manager'.
+                      The type of the project. Supported values: secret-manager, cert-manager, kms. Defaults to 'secret-manager'.
                     type: string
                 type: object
               conditions:

@@ -47,8 +47,8 @@ type ProjectInitParameters struct {
 	// The name of the template to use for the project
 	TemplateName *string `json:"templateName,omitempty" tf:"template_name,omitempty"`
 
-	// manager, kms. Defaults to 'secret-manager'.
-	// The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+	// manager, cert-manager, kms. Defaults to 'secret-manager'.
+	// The type of the project. Supported values: secret-manager, cert-manager, kms. Defaults to 'secret-manager'.
 	Type *string `json:"type,omitempty" tf:"type,omitempty"`
 }
 
@@ -92,8 +92,8 @@ type ProjectObservation struct {
 	// The name of the template to use for the project
 	TemplateName *string `json:"templateName,omitempty" tf:"template_name,omitempty"`
 
-	// manager, kms. Defaults to 'secret-manager'.
-	// The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+	// manager, cert-manager, kms. Defaults to 'secret-manager'.
+	// The type of the project. Supported values: secret-manager, cert-manager, kms. Defaults to 'secret-manager'.
 	Type *string `json:"type,omitempty" tf:"type,omitempty"`
 }
 
@@ -139,8 +139,8 @@ type ProjectParameters struct {
 	// +kubebuilder:validation:Optional
 	TemplateName *string `json:"templateName,omitempty" tf:"template_name,omitempty"`
 
-	// manager, kms. Defaults to 'secret-manager'.
-	// The type of the project. Supported values: secret-manager, kms. Defaults to 'secret-manager'.
+	// manager, cert-manager, kms. Defaults to 'secret-manager'.
+	// The type of the project. Supported values: secret-manager, cert-manager, kms. Defaults to 'secret-manager'.
 	// +kubebuilder:validation:Optional
 	Type *string `json:"type,omitempty" tf:"type,omitempty"`
 }

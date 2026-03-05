@@ -9,7 +9,7 @@
 package v1alpha1
 
 import (
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/apis/common/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -300,6 +300,11 @@ func (in *KubernetesAuthInitParameters) DeepCopyInto(out *KubernetesAuthInitPara
 			}
 		}
 	}
+	if in.GatewayID != nil {
+		in, out := &in.GatewayID, &out.GatewayID
+		*out = new(string)
+		**out = **in
+	}
 	if in.IdentityID != nil {
 		in, out := &in.IdentityID, &out.IdentityID
 		*out = new(string)
@@ -327,6 +332,11 @@ func (in *KubernetesAuthInitParameters) DeepCopyInto(out *KubernetesAuthInitPara
 	}
 	if in.TokenReviewerJwt != nil {
 		in, out := &in.TokenReviewerJwt, &out.TokenReviewerJwt
+		*out = new(string)
+		**out = **in
+	}
+	if in.TokenReviewerMode != nil {
+		in, out := &in.TokenReviewerMode, &out.TokenReviewerMode
 		*out = new(string)
 		**out = **in
 	}
@@ -419,6 +429,11 @@ func (in *KubernetesAuthObservation) DeepCopyInto(out *KubernetesAuthObservation
 			}
 		}
 	}
+	if in.GatewayID != nil {
+		in, out := &in.GatewayID, &out.GatewayID
+		*out = new(string)
+		**out = **in
+	}
 	if in.ID != nil {
 		in, out := &in.ID, &out.ID
 		*out = new(string)
@@ -441,6 +456,11 @@ func (in *KubernetesAuthObservation) DeepCopyInto(out *KubernetesAuthObservation
 	}
 	if in.TokenReviewerJwt != nil {
 		in, out := &in.TokenReviewerJwt, &out.TokenReviewerJwt
+		*out = new(string)
+		**out = **in
+	}
+	if in.TokenReviewerMode != nil {
+		in, out := &in.TokenReviewerMode, &out.TokenReviewerMode
 		*out = new(string)
 		**out = **in
 	}
@@ -501,6 +521,11 @@ func (in *KubernetesAuthParameters) DeepCopyInto(out *KubernetesAuthParameters) 
 			}
 		}
 	}
+	if in.GatewayID != nil {
+		in, out := &in.GatewayID, &out.GatewayID
+		*out = new(string)
+		**out = **in
+	}
 	if in.IdentityID != nil {
 		in, out := &in.IdentityID, &out.IdentityID
 		*out = new(string)
@@ -528,6 +553,11 @@ func (in *KubernetesAuthParameters) DeepCopyInto(out *KubernetesAuthParameters) 
 	}
 	if in.TokenReviewerJwt != nil {
 		in, out := &in.TokenReviewerJwt, &out.TokenReviewerJwt
+		*out = new(string)
+		**out = **in
+	}
+	if in.TokenReviewerMode != nil {
+		in, out := &in.TokenReviewerMode, &out.TokenReviewerMode
 		*out = new(string)
 		**out = **in
 	}
