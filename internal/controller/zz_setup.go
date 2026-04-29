@@ -9,6 +9,7 @@ import (
 
 	"github.com/crossplane/upjet/pkg/controller"
 
+	awsauth "github.com/infisical/provider-infisical/internal/controller/identity/awsauth"
 	identity "github.com/infisical/provider-infisical/internal/controller/identity/identity"
 	kubernetesauth "github.com/infisical/provider-infisical/internal/controller/identity/kubernetesauth"
 	universalauth "github.com/infisical/provider-infisical/internal/controller/identity/universalauth"
@@ -29,6 +30,7 @@ import (
 // the supplied manager.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		awsauth.Setup,
 		identity.Setup,
 		kubernetesauth.Setup,
 		universalauth.Setup,
