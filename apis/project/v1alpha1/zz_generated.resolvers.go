@@ -9,7 +9,8 @@ package v1alpha1
 import (
 	"context"
 	reference "github.com/crossplane/crossplane-runtime/pkg/reference"
-	v1alpha1 "github.com/infisical/provider-infisical/apis/identity/v1alpha1"
+	v1alpha1 "github.com/infisical/provider-infisical/apis/group/v1alpha1"
+	v1alpha11 "github.com/infisical/provider-infisical/apis/identity/v1alpha1"
 	errors "github.com/pkg/errors"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -106,6 +107,22 @@ func (mg *ProjectGroup) ResolveReferences(ctx context.Context, c client.Reader) 
 	var err error
 
 	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: reference.FromPtrValue(mg.Spec.ForProvider.GroupID),
+		Extract:      reference.ExternalName(),
+		Reference:    mg.Spec.ForProvider.GroupIDRef,
+		Selector:     mg.Spec.ForProvider.GroupIDSelector,
+		To: reference.To{
+			List:    &v1alpha1.GroupList{},
+			Managed: &v1alpha1.Group{},
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "mg.Spec.ForProvider.GroupID")
+	}
+	mg.Spec.ForProvider.GroupID = reference.ToPtrValue(rsp.ResolvedValue)
+	mg.Spec.ForProvider.GroupIDRef = rsp.ResolvedReference
+
+	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: reference.FromPtrValue(mg.Spec.ForProvider.ProjectID),
 		Extract:      reference.ExternalName(),
 		Reference:    mg.Spec.ForProvider.ProjectIDRef,
@@ -120,6 +137,22 @@ func (mg *ProjectGroup) ResolveReferences(ctx context.Context, c client.Reader) 
 	}
 	mg.Spec.ForProvider.ProjectID = reference.ToPtrValue(rsp.ResolvedValue)
 	mg.Spec.ForProvider.ProjectIDRef = rsp.ResolvedReference
+
+	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
+		CurrentValue: reference.FromPtrValue(mg.Spec.InitProvider.GroupID),
+		Extract:      reference.ExternalName(),
+		Reference:    mg.Spec.InitProvider.GroupIDRef,
+		Selector:     mg.Spec.InitProvider.GroupIDSelector,
+		To: reference.To{
+			List:    &v1alpha1.GroupList{},
+			Managed: &v1alpha1.Group{},
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "mg.Spec.InitProvider.GroupID")
+	}
+	mg.Spec.InitProvider.GroupID = reference.ToPtrValue(rsp.ResolvedValue)
+	mg.Spec.InitProvider.GroupIDRef = rsp.ResolvedReference
 
 	rsp, err = r.Resolve(ctx, reference.ResolutionRequest{
 		CurrentValue: reference.FromPtrValue(mg.Spec.InitProvider.ProjectID),
@@ -153,8 +186,8 @@ func (mg *ProjectIdentity) ResolveReferences(ctx context.Context, c client.Reade
 		Reference:    mg.Spec.ForProvider.IdentityIDRef,
 		Selector:     mg.Spec.ForProvider.IdentityIDSelector,
 		To: reference.To{
-			List:    &v1alpha1.IdentityList{},
-			Managed: &v1alpha1.Identity{},
+			List:    &v1alpha11.IdentityList{},
+			Managed: &v1alpha11.Identity{},
 		},
 	})
 	if err != nil {
@@ -185,8 +218,8 @@ func (mg *ProjectIdentity) ResolveReferences(ctx context.Context, c client.Reade
 		Reference:    mg.Spec.InitProvider.IdentityIDRef,
 		Selector:     mg.Spec.InitProvider.IdentityIDSelector,
 		To: reference.To{
-			List:    &v1alpha1.IdentityList{},
-			Managed: &v1alpha1.Identity{},
+			List:    &v1alpha11.IdentityList{},
+			Managed: &v1alpha11.Identity{},
 		},
 	})
 	if err != nil {

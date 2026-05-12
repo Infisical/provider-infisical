@@ -9,6 +9,7 @@ import (
 	_ "embed"
 
 	ujconfig "github.com/crossplane/upjet/pkg/config"
+	"github.com/infisical/provider-infisical/config/group"
 	"github.com/infisical/provider-infisical/config/identity"
 	"github.com/infisical/provider-infisical/config/project"
 	"github.com/infisical/provider-infisical/config/secret"
@@ -40,6 +41,7 @@ func GetProvider() *ujconfig.Provider {
 		// add custom config functions
 		project.Configure,
 		identity.Configure,
+		group.Configure,
 		secretsync.Configure,
 		secret.Configure,
 	} {

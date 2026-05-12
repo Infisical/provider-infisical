@@ -14,6 +14,7 @@ import (
 var ExternalNameConfigs = map[string]config.ExternalName{
 	"infisical_project":                  config.IdentifierFromProvider,
 	"infisical_identity":                 config.IdentifierFromProvider,
+	"infisical_group":                    config.IdentifierFromProvider,
 	"infisical_project_environment":      config.IdentifierFromProvider,
 	"infisical_identity_universal_auth":  config.IdentifierFromProvider,
 	"infisical_identity_kubernetes_auth": config.IdentifierFromProvider,
