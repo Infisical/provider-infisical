@@ -432,6 +432,49 @@ resources:
             name: (String) The name of the GitLab App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
+    infisical_app_connection_hashicorp_vault:
+        subCategory: App Connections
+        description: Create and manage HashiCorp Vault App Connection
+        name: infisical_app_connection_hashicorp_vault
+        title: infisical_app_connection_hashicorp_vault Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-vault-access-token
+              manifest: |-
+                {
+                  "credentials": {
+                    "access_token": "\u003cvault-access-token\u003e",
+                    "instance_url": "https://vault.example.com"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "access-token",
+                  "name": "vault-access-token-app-connection"
+                }
+            - name: app-connection-vault-app-role
+              manifest: |-
+                {
+                  "credentials": {
+                    "instance_url": "https://vault.example.com",
+                    "role_id": "\u003capprole-role-id\u003e",
+                    "secret_id": "\u003capprole-secret-id\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "app-role",
+                  "name": "vault-app-role-app-connection"
+                }
+        argumentDocs:
+            access_token: (String, Sensitive) The Vault access token. Required for the access-token method.
+            credentials: (Attributes) The credentials for the HashiCorp Vault App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the HashiCorp Vault App Connection credentials
+            description: (String) An optional description for the HashiCorp Vault App Connection.
+            id: (String) The ID of the app connection
+            instance_url: (String) The URL of the HashiCorp Vault instance, e.g. https://vault.example.com. Required for all methods.
+            method: '(String) The method used to authenticate with HashiCorp Vault. Possible values are: access-token, app-role'
+            name: (String) The name of the HashiCorp Vault App Connection to create. Must be slug-friendly
+            namespace: (String) Optional Vault namespace. Only applicable to HCP Vault Dedicated and Enterprise deployments.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            role_id: (String, Sensitive) The AppRole role ID. Required for the app-role method.
+            secret_id: (String, Sensitive) The AppRole secret ID. Required for the app-role method.
+        importStatements: []
     infisical_app_connection_ldap:
         subCategory: App Connections
         description: Create and manage LDAP App Connection
@@ -890,7 +933,7 @@ resources:
             csr: (String) Certificate Signing Request (CSR) in PEM format. If provided, the certificate will be issued based on the CSR. Use Terraform's file() function to read from a file (e.g., file("./my-certificate.csr"))
             extended_key_usages: '(List of String) Extended key usages for the certificate. Supported: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             id: (String) The ID of the certificate
-            key_algorithm: '(String) The key algorithm for the certificate. Supported: RSA_2048, RSA_3072, RSA_4096, ECDSA_P256, ECDSA_P384, ECDSA_P521'
+            key_algorithm: '(String) The key algorithm for the certificate. Supported: RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1'
             key_usages: '(List of String) Key usages for the certificate. Supported: digital_signature, key_encipherment, non_repudiation, data_encipherment, key_agreement, key_cert_sign, crl_sign, encipher_only, decipher_only'
             locality: (String) The locality (L) for the certificate
             not_after: (String) The not-after (expiration) date of the certificate (RFC3339 format)
@@ -2335,6 +2378,34 @@ resources:
             - |-
               # This will import the resource by its group ID
               terraform import infisical_group.example <group_id>
+    infisical_group_machine_identity:
+        subCategory: ""
+        description: Add a machine identity as a member of a group. Only Machine Identity authentication is supported for this resource.
+        name: infisical_group_machine_identity
+        title: infisical_group_machine_identity Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "group_id": "\u003cgroup-id\u003e",
+                  "identity_id": "${infisical_identity.example.id}"
+                }
+              references:
+                identity_id: infisical_identity.example.id
+              dependencies:
+                infisical_identity.example: |-
+                    {
+                      "name": "example-identity",
+                      "org_id": "\u003corg-id\u003e",
+                      "role": "member"
+                    }
+        argumentDocs:
+            group_id: (String) The ID of the group.
+            identity_id: (String) The ID of the machine identity.
+        importStatements:
+            - |-
+              # This will import the resource by its group ID and identity ID
+              terraform import infisical_group_machine_identity.example <group_id>,<identity_id>
     infisical_identity:
         subCategory: Identities
         description: Create and manage identity in Infisical.
@@ -2773,11 +2844,40 @@ resources:
             - |-
               # This will import the resource by its identity ID
               terraform import infisical_identity.example <identity_id>
-    infisical_identity_aws_auth Resource - terraform-provider-infisical:
+    infisical_identity_aws_auth:
         subCategory: Identities
         description: Create and manage identity aws auth in Infisical.
-        name: infisical_identity_aws_auth Resource - terraform-provider-infisical
+        name: infisical_identity_aws_auth
         title: infisical_identity_aws_auth Resource - terraform-provider-infisical
+        examples:
+            - name: aws-auth
+              manifest: |-
+                {
+                  "access_token_max_ttl": 2592000,
+                  "access_token_trusted_ips": [
+                    {
+                      "ip_address": "0.0.0.0/0"
+                    }
+                  ],
+                  "access_token_ttl": 2592000,
+                  "allowed_account_ids": [
+                    "123456789012"
+                  ],
+                  "allowed_principal_arns": [
+                    "arn:aws:iam::123456789012:role/MyRole"
+                  ],
+                  "identity_id": "${infisical_identity.machine-identity-1.id}",
+                  "sts_endpoint": "https://sts.us-east-1.amazonaws.com/"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-1.id
+              dependencies:
+                infisical_identity.machine-identity-1: |-
+                    {
+                      "name": "machine-identity-1",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
         argumentDocs:
             access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
             access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
@@ -2789,7 +2889,10 @@ resources:
             identity_id: (String) The ID of the identity to attach the configuration onto.
             ip_address: (String)
             sts_endpoint: (String) The endpoint URL for the AWS STS API. This value should be adjusted based on the AWS region you are operating in (e.g. https://sts.us-east-1.amazonaws.com/); refer to the list of regional STS endpoints here.
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the resource by its identity ID
+              terraform import infisical_identity_aws_auth.example <identity_id>
     infisical_identity_azure_auth:
         subCategory: Identities
         description: Create and manage identity azure auth in Infisical.
@@ -2851,6 +2954,88 @@ resources:
             ip_address: (String)
             type: '(String) The Type of GCP Auth Method to use: Options are gce, iam. Default:gce'
         importStatements: []
+    infisical_identity_jwt_auth:
+        subCategory: Identities
+        description: Create and manage identity JWT auth in Infisical.
+        name: infisical_identity_jwt_auth
+        title: infisical_identity_jwt_auth Resource - terraform-provider-infisical
+        examples:
+            - name: jwt-auth-jwks-1
+              manifest: |-
+                {
+                  "bound_audiences": [
+                    "my-audience"
+                  ],
+                  "bound_issuer": "https://example.com",
+                  "bound_subject": "my-subject",
+                  "configuration_type": "jwks",
+                  "identity_id": "${infisical_identity.machine-identity-jwks-1.id}",
+                  "jwks_ca_cert": "${file(\"public.pem\")}",
+                  "jwks_url": "https://example.com/.well-known/jwks.json"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-jwks-1.id
+              dependencies:
+                infisical_identity.machine-identity-jwks-1: |-
+                    {
+                      "name": "machine-identity-jwks-1",
+                      "org_id": "\u003corg-id\u003e",
+                      "role": "admin"
+                    }
+                infisical_identity.machine-identity-static-1: |-
+                    {
+                      "name": "machine-identity-static-1",
+                      "org_id": "\u003corg-id\u003e",
+                      "role": "admin"
+                    }
+            - name: jwt-auth-static-1
+              manifest: |-
+                {
+                  "bound_audiences": [
+                    "my-audience"
+                  ],
+                  "bound_issuer": "https://example.com",
+                  "configuration_type": "static",
+                  "identity_id": "${infisical_identity.machine-identity-static-1.id}",
+                  "public_keys": [
+                    "${file(\"public.pem\")}"
+                  ]
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-static-1.id
+              dependencies:
+                infisical_identity.machine-identity-jwks-1: |-
+                    {
+                      "name": "machine-identity-jwks-1",
+                      "org_id": "\u003corg-id\u003e",
+                      "role": "admin"
+                    }
+                infisical_identity.machine-identity-static-1: |-
+                    {
+                      "name": "machine-identity-static-1",
+                      "org_id": "\u003corg-id\u003e",
+                      "role": "admin"
+                    }
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: '(Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default: 0'
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address. (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            bound_audiences: (List of String) The list of intended recipients.
+            bound_claims: (Map of String) The attributes that should be present in the JWT for it to be valid.
+            bound_issuer: (String) The unique identifier of the identity provider issuing the JWTs.
+            bound_subject: (String) The expected principal that is the subject of the JWT.
+            configuration_type: (String) The configuration type of the JWT auth. Must be 'jwks' or 'static'.
+            id: (String) The ID of the JWT auth.
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+            jwks_ca_cert: (String) The PEM-encoded CA certificate for validating the TLS connection to the JWKS URL.
+            jwks_url: (String) The URL used to retrieve the JSON Web Key Set (JWKS) for verifying JWTs. Required when configuration_type is 'jwks'.
+            public_keys: (List of String) A list of PEM-encoded public keys used to verify JWTs. Required when configuration_type is 'static'.
+        importStatements:
+            - |-
+              # This will import the resource by its identity ID
+              terraform import infisical_identity_jwt_auth.example <identity_id>
     infisical_identity_kubernetes_auth:
         subCategory: Identities
         description: Create and manage identity kubernetes auth in Infisical.
@@ -3483,7 +3668,7 @@ resources:
         importStatements: []
     infisical_project_identity_specific_privilege:
         subCategory: Projects
-        description: Create additional privileges for identities & save to Infisical. Only Machine Identity authentication is supported for this data source.
+        description: Create additional privileges for identities & save to Infisical. Only Machine Identity authentication is supported for this resource.
         name: infisical_project_identity_specific_privilege
         title: infisical_project_identity_specific_privilege Resource - terraform-provider-infisical
         examples:
@@ -3501,10 +3686,11 @@ resources:
                     },
                     {
                       "action": [
-                        "read",
+                        "describeSecret",
+                        "readValue",
                         "edit"
                       ],
-                      "conditions": "${jsonencode({\n        environment = {\n          \"$in\" = [\"dev\", \"prod\"]\n          \"$eq\" = \"dev\"\n        }\n        secretPath = {\n          \"$eq\" = \"/\"\n        }\n      })}",
+                      "conditions": "${jsonencode({\n        environment = {\n          \"$eq\" = \"dev\"\n        }\n        secretPath = {\n          \"$eq\" = \"/\"\n        }\n      })}",
                       "subject": "secrets"
                     }
                   ],
@@ -3539,7 +3725,7 @@ resources:
             inverted: (Boolean) Whether rule forbids. Set this to true if permission forbids.
             is_temporary: (Boolean) Flag to indicate the assigned specific privilege is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
             permission: (Attributes) (DEPRECATED, USE permissions_v2. Refer to the migration guide in https://infisical.com/docs/internals/permissions#migrating-from-permission-v1-to-permission-v2) The permissions assigned to the project identity specific privilege (see below for nested schema)
-            permissions_v2: (Attributes List) The permissions assigned to the project identity specific privilege. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. (see below for nested schema)
+            permissions_v2: (Attributes List) The permissions assigned to the project identity specific privilege. Refer to the documentation here https://infisical.com/docs/internals/permissions/project-permissions for its usage. (see below for nested schema)
             project_slug: (String) The slug of the project to create identity specific privilege
             secret_path: (String) The secret path this permission should be scoped to
             slug: (String) The slug for the new privilege
@@ -3548,7 +3734,8 @@ resources:
             temporary_access_start_time: (String) ISO time for which temporary access should begin. The current time is used by default.
             temporary_mode: '(String) Type of temporary access given. Types: relative. Default: relative'
             temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
-        importStatements: []
+        importStatements:
+            - terraform import infisical_project_identity_specific_privilege.example <project_id>,<identity_id>,<privilege_id>
     infisical_project_role:
         subCategory: Projects
         description: Create custom project roles & save to Infisical. Only Machine Identity authentication is supported for this resource.
@@ -3768,6 +3955,7 @@ resources:
         name: infisical_secret_folder Resource - terraform-provider-infisical
         title: infisical_secret_folder Resource - terraform-provider-infisical
         argumentDocs:
+            description: (String) The description of the folder. Defaults to an empty string.
             environment_id: (String) The ID of the environment
             environment_slug: (String) The environment slug of the folder to modify/create
             folder_path: (String) The path where the folder should be created/updated
@@ -4706,15 +4894,35 @@ resources:
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
-    infisical_secret_tag Resource - terraform-provider-infisical:
+    infisical_secret_tag:
         subCategory: Secrets
         description: Create secret tag & save to Infisical.
-        name: infisical_secret_tag Resource - terraform-provider-infisical
+        name: infisical_secret_tag
         title: infisical_secret_tag Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "color": "#FF0000",
+                  "name": "my-tag",
+                  "project_id": "${infisical_project.example.id}",
+                  "slug": "my-tag"
+                }
+              references:
+                project_id: infisical_project.example.id
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
         argumentDocs:
             color: (String) Color code for the tag.
-            id: (String) The ID of the role
+            id: (String) The ID of the tag
             name: (String) The name for the new tag
             project_id: (String) The project id associated with the secret tag
             slug: (String) The slug for the new tag
-        importStatements: []
+        importStatements:
+            - |-
+              # Import a secret tag using its project ID and tag ID
+              terraform import infisical_secret_tag.example <project_id>,<tag_id>

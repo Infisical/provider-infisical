@@ -8,7 +8,9 @@ metadata:
   name: test-group
 spec:
   forProvider:
-    groupId: <group-id>
+    groupIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
     projectIdSelector:
       matchLabels:
         testing.upbound.io/example-name: example

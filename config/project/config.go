@@ -43,6 +43,9 @@ func Configure(p *config.Provider) {
 		r.References["project_id"] = config.Reference{
 			TerraformName: "infisical_project",
 		}
+		r.References["group_id"] = config.Reference{
+			TerraformName: "infisical_group",
+		}
 	})
 
 	p.AddResourceConfigurator("infisical_project_role", func(r *config.Resource) {

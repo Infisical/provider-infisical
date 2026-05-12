@@ -637,6 +637,16 @@ func (in *ProjectGroupInitParameters) DeepCopyInto(out *ProjectGroupInitParamete
 		*out = new(string)
 		**out = **in
 	}
+	if in.GroupIDRef != nil {
+		in, out := &in.GroupIDRef, &out.GroupIDRef
+		*out = new(v1.Reference)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.GroupIDSelector != nil {
+		in, out := &in.GroupIDSelector, &out.GroupIDSelector
+		*out = new(v1.Selector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.GroupName != nil {
 		in, out := &in.GroupName, &out.GroupName
 		*out = new(string)
@@ -758,6 +768,16 @@ func (in *ProjectGroupParameters) DeepCopyInto(out *ProjectGroupParameters) {
 		in, out := &in.GroupID, &out.GroupID
 		*out = new(string)
 		**out = **in
+	}
+	if in.GroupIDRef != nil {
+		in, out := &in.GroupIDRef, &out.GroupIDRef
+		*out = new(v1.Reference)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.GroupIDSelector != nil {
+		in, out := &in.GroupIDSelector, &out.GroupIDSelector
+		*out = new(v1.Selector)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.GroupName != nil {
 		in, out := &in.GroupName, &out.GroupName

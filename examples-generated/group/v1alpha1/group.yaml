@@ -1,0 +1,13 @@
+apiVersion: group.crossplane.infisical.com/v1alpha1
+kind: Group
+metadata:
+  annotations:
+    meta.upbound.io/example-id: group/v1alpha1/group
+  labels:
+    testing.upbound.io/example-name: test-group
+  name: test-group
+spec:
+  forProvider:
+    name: my-test-name
+    role: member
+    slug: my-test-slug
