@@ -32,8 +32,9 @@ type SecretInitParameters struct {
 	// The name of the secret
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
 
-	// (List of String) Tag ids to be attached for the secrets.
+	// (Set of String) Tag ids to be attached for the secrets.
 	// Tag ids to be attached for the secrets.
+	// +listType=set
 	TagIds []*string `json:"tagIds,omitempty" tf:"tag_ids,omitempty"`
 
 	// (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
@@ -66,7 +67,8 @@ type SecretObservation struct {
 	// (String) The ID of the secret
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 
-	// (String)
+	// (String) The last time the secret was updated.
+	// The last time the secret was updated.
 	LastUpdated *string `json:"lastUpdated,omitempty" tf:"last_updated,omitempty"`
 
 	// value pairs.
@@ -78,8 +80,9 @@ type SecretObservation struct {
 	// The name of the secret
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
 
-	// (List of String) Tag ids to be attached for the secrets.
+	// (Set of String) Tag ids to be attached for the secrets.
 	// Tag ids to be attached for the secrets.
+	// +listType=set
 	TagIds []*string `json:"tagIds,omitempty" tf:"tag_ids,omitempty"`
 
 	// only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
@@ -118,9 +121,10 @@ type SecretParameters struct {
 	// +kubebuilder:validation:Optional
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
 
-	// (List of String) Tag ids to be attached for the secrets.
+	// (Set of String) Tag ids to be attached for the secrets.
 	// Tag ids to be attached for the secrets.
 	// +kubebuilder:validation:Optional
+	// +listType=set
 	TagIds []*string `json:"tagIds,omitempty" tf:"tag_ids,omitempty"`
 
 	// (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
