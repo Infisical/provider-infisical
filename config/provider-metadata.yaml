@@ -101,6 +101,7 @@ resources:
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             role_arn: (String, Sensitive) The Amazon Resource Name (ARN) of the IAM role to assume for performing operations. Infisical will assume this role using AWS Security Token Service (STS). Required for assume-role access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#assume-role-recommended
             secret_access_key: (String, Sensitive) The AWS Secret Access Key associated with the Access Key ID to authenticate requests to AWS services. Required for access-key access method. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/aws#access-key
+            sts_endpoint: (String) An optional custom endpoint URL for the AWS STS API (must start with https://). Only applicable to the assume-role method; when omitted, AWS's default STS endpoint resolution is used.
         importStatements: []
     infisical_app_connection_azure_app_configuration:
         subCategory: App Connections
@@ -422,7 +423,7 @@ resources:
                 }
         argumentDocs:
             access_token: (String, Sensitive) The Access Token used to access GitLab.
-            access_token_type: '(String) The type of token used to connect with GitLab. Supported options: ''project'' and ''personal'''
+            access_token_type: '(String) The type of token used to connect with GitLab. Supported options: ''project'', ''personal'', and ''group'''
             credentials: (Attributes) The credentials for the GitLab App Connection (see below for nested schema)
             credentials_hash: (String) The hash of the GitLab App Connection credentials
             description: (String) An optional description for the GitLab App Connection.
@@ -466,6 +467,7 @@ resources:
             credentials: (Attributes) The credentials for the HashiCorp Vault App Connection (see below for nested schema)
             credentials_hash: (String) The hash of the HashiCorp Vault App Connection credentials
             description: (String) An optional description for the HashiCorp Vault App Connection.
+            gateway_id: (String) The Gateway ID to use for the app connection. If not specified, the Internet Gateway will be used.
             id: (String) The ID of the app connection
             instance_url: (String) The URL of the HashiCorp Vault instance, e.g. https://vault.example.com. Required for all methods.
             method: '(String) The method used to authenticate with HashiCorp Vault. Possible values are: access-token, app-role'
@@ -731,6 +733,388 @@ resources:
             name: (String) The name of the Supabase App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
+    infisical_cert_manager_application:
+        subCategory: Certificate Management
+        description: Create and manage Certificate Manager applications in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_application
+        title: infisical_cert_manager_application Resource - terraform-provider-infisical
+        examples:
+            - name: platform
+              manifest: |-
+                {
+                  "description": "Certificates issued for the platform team",
+                  "name": "platform"
+                }
+        argumentDocs:
+            description: (String) The description of the Certificate Manager application
+            id: (String) The ID of the Certificate Manager application
+            name: (String) The name of the Certificate Manager application
+        importStatements:
+            - |-
+              # This will import the Certificate Manager application by its ID
+              terraform import infisical_cert_manager_application.example <application_id>
+    infisical_cert_manager_application_group:
+        subCategory: Certificate Management
+        description: Manage group memberships for a Certificate Manager application in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_application_group
+        title: infisical_cert_manager_application_group Resource - terraform-provider-infisical
+        examples:
+            - name: platform_sre_admins
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "group_id": "${infisical_cert_manager_group.sre.group_id}",
+                  "role": "admin"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+                group_id: infisical_cert_manager_group.sre.group_id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "name": "platform"
+                    }
+                infisical_cert_manager_group.sre: |-
+                    {
+                      "group_id": "\u003cgroup-id\u003e",
+                      "role": "member"
+                    }
+            - name: platform_devs
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "group_id": "${infisical_cert_manager_group.sre.group_id}",
+                  "role": "operator"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+                group_id: infisical_cert_manager_group.sre.group_id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "name": "platform"
+                    }
+                infisical_cert_manager_group.sre: |-
+                    {
+                      "group_id": "\u003cgroup-id\u003e",
+                      "role": "member"
+                    }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application
+            group_id: (String) The ID of the group to add
+            id: (String) The ID of the application group membership
+            role: (String) The role to assign to the group (admin, operator, or auditor)
+        importStatements:
+            - |-
+              # This will import the application group membership by application ID and group ID
+              terraform import infisical_cert_manager_application_group.example <application_id>:<group_id>
+    infisical_cert_manager_application_identity:
+        subCategory: Certificate Management
+        description: Manage identity memberships for a Certificate Manager application in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_application_identity
+        title: infisical_cert_manager_application_identity Resource - terraform-provider-infisical
+        examples:
+            - name: platform_ci
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "identity_id": "${infisical_cert_manager_identity.ci.identity_id}",
+                  "role": "operator"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+                identity_id: infisical_cert_manager_identity.ci.identity_id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "name": "platform"
+                    }
+                infisical_cert_manager_identity.ci: |-
+                    {
+                      "identity_id": "\u003cidentity-id\u003e",
+                      "role": "member"
+                    }
+            - name: platform_readonly
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "identity_id": "${infisical_cert_manager_identity.ci.identity_id}",
+                  "role": "auditor"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+                identity_id: infisical_cert_manager_identity.ci.identity_id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "name": "platform"
+                    }
+                infisical_cert_manager_identity.ci: |-
+                    {
+                      "identity_id": "\u003cidentity-id\u003e",
+                      "role": "member"
+                    }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application
+            id: (String) The ID of the application identity membership
+            identity_id: (String) The ID of the identity to add
+            role: (String) The role to assign to the identity (admin, operator, or auditor)
+        importStatements:
+            - |-
+              # This will import the application identity membership by application ID and identity ID
+              terraform import infisical_cert_manager_application_identity.example <application_id>:<identity_id>
+    infisical_cert_manager_application_profile:
+        subCategory: Certificate Management
+        description: Attach a certificate profile to a Certificate Manager application and configure its enrollment methods. Each enrollment block (api_config, est_config, acme_config, scep_config) is optional; add, edit, or remove a block to update the matching enrollment. Only Machine Identity authentication is supported.
+        name: infisical_cert_manager_application_profile
+        title: infisical_cert_manager_application_profile Resource - terraform-provider-infisical
+        examples:
+            - name: platform_web_server
+              manifest: |-
+                {
+                  "acme_config": {
+                    "skip_dns_ownership_verification": false,
+                    "skip_eab_binding": false
+                  },
+                  "api_config": {
+                    "auto_renew": true,
+                    "renew_before_days": 7
+                  },
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "est_config": {
+                    "disable_bootstrap_ca_validation": false,
+                    "passphrase": "change-me-est-secret"
+                  },
+                  "profile_id": "${infisical_cert_manager_certificate_profile.web_server.id}",
+                  "scep_config": {
+                    "allow_cert_based_renewal": true,
+                    "challenge_password": "change-me-scep-secret",
+                    "challenge_type": "static",
+                    "include_ca_cert_in_response": true
+                  }
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+                profile_id: infisical_cert_manager_certificate_profile.web_server.id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "name": "platform"
+                    }
+                infisical_cert_manager_certificate_policy.web_server: |-
+                    {
+                      "algorithms": [
+                        {
+                          "key_algorithm": [
+                            "RSA-2048"
+                          ],
+                          "signature": [
+                            "SHA256-RSA"
+                          ]
+                        }
+                      ],
+                      "extended_key_usages": [
+                        {
+                          "allowed": [
+                            "server_auth"
+                          ]
+                        }
+                      ],
+                      "key_usages": [
+                        {
+                          "allowed": [
+                            "digital_signature",
+                            "key_encipherment"
+                          ]
+                        }
+                      ],
+                      "name": "web-server-policy",
+                      "subject": [
+                        {
+                          "allowed": [
+                            "*.example.com"
+                          ],
+                          "required": [
+                            "*.example.com"
+                          ],
+                          "type": "common_name"
+                        }
+                      ],
+                      "validity": [
+                        {
+                          "max": "90d"
+                        }
+                      ]
+                    }
+                infisical_cert_manager_certificate_profile.web_server: |-
+                    {
+                      "ca_id": "${infisical_cert_manager_internal_ca.issuing.id}",
+                      "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
+                      "defaults": [
+                        {
+                          "common_name": "service.example.com",
+                          "extended_key_usages": [
+                            "server_auth"
+                          ],
+                          "key_algorithm": "RSA_2048",
+                          "key_usages": [
+                            "digital_signature"
+                          ],
+                          "signature_algorithm": "RSA-SHA256",
+                          "ttl_days": 90
+                        }
+                      ],
+                      "issuer_type": "ca",
+                      "name": "web-server"
+                    }
+                infisical_cert_manager_internal_ca.issuing: |-
+                    {
+                      "common_name": "Enterprise Issuing Certificate Authority",
+                      "country": "US",
+                      "key_algorithm": "RSA_2048",
+                      "name": "enterprise-issuing-ca",
+                      "organization": "Example Corp",
+                      "type": "intermediate"
+                    }
+        argumentDocs:
+            acme_config: (Attributes) Enable the ACME enrollment method. Omit the block to disable ACME enrollment. (see below for nested schema)
+            allow_cert_based_renewal: (Boolean) Allow certificate-based renewal. Defaults to true.
+            api_config: (Attributes) Enable the API enrollment method. Omit the block to disable API enrollment. (see below for nested schema)
+            application_id: (String) The ID of the Certificate Manager application
+            auto_renew: (Boolean) Whether to automatically renew certificates. Defaults to false when omitted.
+            ca_chain: (String) PEM-encoded CA chain used for bootstrap CA validation (only honored when disable_bootstrap_ca_validation is false).
+            challenge_endpoint_url: (String) The SCEP dynamic challenge endpoint URL (only set when challenge_type is dynamic).
+            challenge_password: (String, Sensitive) Static-mode SCEP challenge password (min 8 chars). Required when challenge_type is static.
+            challenge_type: '(String) SCEP challenge type. Supported values: static, dynamic. Defaults to static.'
+            directory_url: (String) The ACME directory URL clients should use.
+            disable_bootstrap_ca_validation: (Boolean) Whether to disable bootstrap CA validation. Defaults to false.
+            dynamic_challenge_expiry_minutes: (Number) Expiry of a dynamic challenge in minutes (1-1440). Only used when challenge_type is dynamic.
+            dynamic_challenge_max_pending: (Number) Maximum pending dynamic challenges (1-1000). Only used when challenge_type is dynamic.
+            eab_kid: (String, Sensitive) External Account Binding key identifier. Populated on create and on import; routine refreshes don't re-fetch it. Rotated only by the explicit rotate endpoint, never by Terraform.
+            eab_secret: (String, Sensitive) External Account Binding shared secret. Populated on create and on import; routine refreshes don't re-fetch it. Rotated only by the explicit rotate endpoint, never by Terraform.
+            endpoint_url: (String) The EST endpoint URL clients should use.
+            est_config: (Attributes) Enable the EST enrollment method. Omit the block to disable EST enrollment. (see below for nested schema)
+            id: '(String) Composite identifier in the format :'
+            include_ca_cert_in_response: (Boolean) Include the issuing CA certificate in SCEP responses. Defaults to true.
+            passphrase: (String, Sensitive) EST passphrase used to authorize certificate requests.
+            profile_id: (String) The ID of the certificate profile to attach
+            ra_cert_expires_at: (String) ISO-8601 timestamp when the RA certificate expires.
+            ra_certificate_pem: (String) The PEM-encoded RA certificate used by the SCEP service.
+            renew_before_days: (Number) Number of days before expiration to renew (1-30). Defaults to 7 when omitted.
+            scep_config: (Attributes) Enable the SCEP enrollment method. Omit the block to disable SCEP enrollment. (see below for nested schema)
+            scep_endpoint_url: (String) The SCEP endpoint URL clients should use.
+            skip_dns_ownership_verification: (Boolean) Skip DNS ownership verification. Defaults to false.
+            skip_eab_binding: (Boolean) Skip External Account Binding. Defaults to false. Cannot be set to true at the same time as skip_dns_ownership_verification.
+        importStatements:
+            - |-
+              # This will import the application-profile attachment by application ID and profile ID
+              terraform import infisical_cert_manager_application_profile.example <application_id>:<profile_id>
+    infisical_cert_manager_application_user:
+        subCategory: Certificate Management
+        description: Manage user memberships for a Certificate Manager application in Infisical. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_application_user
+        title: infisical_cert_manager_application_user Resource - terraform-provider-infisical
+        examples:
+            - name: platform_admin
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "email": "${infisical_cert_manager_user.admin.email}",
+                  "role": "admin"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+                email: infisical_cert_manager_user.admin.email
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "name": "platform"
+                    }
+                infisical_cert_manager_user.admin: |-
+                    {
+                      "email": "admin@example.com",
+                      "role": "member"
+                    }
+                infisical_cert_manager_user.auditor: |-
+                    {
+                      "email": "auditor@example.com",
+                      "role": "member"
+                    }
+                infisical_cert_manager_user.operator: |-
+                    {
+                      "email": "operator@example.com",
+                      "role": "member"
+                    }
+            - name: platform_operator
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "email": "${infisical_cert_manager_user.operator.email}",
+                  "role": "operator"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+                email: infisical_cert_manager_user.operator.email
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "name": "platform"
+                    }
+                infisical_cert_manager_user.admin: |-
+                    {
+                      "email": "admin@example.com",
+                      "role": "member"
+                    }
+                infisical_cert_manager_user.auditor: |-
+                    {
+                      "email": "auditor@example.com",
+                      "role": "member"
+                    }
+                infisical_cert_manager_user.operator: |-
+                    {
+                      "email": "operator@example.com",
+                      "role": "member"
+                    }
+            - name: platform_auditor
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "email": "${infisical_cert_manager_user.auditor.email}",
+                  "role": "auditor"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+                email: infisical_cert_manager_user.auditor.email
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "name": "platform"
+                    }
+                infisical_cert_manager_user.admin: |-
+                    {
+                      "email": "admin@example.com",
+                      "role": "member"
+                    }
+                infisical_cert_manager_user.auditor: |-
+                    {
+                      "email": "auditor@example.com",
+                      "role": "member"
+                    }
+                infisical_cert_manager_user.operator: |-
+                    {
+                      "email": "operator@example.com",
+                      "role": "member"
+                    }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application
+            email: (String) The email of the user to add
+            id: (String) The ID of the application user membership
+            role: (String) The role to assign to the user (admin, operator, or auditor)
+            user_id: (String) The ID of the user
+        importStatements:
+            - |-
+              # This will import the application user membership by application ID and email
+              terraform import infisical_cert_manager_application_user.example <application_id>:<email>
     infisical_cert_manager_ca_certificate:
         subCategory: Certificate Management
         description: Create and manage CA certificates in Infisical. Only Machine Identity authentication is supported for this resource.
@@ -757,7 +1141,6 @@ resources:
                       "name": "enterprise-issuing-ca",
                       "organization": "Example Corp",
                       "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
                       "province": "California",
                       "type": "intermediate"
                     }
@@ -770,16 +1153,8 @@ resources:
                       "name": "enterprise-root-ca",
                       "organization": "Example Corp",
                       "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
                       "province": "California",
                       "type": "root"
-                    }
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
                     }
             - name: issuing_cert
               manifest: |-
@@ -806,7 +1181,6 @@ resources:
                       "name": "enterprise-issuing-ca",
                       "organization": "Example Corp",
                       "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
                       "province": "California",
                       "type": "intermediate"
                     }
@@ -819,60 +1193,8 @@ resources:
                       "name": "enterprise-root-ca",
                       "organization": "Example Corp",
                       "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
                       "province": "California",
                       "type": "root"
-                    }
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
-            - name: dev_cert
-              manifest: |-
-                {
-                  "ca_id": "${infisical_cert_manager_internal_ca.root.id}",
-                  "max_path_length": -1,
-                  "not_after": "2025-01-01T00:00:00Z",
-                  "not_before": "2024-01-01T00:00:00Z"
-                }
-              references:
-                ca_id: infisical_cert_manager_internal_ca.root.id
-              dependencies:
-                infisical_cert_manager_internal_ca.issuing: |-
-                    {
-                      "common_name": "Enterprise Issuing Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-issuing-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "intermediate"
-                    }
-                infisical_cert_manager_internal_ca.root: |-
-                    {
-                      "common_name": "Enterprise Root Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-root-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "root"
-                    }
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
                     }
         argumentDocs:
             ca_id: (String) The ID of the certificate authority to generate a certificate for
@@ -884,38 +1206,66 @@ resources:
             not_before: (String) The date and time when the CA becomes valid in RFC3339 format (e.g., '2024-01-01T00:00:00Z')
             parent_ca_id: (String) The ID of the parent CA (required for intermediate CAs)
             serial_number: (String) The serial number of the CA certificate
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the CA certificate by CA ID and certificate ID
+              terraform import infisical_cert_manager_ca_certificate.example <ca_id>:<cert_id>
     infisical_cert_manager_certificate:
         subCategory: Certificate Management
         description: Request and manage certificates from Infisical certificate profiles. Supports both CSR-based and direct field requests. The resource will poll until the certificate is issued or a timeout is reached. Only Machine Identity authentication is supported for this resource.
         name: infisical_cert_manager_certificate
         title: infisical_cert_manager_certificate Resource - terraform-provider-infisical
         examples:
-            - name: my_cert
+            - name: api_direct
               manifest: |-
                 {
                   "alt_names": [
                     "api.example.com",
                     "api-internal.example.com"
                   ],
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
                   "common_name": "api.example.com",
                   "country": "US",
+                  "extended_key_usages": [
+                    "server_auth"
+                  ],
                   "key_algorithm": "RSA_2048",
+                  "key_usages": [
+                    "digital_signature",
+                    "key_encipherment"
+                  ],
                   "organization": "Example Corp",
-                  "profile_id": "\u003cinternal-ca-profile-id\u003e",
+                  "profile_id": "\u003cprofile-id\u003e",
                   "signature_algorithm": "RSA-SHA256",
                   "timeout_seconds": 300,
                   "ttl": "90d"
                 }
-            - name: csr_based_cert
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "description": "Certificates issued for the platform team",
+                      "name": "platform"
+                    }
+            - name: api_csr_file
               manifest: |-
                 {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
                   "csr": "${file(\"./my-certificate.csr\")}",
                   "profile_id": "\u003cprofile-id\u003e",
                   "timeout_seconds": 300,
                   "ttl": "90d"
                 }
-            - name: inline_csr_cert
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "description": "Certificates issued for the platform team",
+                      "name": "platform"
+                    }
+            - name: api_csr_inline
               manifest: |-
                 {
                   "csr": "-----BEGIN CERTIFICATE REQUEST-----\nMIICljCCAX4CAQAwGDEWMBQGA1UEAwwNaW5maXNpY2FsLmNvbTCCASIwDQYJKoZI\nhvcNAQEBBQADggEPADCCAQoCggEBAL7c6thewe78xVXyBQ0ZgmSjlkYCGeJgxot/\nQqB1+z3mlMr/tViy8UFBThO69i532ZgWyuJ24YWVeF67WBQPYXnkXlUMJKYGM6UA\nka6dOjCeSJHNXkxbLHI3yljvXP/Kn6w+WczeSuJXYNH5Uet9TtTEuXIqTgWjnAhD\nTAWqtyHPbtw3jVWy7xkSc/JuqVGha05snjPPmF9lkdoztG3gosN0TnwTGaQ382sr\ngiUBkkfdBK0eGmTwJlG9xLZMm3hDyAFz2/iw6GR57uvp/h9RDZVZcuisUQf2T8NZ\nCCVPTSGpfYxbQ4KviDghL2/GDY9NVudHSyeCCA0zOPZW9tg7hAECAwEAAaA5MDcG\nCSqGSIb3DQEJDjEqMCgwJgYDVR0RBB8wHYINaW5maXNpY2FsLmNvbYIMaW5maXNp\nY2FsLmVzMA0GCSqGSIb3DQEBCwUAA4IBAQBZy+AYPWeZVs+ZPP/9Zj0cl7BchwZV\nphEPIezIdKqDyLcyjCf168rbTEqch9gz5CvyIPL3kBohicI/k+/RYPnRKsTdiYNE\nXrpeaarHqlvpGzjsrQUv6iJgrDGZXMVJn+op3cDChNPet9RJ1utH96S6W6Ent4QU\n90XNi6fBSja8wThfj0AAl51OycHwfNg5/CtygT0eM16/bZl0knJ884Bf35LNE731\nAwp8H6ELyXOX1tRKNZRPMKr2Nw/qn6QK611R9aSA+maa25YZa8K0cvSVAJQOfdei\n0A7YVKj492nqnN/xS5kzIidZuaCBLocLo5j615xh/79YgMZjrGo3wvnk\n-----END CERTIFICATE REQUEST-----\n",
@@ -923,14 +1273,21 @@ resources:
                   "timeout_seconds": 300,
                   "ttl": "90d"
                 }
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "description": "Certificates issued for the platform team",
+                      "name": "platform"
+                    }
         argumentDocs:
             alt_names: (List of String) Subject alternative names (SANs) for the certificate
-            certificate: (String) The issued certificate in PEM format
-            certificate_chain: (String) The certificate chain in PEM format
+            application_id: (String) The ID of the Certificate Manager application to issue this certificate from
+            certificate: (String) The issued certificate in PEM format.
+            certificate_chain: (String) The certificate chain in PEM format.
             certificate_request_id: (String) The ID of the certificate request
             common_name: (String) The common name (CN) for the certificate. Required when not using CSR
             country: (String) The country (C) for the certificate (2-letter code)
-            csr: (String) Certificate Signing Request (CSR) in PEM format. If provided, the certificate will be issued based on the CSR. Use Terraform's file() function to read from a file (e.g., file("./my-certificate.csr"))
+            csr: (String) Certificate Signing Request (CSR) in PEM format. If provided, the certificate will be issued based on the CSR. Use Terraform's file() function to read from a file (e.g., file("./my-certificate.csr")).
             extended_key_usages: '(List of String) Extended key usages for the certificate. Supported: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             id: (String) The ID of the certificate
             key_algorithm: '(String) The key algorithm for the certificate. Supported: RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1'
@@ -940,18 +1297,21 @@ resources:
             not_before: (String) The not-before date of the certificate (RFC3339 format)
             organization: (String) The organization (O) for the certificate
             ou: (String) The organizational unit (OU) for the certificate
-            private_key: (String, Sensitive) The private key in PEM format (only available for direct field requests, not CSR-based)
+            private_key: (String, Sensitive) The private key in PEM format (only available for direct field requests, not CSR-based).
             profile_id: (String) The ID of the certificate profile to use for issuance
             province: (String) The state/province (ST) for the certificate
             serial_number: (String) The serial number of the issued certificate
             signature_algorithm: '(String) The signature algorithm for the certificate. Supported: RSA-SHA256, RSA-SHA384, RSA-SHA512, ECDSA-SHA256, ECDSA-SHA384, ECDSA-SHA512'
             status: (String) The status of the certificate (pending, issued, failed)
             timeout_seconds: (Number) Maximum time to wait for certificate issuance in seconds. Defaults to 3600 (1 hour)
-            ttl: (String) Time to live for the certificate (e.g., '30d', '90d', '1y')
-        importStatements: []
+            ttl: (String) Time to live for the certificate (e.g., '30d', '90d', '1y').
+        importStatements:
+            - |-
+              # This will import the certificate by its ID
+              terraform import infisical_cert_manager_certificate.example <certificate_id>
     infisical_cert_manager_certificate_policy:
         subCategory: Certificate Management
-        description: Create and manage certificate policies in Infisical. Only Machine Identity authentication is supported for this resource.
+        description: Create and manage certificate policies in Certificate Manager. Only Machine Identity authentication is supported for this resource.
         name: infisical_cert_manager_certificate_policy
         title: infisical_cert_manager_certificate_policy Resource - terraform-provider-infisical
         examples:
@@ -991,7 +1351,6 @@ resources:
                     }
                   ],
                   "name": "web-server-policy",
-                  "project_slug": "${infisical_project.pki.slug}",
                   "sans": [
                     {
                       "allowed": [
@@ -1047,16 +1406,6 @@ resources:
                     }
                   ]
                 }
-              references:
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
             - name: code_signing
               manifest: |-
                 {
@@ -1089,7 +1438,6 @@ resources:
                     }
                   ],
                   "name": "code-signing-policy",
-                  "project_slug": "${infisical_project.pki.slug}",
                   "subject": [
                     {
                       "allowed": [
@@ -1119,16 +1467,6 @@ resources:
                     }
                   ]
                 }
-              references:
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
         argumentDocs:
             algorithms: (Block, Optional) Algorithm constraints for the certificate policy. At least one signature algorithm and one key algorithm must be specified. (see below for nested schema)
             allowed: '(List of String) List of allowed extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
@@ -1140,41 +1478,48 @@ resources:
             key_usages: (Block, Optional) Key usage policies for the certificate policy (see below for nested schema)
             max: (String) Maximum validity period (e.g., '90d', '2y', '6m')
             name: (String) The name of the certificate policy
-            project_slug: (String) The slug of the cert-manager project
             required: '(List of String) List of required extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             sans: (Block List) Subject alternative name (SAN) policies for the certificate policy (see below for nested schema)
             signature: '(List of String) List of allowed signature algorithms (at least one required). Supported values: SHA256-RSA, SHA512-RSA, SHA384-ECDSA, SHA384-RSA, SHA256-ECDSA, SHA512-ECDSA'
             subject: (Block List) Subject attribute policies for the certificate policy (see below for nested schema)
             type: '(String) The SAN type. Possible values: dns_name, ip_address, email, uri'
             validity: (Block, Optional) Validity constraints for the certificate policy (see below for nested schema)
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the certificate policy by its ID
+              terraform import infisical_cert_manager_certificate_policy.example <policy_id>
     infisical_cert_manager_certificate_profile:
         subCategory: Certificate Management
-        description: Create and manage certificate profiles in Infisical. Only Machine Identity authentication is supported for this resource.
+        description: Create and manage certificate profiles in Certificate Manager. Enrollment methods are configured on the application via the infisical_cert_manager_application_profile resource. Only Machine Identity authentication is supported for this resource.
         name: infisical_cert_manager_certificate_profile
         title: infisical_cert_manager_certificate_profile Resource - terraform-provider-infisical
         examples:
-            - name: web_server_api
+            - name: web_server
               manifest: |-
                 {
-                  "api_config": [
-                    {
-                      "auto_renew": true,
-                      "renew_before_days": 7
-                    }
-                  ],
                   "ca_id": "${infisical_cert_manager_internal_ca.issuing.id}",
                   "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
-                  "description": "API enrollment for web server certificates",
-                  "enrollment_type": "api",
+                  "defaults": [
+                    {
+                      "common_name": "service.example.com",
+                      "extended_key_usages": [
+                        "server_auth"
+                      ],
+                      "key_algorithm": "RSA_2048",
+                      "key_usages": [
+                        "digital_signature"
+                      ],
+                      "signature_algorithm": "RSA-SHA256",
+                      "ttl_days": 90
+                    }
+                  ],
+                  "description": "Profile for issuing web server certificates",
                   "issuer_type": "ca",
-                  "name": "web-server-api",
-                  "project_slug": "${infisical_project.pki.slug}"
+                  "name": "web-server"
                 }
               references:
                 ca_id: infisical_cert_manager_internal_ca.issuing.id
                 certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
-                project_slug: infisical_project.pki.slug
               dependencies:
                 infisical_cert_manager_certificate_policy.web_server: |-
                     {
@@ -1182,14 +1527,10 @@ resources:
                         {
                           "key_algorithm": [
                             "RSA-2048",
-                            "RSA-3072",
-                            "ECDSA-P256",
-                            "ECDSA-P384"
+                            "RSA-3072"
                           ],
                           "signature": [
-                            "SHA256-RSA",
-                            "SHA256-ECDSA",
-                            "SHA384-ECDSA"
+                            "SHA256-RSA"
                           ]
                         }
                       ],
@@ -1211,30 +1552,21 @@ resources:
                         }
                       ],
                       "name": "web-server-policy",
-                      "project_slug": "${infisical_project.pki.slug}",
                       "sans": [
                         {
                           "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
+                            "*.example.com"
                           ],
                           "required": [
                             "*.example.com"
                           ],
                           "type": "dns_name"
-                        },
-                        {
-                          "allowed": [
-                            "*@example.com"
-                          ],
-                          "type": "email"
                         }
                       ],
                       "subject": [
                         {
                           "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
+                            "*.example.com"
                           ],
                           "required": [
                             "*.example.com"
@@ -1246,12 +1578,6 @@ resources:
                             "Example Corp"
                           ],
                           "type": "organization"
-                        },
-                        {
-                          "required": [
-                            "US"
-                          ],
-                          "type": "country"
                         }
                       ],
                       "validity": [
@@ -1269,191 +1595,33 @@ resources:
                       "name": "enterprise-issuing-ca",
                       "organization": "Example Corp",
                       "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
                       "province": "California",
                       "type": "intermediate"
-                    }
-                infisical_cert_manager_internal_ca.root: |-
-                    {
-                      "common_name": "Enterprise Root Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-root-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "root"
-                    }
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
-            - name: web_server_est
-              manifest: |-
-                {
-                  "ca_id": "${infisical_cert_manager_internal_ca.issuing.id}",
-                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
-                  "description": "EST enrollment for web server certificates",
-                  "enrollment_type": "est",
-                  "est_config": [
-                    {
-                      "ca_chain": "${var.encrypted_ca_chain}",
-                      "disable_bootstrap_ca_validation": false,
-                      "passphrase": "${var.est_passphrase}"
-                    }
-                  ],
-                  "issuer_type": "ca",
-                  "name": "web-server-est",
-                  "project_slug": "${infisical_project.pki.slug}"
-                }
-              references:
-                ca_id: infisical_cert_manager_internal_ca.issuing.id
-                certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
-                est_config.ca_chain: var.encrypted_ca_chain
-                est_config.passphrase: var.est_passphrase
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_cert_manager_certificate_policy.web_server: |-
-                    {
-                      "algorithms": [
-                        {
-                          "key_algorithm": [
-                            "RSA-2048",
-                            "RSA-3072",
-                            "ECDSA-P256",
-                            "ECDSA-P384"
-                          ],
-                          "signature": [
-                            "SHA256-RSA",
-                            "SHA256-ECDSA",
-                            "SHA384-ECDSA"
-                          ]
-                        }
-                      ],
-                      "description": "Policy for web server certificates",
-                      "extended_key_usages": [
-                        {
-                          "allowed": [
-                            "server_auth",
-                            "client_auth"
-                          ]
-                        }
-                      ],
-                      "key_usages": [
-                        {
-                          "allowed": [
-                            "digital_signature",
-                            "key_encipherment"
-                          ]
-                        }
-                      ],
-                      "name": "web-server-policy",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "sans": [
-                        {
-                          "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
-                          ],
-                          "required": [
-                            "*.example.com"
-                          ],
-                          "type": "dns_name"
-                        },
-                        {
-                          "allowed": [
-                            "*@example.com"
-                          ],
-                          "type": "email"
-                        }
-                      ],
-                      "subject": [
-                        {
-                          "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
-                          ],
-                          "required": [
-                            "*.example.com"
-                          ],
-                          "type": "common_name"
-                        },
-                        {
-                          "required": [
-                            "Example Corp"
-                          ],
-                          "type": "organization"
-                        },
-                        {
-                          "required": [
-                            "US"
-                          ],
-                          "type": "country"
-                        }
-                      ],
-                      "validity": [
-                        {
-                          "max": "90d"
-                        }
-                      ]
-                    }
-                infisical_cert_manager_internal_ca.issuing: |-
-                    {
-                      "common_name": "Enterprise Issuing Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-issuing-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "intermediate"
-                    }
-                infisical_cert_manager_internal_ca.root: |-
-                    {
-                      "common_name": "Enterprise Root Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-root-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "root"
-                    }
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
                     }
             - name: self_signed_dev
               manifest: |-
                 {
-                  "api_config": [
+                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
+                  "defaults": [
                     {
-                      "auto_renew": false,
-                      "renew_before_days": 7
+                      "common_name": "dev.example.com",
+                      "extended_key_usages": [
+                        "server_auth"
+                      ],
+                      "key_algorithm": "RSA_2048",
+                      "key_usages": [
+                        "digital_signature"
+                      ],
+                      "signature_algorithm": "RSA-SHA256",
+                      "ttl_days": 90
                     }
                   ],
-                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
                   "description": "Self-signed certificates for development",
-                  "enrollment_type": "api",
                   "issuer_type": "self-signed",
-                  "name": "self-signed-dev",
-                  "project_slug": "${infisical_project.pki.slug}"
+                  "name": "self-signed-dev"
                 }
               references:
                 certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
-                project_slug: infisical_project.pki.slug
               dependencies:
                 infisical_cert_manager_certificate_policy.web_server: |-
                     {
@@ -1461,14 +1629,10 @@ resources:
                         {
                           "key_algorithm": [
                             "RSA-2048",
-                            "RSA-3072",
-                            "ECDSA-P256",
-                            "ECDSA-P384"
+                            "RSA-3072"
                           ],
                           "signature": [
-                            "SHA256-RSA",
-                            "SHA256-ECDSA",
-                            "SHA384-ECDSA"
+                            "SHA256-RSA"
                           ]
                         }
                       ],
@@ -1490,30 +1654,21 @@ resources:
                         }
                       ],
                       "name": "web-server-policy",
-                      "project_slug": "${infisical_project.pki.slug}",
                       "sans": [
                         {
                           "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
+                            "*.example.com"
                           ],
                           "required": [
                             "*.example.com"
                           ],
                           "type": "dns_name"
-                        },
-                        {
-                          "allowed": [
-                            "*@example.com"
-                          ],
-                          "type": "email"
                         }
                       ],
                       "subject": [
                         {
                           "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
+                            "*.example.com"
                           ],
                           "required": [
                             "*.example.com"
@@ -1525,12 +1680,6 @@ resources:
                             "Example Corp"
                           ],
                           "type": "organization"
-                        },
-                        {
-                          "required": [
-                            "US"
-                          ],
-                          "type": "country"
                         }
                       ],
                       "validity": [
@@ -1548,329 +1697,35 @@ resources:
                       "name": "enterprise-issuing-ca",
                       "organization": "Example Corp",
                       "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
                       "province": "California",
                       "type": "intermediate"
-                    }
-                infisical_cert_manager_internal_ca.root: |-
-                    {
-                      "common_name": "Enterprise Root Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-root-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "root"
-                    }
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
-            - name: acme_profile
-              manifest: |-
-                {
-                  "ca_id": "${var.acme_ca_id}",
-                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
-                  "description": "Let's Encrypt ACME certificates",
-                  "enrollment_type": "acme",
-                  "issuer_type": "ca",
-                  "name": "acme-letsencrypt",
-                  "project_slug": "${infisical_project.pki.slug}"
-                }
-              references:
-                ca_id: var.acme_ca_id
-                certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_cert_manager_certificate_policy.web_server: |-
-                    {
-                      "algorithms": [
-                        {
-                          "key_algorithm": [
-                            "RSA-2048",
-                            "RSA-3072",
-                            "ECDSA-P256",
-                            "ECDSA-P384"
-                          ],
-                          "signature": [
-                            "SHA256-RSA",
-                            "SHA256-ECDSA",
-                            "SHA384-ECDSA"
-                          ]
-                        }
-                      ],
-                      "description": "Policy for web server certificates",
-                      "extended_key_usages": [
-                        {
-                          "allowed": [
-                            "server_auth",
-                            "client_auth"
-                          ]
-                        }
-                      ],
-                      "key_usages": [
-                        {
-                          "allowed": [
-                            "digital_signature",
-                            "key_encipherment"
-                          ]
-                        }
-                      ],
-                      "name": "web-server-policy",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "sans": [
-                        {
-                          "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
-                          ],
-                          "required": [
-                            "*.example.com"
-                          ],
-                          "type": "dns_name"
-                        },
-                        {
-                          "allowed": [
-                            "*@example.com"
-                          ],
-                          "type": "email"
-                        }
-                      ],
-                      "subject": [
-                        {
-                          "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
-                          ],
-                          "required": [
-                            "*.example.com"
-                          ],
-                          "type": "common_name"
-                        },
-                        {
-                          "required": [
-                            "Example Corp"
-                          ],
-                          "type": "organization"
-                        },
-                        {
-                          "required": [
-                            "US"
-                          ],
-                          "type": "country"
-                        }
-                      ],
-                      "validity": [
-                        {
-                          "max": "90d"
-                        }
-                      ]
-                    }
-                infisical_cert_manager_internal_ca.issuing: |-
-                    {
-                      "common_name": "Enterprise Issuing Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-issuing-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "intermediate"
-                    }
-                infisical_cert_manager_internal_ca.root: |-
-                    {
-                      "common_name": "Enterprise Root Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-root-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "root"
-                    }
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
-            - name: adcs_profile
-              manifest: |-
-                {
-                  "api_config": [
-                    {
-                      "auto_renew": true,
-                      "renew_before_days": 14
-                    }
-                  ],
-                  "ca_id": "${var.adcs_ca_id}",
-                  "certificate_policy_id": "${infisical_cert_manager_certificate_policy.web_server.id}",
-                  "description": "Corporate ADCS certificates",
-                  "enrollment_type": "api",
-                  "external_configs": [
-                    {
-                      "template": "WebServerTemplate"
-                    }
-                  ],
-                  "issuer_type": "ca",
-                  "name": "adcs-corporate",
-                  "project_slug": "${infisical_project.pki.slug}"
-                }
-              references:
-                ca_id: var.adcs_ca_id
-                certificate_policy_id: infisical_cert_manager_certificate_policy.web_server.id
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_cert_manager_certificate_policy.web_server: |-
-                    {
-                      "algorithms": [
-                        {
-                          "key_algorithm": [
-                            "RSA-2048",
-                            "RSA-3072",
-                            "ECDSA-P256",
-                            "ECDSA-P384"
-                          ],
-                          "signature": [
-                            "SHA256-RSA",
-                            "SHA256-ECDSA",
-                            "SHA384-ECDSA"
-                          ]
-                        }
-                      ],
-                      "description": "Policy for web server certificates",
-                      "extended_key_usages": [
-                        {
-                          "allowed": [
-                            "server_auth",
-                            "client_auth"
-                          ]
-                        }
-                      ],
-                      "key_usages": [
-                        {
-                          "allowed": [
-                            "digital_signature",
-                            "key_encipherment"
-                          ]
-                        }
-                      ],
-                      "name": "web-server-policy",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "sans": [
-                        {
-                          "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
-                          ],
-                          "required": [
-                            "*.example.com"
-                          ],
-                          "type": "dns_name"
-                        },
-                        {
-                          "allowed": [
-                            "*@example.com"
-                          ],
-                          "type": "email"
-                        }
-                      ],
-                      "subject": [
-                        {
-                          "allowed": [
-                            "*.example.com",
-                            "*.internal.example.com"
-                          ],
-                          "required": [
-                            "*.example.com"
-                          ],
-                          "type": "common_name"
-                        },
-                        {
-                          "required": [
-                            "Example Corp"
-                          ],
-                          "type": "organization"
-                        },
-                        {
-                          "required": [
-                            "US"
-                          ],
-                          "type": "country"
-                        }
-                      ],
-                      "validity": [
-                        {
-                          "max": "90d"
-                        }
-                      ]
-                    }
-                infisical_cert_manager_internal_ca.issuing: |-
-                    {
-                      "common_name": "Enterprise Issuing Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-issuing-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "intermediate"
-                    }
-                infisical_cert_manager_internal_ca.root: |-
-                    {
-                      "common_name": "Enterprise Root Certificate Authority",
-                      "country": "US",
-                      "key_algorithm": "RSA_2048",
-                      "locality": "San Francisco",
-                      "name": "enterprise-root-ca",
-                      "organization": "Example Corp",
-                      "ou": "IT Security",
-                      "project_slug": "${infisical_project.pki.slug}",
-                      "province": "California",
-                      "type": "root"
-                    }
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for PKI certificate management",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
                     }
         argumentDocs:
-            api_config: (Block, Optional) API configuration (required when enrollment_type is 'api') (see below for nested schema)
-            auto_renew: (Boolean) Whether to automatically renew certificates
-            ca_chain: (String, Sensitive) The CA certificate chain for EST enrollment
             ca_id: (String) The ID of the certificate authority to use (required unless issuer_type is 'self-signed')
             certificate_policy_id: (String) The ID of the certificate policy to use
+            common_name: (String) Default common name
+            country: (String) Default country (C)
+            defaults: (Block, Optional) Default certificate attribute values applied when issuing certificates from this profile (see below for nested schema)
             description: (String) The description of the certificate profile
-            disable_bootstrap_ca_validation: (Boolean) Whether to disable bootstrap CA validation
-            enrollment_type: '(String) The enrollment type for the profile. Supported values: api, est, acme'
-            est_config: (Block, Optional) EST configuration (required when enrollment_type is 'est') (see below for nested schema)
-            external_configs: (Block, Optional) External configuration for external CA types (e.g., ADCS template name) (see below for nested schema)
+            extended_key_usages: '(List of String) Default extended key usages. Supported values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             id: (String) The ID of the certificate profile
             issuer_type: '(String) The issuer type for the profile. Supported values: ca, self-signed. Defaults to ''ca''.'
+            key_algorithm: '(String) Default key algorithm. Supported values: RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1'
+            key_usages: '(List of String) Default key usages. Supported values: digital_signature, key_encipherment, non_repudiation, data_encipherment, key_agreement, key_cert_sign, crl_sign, encipher_only, decipher_only'
+            locality: (String) Default locality (L)
             name: (String) The unique name of the certificate profile
-            passphrase: (String, Sensitive) The passphrase for EST enrollment
-            project_slug: (String) The slug of the cert-manager project
-            renew_before_days: (Number) Number of days before expiration to renew certificates (1-30)
-            template: (String) Certificate template name for Azure AD CS
-        importStatements: []
+            organization: (String) Default organization (O)
+            organizational_unit: (String) Default organizational unit (OU)
+            signature_algorithm: '(String) Default signature algorithm. Supported values: RSA-SHA256, RSA-SHA384, RSA-SHA512, ECDSA-SHA256, ECDSA-SHA384, ECDSA-SHA512'
+            state: (String) Default state/province (ST)
+            ttl_days: (Number) Default certificate validity in days
+        importStatements:
+            - |-
+              # This will import the certificate profile by its ID
+              terraform import infisical_cert_manager_certificate_profile.example <profile_id>
     infisical_cert_manager_external_ca_acme:
         subCategory: Certificate Management
-        description: Create and manage external ACME certificate authorities in Infisical. Only Machine Identity authentication is supported for this resource.
+        description: Create and manage external ACME certificate authorities in Certificate Manager. Only Machine Identity authentication is supported for this resource.
         name: infisical_cert_manager_external_ca_acme
         title: infisical_cert_manager_external_ca_acme Resource - terraform-provider-infisical
         examples:
@@ -1883,19 +1738,8 @@ resources:
                   "dns_hosted_zone_id": "Z123456789ABCDEFGH",
                   "dns_provider": "route53",
                   "name": "letsencrypt-prod",
-                  "project_slug": "${infisical_project.pki.slug}",
                   "status": "active"
                 }
-              references:
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for managing SSL/TLS certificates",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
         argumentDocs:
             account_email: (String) The email address for ACME account registration
             directory_url: (String) The ACME directory URL
@@ -1906,12 +1750,14 @@ resources:
             eab_kid: (String) External Account Binding (EAB) Key ID (optional)
             id: (String) The ID of the ACME CA
             name: (String) The name of the ACME CA
-            project_slug: (String) The slug of the cert-manager project
             status: '(String) The status of the CA. Supported values: active, disabled. Defaults to ''active''.'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the external ACME CA by its ID
+              terraform import infisical_cert_manager_external_ca_acme.example <ca_id>
     infisical_cert_manager_external_ca_adcs:
         subCategory: Certificate Management
-        description: Create and manage external ADCS (Microsoft Active Directory Certificate Services) certificate authorities in Infisical. Only Machine Identity authentication is supported for this resource.
+        description: Create and manage external ADCS (Microsoft Active Directory Certificate Services) certificate authorities in Certificate Manager. Only Machine Identity authentication is supported for this resource.
         name: infisical_cert_manager_external_ca_adcs
         title: infisical_cert_manager_external_ca_adcs Resource - terraform-provider-infisical
         examples:
@@ -1920,29 +1766,72 @@ resources:
                 {
                   "azure_adcs_connection_id": "your-azure-adcs-connection-id",
                   "name": "corporate-adcs",
-                  "project_slug": "${infisical_project.pki.slug}",
                   "status": "active"
                 }
-              references:
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for managing SSL/TLS certificates",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
         argumentDocs:
             azure_adcs_connection_id: (String) The ID of the Azure ADCS app connection for certificate issuance
             id: (String) The ID of the ADCS CA
             name: (String) The name of the ADCS CA
-            project_slug: (String) The slug of the cert-manager project
             status: '(String) The status of the CA. Supported values: active, disabled. Defaults to ''active''.'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the external ADCS CA by its ID
+              terraform import infisical_cert_manager_external_ca_adcs.example <ca_id>
+    infisical_cert_manager_group:
+        subCategory: Certificate Management
+        description: Manage group memberships in Certificate Manager. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_group
+        title: infisical_cert_manager_group Resource - terraform-provider-infisical
+        examples:
+            - name: sre
+              manifest: |-
+                {
+                  "group_id": "\u003cgroup-id\u003e",
+                  "role": "admin"
+                }
+            - name: oncall_rotation
+              manifest: |-
+                {
+                  "group_id": "\u003cgroup-id\u003e",
+                  "role": "member"
+                }
+        argumentDocs:
+            group_id: (String) The ID of the group
+            id: (String) The ID of the Certificate Manager group membership
+            role: (String) The role to assign to the group (admin or member)
+        importStatements:
+            - |-
+              # This will import the Certificate Manager group membership by the group ID
+              terraform import infisical_cert_manager_group.example <group_id>
+    infisical_cert_manager_identity:
+        subCategory: Certificate Management
+        description: Manage identity memberships in Certificate Manager. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_identity
+        title: infisical_cert_manager_identity Resource - terraform-provider-infisical
+        examples:
+            - name: ci
+              manifest: |-
+                {
+                  "identity_id": "\u003cidentity-id\u003e",
+                  "role": "admin"
+                }
+            - name: deploy_bot
+              manifest: |-
+                {
+                  "identity_id": "\u003cidentity-id\u003e",
+                  "role": "member"
+                }
+        argumentDocs:
+            id: (String) The ID of the Certificate Manager identity membership
+            identity_id: (String) The ID of the identity
+            role: (String) The role to assign to the identity (admin or member)
+        importStatements:
+            - |-
+              # This will import the Certificate Manager identity membership by the identity ID
+              terraform import infisical_cert_manager_identity.example <identity_id>
     infisical_cert_manager_internal_ca:
         subCategory: Certificate Management
-        description: Create and manage internal certificate authorities (root or intermediate) in Infisical. Only Machine Identity authentication is supported for this resource.
+        description: Create and manage internal certificate authorities (root or intermediate) in Certificate Manager. Only Machine Identity authentication is supported for this resource.
         name: infisical_cert_manager_internal_ca
         title: infisical_cert_manager_internal_ca Resource - terraform-provider-infisical
         examples:
@@ -1956,20 +1845,9 @@ resources:
                   "name": "enterprise-root-ca",
                   "organization": "Acme Corp",
                   "ou": "IT Security",
-                  "project_slug": "${infisical_project.pki.slug}",
                   "province": "California",
                   "type": "root"
                 }
-              references:
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for managing SSL/TLS certificates",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
             - name: issuing
               manifest: |-
                 {
@@ -1980,20 +1858,9 @@ resources:
                   "name": "enterprise-issuing-ca",
                   "organization": "Acme Corp",
                   "ou": "IT Security",
-                  "project_slug": "${infisical_project.pki.slug}",
                   "province": "California",
                   "type": "intermediate"
                 }
-              references:
-                project_slug: infisical_project.pki.slug
-              dependencies:
-                infisical_project.pki: |-
-                    {
-                      "description": "Project for managing SSL/TLS certificates",
-                      "name": "PKI Project",
-                      "slug": "pki-project",
-                      "type": "cert-manager"
-                    }
         argumentDocs:
             common_name: (String) The common name (CN) of the CA certificate
             country: (String) The country (C) of the CA certificate
@@ -2003,7 +1870,6 @@ resources:
             name: (String) The name of the CA
             organization: (String) The organization (O) of the CA certificate
             ou: (String) The organizational unit (OU) of the CA certificate
-            project_slug: (String) The slug of the cert-manager project
             province: (String) The state/province (ST) of the CA certificate
             status: '(String) The status of the CA. Supported values: active, disabled. Defaults to ''active''.'
             type: '(String) The type of the CA. Supported values: root, intermediate'
@@ -2011,6 +1877,33 @@ resources:
             - |-
               # This will import the internal CA by its ID
               terraform import infisical_cert_manager_internal_ca.example <ca_id>
+    infisical_cert_manager_user:
+        subCategory: Certificate Management
+        description: Manage user memberships in Certificate Manager. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_user
+        title: infisical_cert_manager_user Resource - terraform-provider-infisical
+        examples:
+            - name: admin
+              manifest: |-
+                {
+                  "email": "admin@example.com",
+                  "role": "admin"
+                }
+            - name: oncall
+              manifest: |-
+                {
+                  "email": "oncall@example.com",
+                  "role": "member"
+                }
+        argumentDocs:
+            email: (String) The email of the user
+            id: (String) The ID of the Certificate Manager user membership
+            role: (String) The role to assign to the user (admin or member)
+            user_id: (String) The ID of the user
+        importStatements:
+            - |-
+              # This will import the Certificate Manager user membership by email
+              terraform import infisical_cert_manager_user.example <email>
     infisical_dynamic_secret_aws_iam:
         subCategory: Dynamic Secrets
         description: Create and manage AWS IAM Dynamic Secret
@@ -3766,7 +3659,10 @@ resources:
             permissions: (String) The permissions assigned to the project role. Refer to the documentation here https://infisical.com/docs/internals/permissions for its usage. Legacy permissions (V1) is not supported for this resource.
             project_slug: (String) The slug of the project to create role
             slug: (String) The slug for the new role
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the project role by its ID
+              terraform import infisical_project_role.example <role_id>
     infisical_project_template:
         subCategory: Projects
         description: Create project templates & save to Infisical. Only Machine Identity authentication is supported for this resource.
@@ -3816,7 +3712,8 @@ resources:
             project_id: (String) The id of the project
             roles: '(String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].'
             username: (String) The usename of the user. By default its the email
-        importStatements: []
+        importStatements:
+            - terraform import infisical_project_user.example <project-id>,<user-id>
     infisical_secret:
         subCategory: Secrets
         description: Create secrets & save to Infisical
@@ -3887,18 +3784,30 @@ resources:
             env_slug: (String) The environment slug of the secret to modify/create
             folder_path: (String) The path to the folder where the given secret resides
             id: (String) The ID of the secret
-            last_updated: (String)
+            last_updated: (String) The last time the secret was updated.
             metadata: (Map of String) Metadata associated with the secret as key-value pairs.
             name: (String) The name of the secret
             note: (String) Note for the secret rotation reminder
             repeat_days: (Number) Frequency of secret rotation reminder in days
             secret_reminder: (Attributes) (see below for nested schema)
-            tag_ids: (List of String) Tag ids to be attached for the secrets.
+            tag_ids: (Set of String) Tag ids to be attached for the secrets.
             value: (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
             value_wo: (String) The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if value is not set. Requires Terraform version 1.11.0 or higher.
             value_wo_version: (Number) Used together with value_wo to trigger an update. Increment this value when an update to the value_wo is required.
             workspace_id: (String) The Infisical project ID (Required for Machine Identity auth, and service tokens with multiple scopes)
-        importStatements: []
+        importStatements:
+            - |-
+              # Import by Infisical secret UUID. The secret value is written to state under `value`.
+              terraform import infisical_secret.example <secret_id>
+
+              # Import by workspace, environment, folder path, and secret name. The secret value is written to state under `value`.
+              terraform import infisical_secret.example '<workspace_id>:<env_slug>:<folder_path>:<secret_name>'
+
+              # Import as write-only by prefixing the ID with `write-only:`. The secret value is NOT written to state; `value_wo_version` is initialized to 1 so a config with `value_wo_version = 1` will not trigger a spurious update on the first plan.
+              terraform import infisical_secret.example 'write-only:<secret_id>'
+
+              # The write-only prefix also works with the composite format.
+              terraform import infisical_secret.example 'write-only:<workspace_id>:<env_slug>:<folder_path>:<secret_name>'
     infisical_secret_approval_policy:
         subCategory: Approval
         description: Create secret approval policy for your projects
@@ -4725,9 +4634,10 @@ resources:
             id: (String) The ID of the GCP Secret Manager secret sync
             initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key_schema: '(optional): The format to use for structuring secret keys in the GCP Secret Manager destination.'
+            location_id: '(optional): The GCP region to sync secrets to (e.g. us-east1). Required when scope is ''region'' and must not be set when scope is ''global''.'
             name: (String) The name of the GCP Secret Manager sync to create. Must be slug-friendly.
             project_id: '(required): The ID of the GCP project to sync with'
-            scope: '(optional): The scope of the sync with GCP Secret Manager. Supported options: global'
+            scope: '(optional): The scope of the sync with GCP Secret Manager. Supported options: global, region'
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
         importStatements: []
@@ -4926,3 +4836,33 @@ resources:
             - |-
               # Import a secret tag using its project ID and tag ID
               terraform import infisical_secret_tag.example <project_id>,<tag_id>
+    infisical_webhook:
+        subCategory: Webhooks
+        description: Create and manage webhooks in Infisical. Webhooks notify an external URL when secrets change at a given path.
+        name: infisical_webhook
+        title: infisical_webhook Resource - terraform-provider-infisical
+        examples:
+            - name: lambda_trigger
+              manifest: |-
+                {
+                  "environment": "prod",
+                  "events_filter": [
+                    "secrets.modified"
+                  ],
+                  "project_id": "\u003cyour-project-id\u003e",
+                  "secret_path": "/",
+                  "webhook_secret_key": "\u003csigning-key\u003e",
+                  "webhook_url": "https://example.com/infisical-webhook"
+                }
+        argumentDocs:
+            environment: (String) The slug of the environment the webhook listens to.
+            events_filter: '(Set of String) The events that trigger the webhook. Options: secrets.modified, secrets.rotation-failed. An empty set means the webhook fires on every supported event.'
+            id: (String) The ID of the webhook.
+            is_disabled: (Boolean) Whether the webhook is disabled. Defaults to false.
+            project_id: (String) The ID of the project the webhook belongs to.
+            secret_path: (String) The secret path the webhook listens to. Defaults to '/'.
+            type: '(String) The webhook type. Options: general, slack, microsoft-teams. Defaults to ''general''.'
+            webhook_secret_key: '(String, Sensitive) The secret key used to sign the webhook payload so the receiver can verify it. Write-only: it is never returned by the API, so it cannot be imported.'
+            webhook_url: (String, Sensitive) The URL Infisical sends the event payload to.
+        importStatements:
+            - terraform import infisical_webhook.example <webhook_id>
