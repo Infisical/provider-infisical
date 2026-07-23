@@ -13,18 +13,18 @@ import (
 	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 )
 
-type AccessApprovalPolicyInitParameters struct {
+type SecretApprovalPolicyInitParameters struct {
 
-	// (Boolean) Whether to allow approvers to approve their own requests
-	// Whether to allow approvers to approve their own requests
+	// (Boolean) Whether to allow the approvers to approve their own changes
+	// Whether to allow the approvers to approve their own changes
 	AllowSelfApproval *bool `json:"allowSelfApproval,omitempty" tf:"allow_self_approval,omitempty"`
 
 	// (String) The enforcement level of the policy. This can either be hard or soft
 	// The enforcement level of the policy. This can either be hard or soft
 	EnforcementLevel *string `json:"enforcementLevel,omitempty" tf:"enforcement_level,omitempty"`
 
-	// (List of String) The environments to apply the access approval policy to
-	// The environments to apply the access approval policy to
+	// (List of String) The environments to apply the secret approval policy to
+	// The environments to apply the secret approval policy to
 	EnvironmentSlugs []*string `json:"environmentSlugs,omitempty" tf:"environment_slugs,omitempty"`
 
 	// (List of String) Array of group IDs to assign as approvers
@@ -35,16 +35,12 @@ type AccessApprovalPolicyInitParameters struct {
 	// Array of group IDs belonging to the groups to assign as bypassers
 	GroupBypassers []*string `json:"groupBypassers,omitempty" tf:"group_bypassers,omitempty"`
 
-	// (String) The maximum time period for the access approval, specified as a duration string (e.g. '1h', '30m', '2d'). If omitted, the default behavior is 'permanent'.
-	// The maximum time period for the access approval, specified as a duration string (e.g. '1h', '30m', '2d'). If omitted, the default behavior is 'permanent'.
-	MaxTimePeriod *string `json:"maxTimePeriod,omitempty" tf:"max_time_period,omitempty"`
-
-	// (String) The name of the access approval policy
-	// The name of the access approval policy
+	// (String) The name of the secret approval policy
+	// The name of the secret approval policy
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
 
-	// (String) The ID of the project to add the access approval policy
-	// The ID of the project to add the access approval policy
+	// (String) The ID of the project to add the secret approval policy
+	// The ID of the project to add the secret approval policy
 	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha1.Project
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
 
@@ -56,16 +52,12 @@ type AccessApprovalPolicyInitParameters struct {
 	// +kubebuilder:validation:Optional
 	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
-	// (String) The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
-	// The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
-	RequestExpirationTime *string `json:"requestExpirationTime,omitempty" tf:"request_expiration_time,omitempty"`
-
 	// (Number) The number of required approvers
 	// The number of required approvers
 	RequiredApprovals *float64 `json:"requiredApprovals,omitempty" tf:"required_approvals,omitempty"`
 
-	// (String) The secret path to apply the access approval policy to
-	// The secret path to apply the access approval policy to
+	// (String) The secret path to apply the secret approval policy to
+	// The secret path to apply the secret approval policy to
 	SecretPath *string `json:"secretPath,omitempty" tf:"secret_path,omitempty"`
 
 	// (List of String) Array of usernames to assign as approvers
@@ -77,18 +69,18 @@ type AccessApprovalPolicyInitParameters struct {
 	UserBypassers []*string `json:"userBypassers,omitempty" tf:"user_bypassers,omitempty"`
 }
 
-type AccessApprovalPolicyObservation struct {
+type SecretApprovalPolicyObservation struct {
 
-	// (Boolean) Whether to allow approvers to approve their own requests
-	// Whether to allow approvers to approve their own requests
+	// (Boolean) Whether to allow the approvers to approve their own changes
+	// Whether to allow the approvers to approve their own changes
 	AllowSelfApproval *bool `json:"allowSelfApproval,omitempty" tf:"allow_self_approval,omitempty"`
 
 	// (String) The enforcement level of the policy. This can either be hard or soft
 	// The enforcement level of the policy. This can either be hard or soft
 	EnforcementLevel *string `json:"enforcementLevel,omitempty" tf:"enforcement_level,omitempty"`
 
-	// (List of String) The environments to apply the access approval policy to
-	// The environments to apply the access approval policy to
+	// (List of String) The environments to apply the secret approval policy to
+	// The environments to apply the secret approval policy to
 	EnvironmentSlugs []*string `json:"environmentSlugs,omitempty" tf:"environment_slugs,omitempty"`
 
 	// (List of String) Array of group IDs to assign as approvers
@@ -99,31 +91,23 @@ type AccessApprovalPolicyObservation struct {
 	// Array of group IDs belonging to the groups to assign as bypassers
 	GroupBypassers []*string `json:"groupBypassers,omitempty" tf:"group_bypassers,omitempty"`
 
-	// (String) The ID of the access approval policy
+	// (String) The ID of the secret approval policy
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 
-	// (String) The maximum time period for the access approval, specified as a duration string (e.g. '1h', '30m', '2d'). If omitted, the default behavior is 'permanent'.
-	// The maximum time period for the access approval, specified as a duration string (e.g. '1h', '30m', '2d'). If omitted, the default behavior is 'permanent'.
-	MaxTimePeriod *string `json:"maxTimePeriod,omitempty" tf:"max_time_period,omitempty"`
-
-	// (String) The name of the access approval policy
-	// The name of the access approval policy
+	// (String) The name of the secret approval policy
+	// The name of the secret approval policy
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
 
-	// (String) The ID of the project to add the access approval policy
-	// The ID of the project to add the access approval policy
+	// (String) The ID of the project to add the secret approval policy
+	// The ID of the project to add the secret approval policy
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
-
-	// (String) The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
-	// The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
-	RequestExpirationTime *string `json:"requestExpirationTime,omitempty" tf:"request_expiration_time,omitempty"`
 
 	// (Number) The number of required approvers
 	// The number of required approvers
 	RequiredApprovals *float64 `json:"requiredApprovals,omitempty" tf:"required_approvals,omitempty"`
 
-	// (String) The secret path to apply the access approval policy to
-	// The secret path to apply the access approval policy to
+	// (String) The secret path to apply the secret approval policy to
+	// The secret path to apply the secret approval policy to
 	SecretPath *string `json:"secretPath,omitempty" tf:"secret_path,omitempty"`
 
 	// (List of String) Array of usernames to assign as approvers
@@ -135,10 +119,10 @@ type AccessApprovalPolicyObservation struct {
 	UserBypassers []*string `json:"userBypassers,omitempty" tf:"user_bypassers,omitempty"`
 }
 
-type AccessApprovalPolicyParameters struct {
+type SecretApprovalPolicyParameters struct {
 
-	// (Boolean) Whether to allow approvers to approve their own requests
-	// Whether to allow approvers to approve their own requests
+	// (Boolean) Whether to allow the approvers to approve their own changes
+	// Whether to allow the approvers to approve their own changes
 	// +kubebuilder:validation:Optional
 	AllowSelfApproval *bool `json:"allowSelfApproval,omitempty" tf:"allow_self_approval,omitempty"`
 
@@ -147,8 +131,8 @@ type AccessApprovalPolicyParameters struct {
 	// +kubebuilder:validation:Optional
 	EnforcementLevel *string `json:"enforcementLevel,omitempty" tf:"enforcement_level,omitempty"`
 
-	// (List of String) The environments to apply the access approval policy to
-	// The environments to apply the access approval policy to
+	// (List of String) The environments to apply the secret approval policy to
+	// The environments to apply the secret approval policy to
 	// +kubebuilder:validation:Optional
 	EnvironmentSlugs []*string `json:"environmentSlugs,omitempty" tf:"environment_slugs,omitempty"`
 
@@ -162,18 +146,13 @@ type AccessApprovalPolicyParameters struct {
 	// +kubebuilder:validation:Optional
 	GroupBypassers []*string `json:"groupBypassers,omitempty" tf:"group_bypassers,omitempty"`
 
-	// (String) The maximum time period for the access approval, specified as a duration string (e.g. '1h', '30m', '2d'). If omitted, the default behavior is 'permanent'.
-	// The maximum time period for the access approval, specified as a duration string (e.g. '1h', '30m', '2d'). If omitted, the default behavior is 'permanent'.
-	// +kubebuilder:validation:Optional
-	MaxTimePeriod *string `json:"maxTimePeriod,omitempty" tf:"max_time_period,omitempty"`
-
-	// (String) The name of the access approval policy
-	// The name of the access approval policy
+	// (String) The name of the secret approval policy
+	// The name of the secret approval policy
 	// +kubebuilder:validation:Optional
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
 
-	// (String) The ID of the project to add the access approval policy
-	// The ID of the project to add the access approval policy
+	// (String) The ID of the project to add the secret approval policy
+	// The ID of the project to add the secret approval policy
 	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha1.Project
 	// +kubebuilder:validation:Optional
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
@@ -186,18 +165,13 @@ type AccessApprovalPolicyParameters struct {
 	// +kubebuilder:validation:Optional
 	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
-	// (String) The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
-	// The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
-	// +kubebuilder:validation:Optional
-	RequestExpirationTime *string `json:"requestExpirationTime,omitempty" tf:"request_expiration_time,omitempty"`
-
 	// (Number) The number of required approvers
 	// The number of required approvers
 	// +kubebuilder:validation:Optional
 	RequiredApprovals *float64 `json:"requiredApprovals,omitempty" tf:"required_approvals,omitempty"`
 
-	// (String) The secret path to apply the access approval policy to
-	// The secret path to apply the access approval policy to
+	// (String) The secret path to apply the secret approval policy to
+	// The secret path to apply the secret approval policy to
 	// +kubebuilder:validation:Optional
 	SecretPath *string `json:"secretPath,omitempty" tf:"secret_path,omitempty"`
 
@@ -212,10 +186,10 @@ type AccessApprovalPolicyParameters struct {
 	UserBypassers []*string `json:"userBypassers,omitempty" tf:"user_bypassers,omitempty"`
 }
 
-// AccessApprovalPolicySpec defines the desired state of AccessApprovalPolicy
-type AccessApprovalPolicySpec struct {
+// SecretApprovalPolicySpec defines the desired state of SecretApprovalPolicy
+type SecretApprovalPolicySpec struct {
 	v1.ResourceSpec `json:",inline"`
-	ForProvider     AccessApprovalPolicyParameters `json:"forProvider"`
+	ForProvider     SecretApprovalPolicyParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -226,52 +200,52 @@ type AccessApprovalPolicySpec struct {
 	// required on creation, but we do not desire to update them after creation,
 	// for example because of an external controller is managing them, like an
 	// autoscaler.
-	InitProvider AccessApprovalPolicyInitParameters `json:"initProvider,omitempty"`
+	InitProvider SecretApprovalPolicyInitParameters `json:"initProvider,omitempty"`
 }
 
-// AccessApprovalPolicyStatus defines the observed state of AccessApprovalPolicy.
-type AccessApprovalPolicyStatus struct {
+// SecretApprovalPolicyStatus defines the observed state of SecretApprovalPolicy.
+type SecretApprovalPolicyStatus struct {
 	v1.ResourceStatus `json:",inline"`
-	AtProvider        AccessApprovalPolicyObservation `json:"atProvider,omitempty"`
+	AtProvider        SecretApprovalPolicyObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 
-// AccessApprovalPolicy is the Schema for the AccessApprovalPolicys API. Create access approval policy for your projects
+// SecretApprovalPolicy is the Schema for the SecretApprovalPolicys API. Create secret approval policy for your projects
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
 // +kubebuilder:printcolumn:name="READY",type="string",JSONPath=".status.conditions[?(@.type=='Ready')].status"
 // +kubebuilder:printcolumn:name="EXTERNAL-NAME",type="string",JSONPath=".metadata.annotations.crossplane\\.io/external-name"
 // +kubebuilder:printcolumn:name="AGE",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,infisical}
-type AccessApprovalPolicy struct {
+type SecretApprovalPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.environmentSlugs) || (has(self.initProvider) && has(self.initProvider.environmentSlugs))",message="spec.forProvider.environmentSlugs is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.requiredApprovals) || (has(self.initProvider) && has(self.initProvider.requiredApprovals))",message="spec.forProvider.requiredApprovals is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.secretPath) || (has(self.initProvider) && has(self.initProvider.secretPath))",message="spec.forProvider.secretPath is a required parameter"
-	Spec   AccessApprovalPolicySpec   `json:"spec"`
-	Status AccessApprovalPolicyStatus `json:"status,omitempty"`
+	Spec   SecretApprovalPolicySpec   `json:"spec"`
+	Status SecretApprovalPolicyStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// AccessApprovalPolicyList contains a list of AccessApprovalPolicys
-type AccessApprovalPolicyList struct {
+// SecretApprovalPolicyList contains a list of SecretApprovalPolicys
+type SecretApprovalPolicyList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AccessApprovalPolicy `json:"items"`
+	Items           []SecretApprovalPolicy `json:"items"`
 }
 
 // Repository type metadata.
 var (
-	AccessApprovalPolicy_Kind             = "AccessApprovalPolicy"
-	AccessApprovalPolicy_GroupKind        = schema.GroupKind{Group: CRDGroup, Kind: AccessApprovalPolicy_Kind}.String()
-	AccessApprovalPolicy_KindAPIVersion   = AccessApprovalPolicy_Kind + "." + CRDGroupVersion.String()
-	AccessApprovalPolicy_GroupVersionKind = CRDGroupVersion.WithKind(AccessApprovalPolicy_Kind)
+	SecretApprovalPolicy_Kind             = "SecretApprovalPolicy"
+	SecretApprovalPolicy_GroupKind        = schema.GroupKind{Group: CRDGroup, Kind: SecretApprovalPolicy_Kind}.String()
+	SecretApprovalPolicy_KindAPIVersion   = SecretApprovalPolicy_Kind + "." + CRDGroupVersion.String()
+	SecretApprovalPolicy_GroupVersionKind = CRDGroupVersion.WithKind(SecretApprovalPolicy_Kind)
 )
 
 func init() {
-	SchemeBuilder.Register(&AccessApprovalPolicy{}, &AccessApprovalPolicyList{})
+	SchemeBuilder.Register(&SecretApprovalPolicy{}, &SecretApprovalPolicyList{})
 }

@@ -9,31 +9,46 @@ resources:
             - name: prod-policy
               manifest: |-
                 {
+                  "allow_self_approval": false,
                   "enforcement_level": "soft",
                   "environment_slugs": [
                     "prod"
                   ],
                   "group_approvers": [
-                    "60782603-18bd-4f83-a312-6a9c501f4914"
+                    "7c13f73b-c09b-4752-aea6-9b691ba3eb45",
+                    "83d5cf3b-3580-4aaf-872e-564a8ccaaf86"
                   ],
+                  "group_bypassers": [
+                    "6629e33a-dc7c-4d0d-918b-62640e6988dc"
+                  ],
+                  "max_time_period": "24h",
                   "name": "my-approval-policy",
                   "project_id": "5156a345-e460-416b-84fc-b14b426b1cb3",
+                  "request_expiration_time": "72h",
                   "required_approvals": 1,
                   "secret_path": "/",
                   "user_approvers": [
-                    "vlad@infisical.com"
+                    "admin@infisical.com"
+                  ],
+                  "user_bypassers": [
+                    "admin@infisical.com"
                   ]
                 }
         argumentDocs:
+            allow_self_approval: (Boolean) Whether to allow approvers to approve their own requests
             enforcement_level: (String) The enforcement level of the policy. This can either be hard or soft
             environment_slugs: (List of String) The environments to apply the access approval policy to
-            group_approvers: (List of String) Array of group IDs belonging to the groups to assign as approvers. Note either group IDs, usernames, or both must be provided.
+            group_approvers: (List of String) Array of group IDs to assign as approvers
+            group_bypassers: (List of String) Array of group IDs belonging to the groups to assign as bypassers
             id: (String) The ID of the access approval policy
+            max_time_period: (String) The maximum time period for the access approval, specified as a duration string (e.g. '1h', '30m', '2d'). If omitted, the default behavior is 'permanent'.
             name: (String) The name of the access approval policy
             project_id: (String) The ID of the project to add the access approval policy
+            request_expiration_time: (String) The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
             required_approvals: (Number) The number of required approvers
             secret_path: (String) The secret path to apply the access approval policy to
-            user_approvers: (List of String) Array of usernames belonging to the users to assign as approvers
+            user_approvers: (List of String) Array of usernames to assign as approvers
+            user_bypassers: (List of String) Array of usernames belonging to the users to assign as bypassers
         importStatements: []
     infisical_app_connection_1password:
         subCategory: App Connections
@@ -322,6 +337,36 @@ resources:
             name: (String) The name of the Databricks App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             workspace_url: (String) The workspace URL of the Databricks instance.
+        importStatements: []
+    infisical_app_connection_datadog:
+        subCategory: App Connections
+        description: Create and manage Datadog App Connection
+        name: infisical_app_connection_datadog
+        title: infisical_app_connection_datadog Resource - terraform-provider-infisical
+        examples:
+            - name: datadog-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_key": "\u003cAPI_KEY\u003e",
+                    "application_key": "\u003cAPPLICATION_KEY\u003e",
+                    "url": "https://api.datadoghq.com"
+                  },
+                  "description": "This is a demo Datadog connection.",
+                  "method": "api-key",
+                  "name": "datadog-demo"
+                }
+        argumentDocs:
+            api_key: (String, Sensitive) The Datadog API key used to authenticate requests. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/datadog
+            application_key: (String, Sensitive) The Datadog application key used to authenticate requests. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/datadog
+            credentials: (Attributes) The credentials for the Datadog App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Datadog App Connection credentials
+            description: (String) An optional description for the Datadog App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Datadog. Possible values are: api-key'
+            name: (String) The name of the Datadog App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            url: (String) The Datadog API URL for your site (e.g. https://api.datadoghq.com). For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/datadog
         importStatements: []
     infisical_app_connection_flyio:
         subCategory: App Connections
@@ -1288,6 +1333,7 @@ resources:
             common_name: (String) The common name (CN) for the certificate. Required when not using CSR
             country: (String) The country (C) for the certificate (2-letter code)
             csr: (String) Certificate Signing Request (CSR) in PEM format. If provided, the certificate will be issued based on the CSR. Use Terraform's file() function to read from a file (e.g., file("./my-certificate.csr")).
+            domain_components: (List of String) Domain components (DC) for the certificate. Multi-valued; each entry becomes a DC attribute in the subject.
             extended_key_usages: '(List of String) Extended key usages for the certificate. Supported: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             id: (String) The ID of the certificate
             key_algorithm: '(String) The key algorithm for the certificate. Supported: RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1'
@@ -1331,6 +1377,11 @@ resources:
                         "SHA256-ECDSA",
                         "SHA384-ECDSA"
                       ]
+                    }
+                  ],
+                  "basic_constraints": [
+                    {
+                      "is_ca": "denied"
                     }
                   ],
                   "description": "Policy for web server certificates",
@@ -1406,6 +1457,82 @@ resources:
                     }
                   ]
                 }
+            - name: intermediate_ca
+              manifest: |-
+                {
+                  "algorithms": [
+                    {
+                      "key_algorithm": [
+                        "RSA-4096",
+                        "ECDSA-P384"
+                      ],
+                      "signature": [
+                        "SHA256-RSA",
+                        "SHA384-ECDSA"
+                      ]
+                    }
+                  ],
+                  "basic_constraints": [
+                    {
+                      "is_ca": "required",
+                      "max_path_length": 1
+                    }
+                  ],
+                  "description": "Policy for intermediate CA certificates",
+                  "key_usages": [
+                    {
+                      "required": [
+                        "key_cert_sign",
+                        "crl_sign"
+                      ]
+                    }
+                  ],
+                  "name": "intermediate-ca-policy",
+                  "subject": [
+                    {
+                      "required": [
+                        "Example Corp Intermediate CA"
+                      ],
+                      "type": "common_name"
+                    },
+                    {
+                      "required": [
+                        "Example Corp"
+                      ],
+                      "type": "organization"
+                    },
+                    {
+                      "allowed": [
+                        "PKI",
+                        "Security"
+                      ],
+                      "type": "organizational_unit"
+                    },
+                    {
+                      "required": [
+                        "US"
+                      ],
+                      "type": "country"
+                    },
+                    {
+                      "allowed": [
+                        "California"
+                      ],
+                      "type": "state"
+                    },
+                    {
+                      "allowed": [
+                        "San Francisco"
+                      ],
+                      "type": "locality"
+                    }
+                  ],
+                  "validity": [
+                    {
+                      "max": "5y"
+                    }
+                  ]
+                }
             - name: code_signing
               manifest: |-
                 {
@@ -1470,18 +1597,21 @@ resources:
         argumentDocs:
             algorithms: (Block, Optional) Algorithm constraints for the certificate policy. At least one signature algorithm and one key algorithm must be specified. (see below for nested schema)
             allowed: '(List of String) List of allowed extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
+            basic_constraints: (Block, Optional) Basic constraints policy for the certificate policy, controlling whether issued certificates may act as certificate authorities. (see below for nested schema)
             denied: '(List of String) List of denied extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             description: (String) The description of the certificate policy
             extended_key_usages: (Block, Optional) Extended key usage policies for the certificate policy (see below for nested schema)
             id: (String) The ID of the certificate policy
+            is_ca: '(String) Policy for the CA flag (basic constraints CA:TRUE) on issued certificates. Possible values: allowed, required, denied'
             key_algorithm: '(List of String) List of allowed key algorithms (at least one required). Supported values: RSA-2048, RSA-3072, RSA-4096, ECDSA-P256, ECDSA-P521, ECDSA-P384'
             key_usages: (Block, Optional) Key usage policies for the certificate policy (see below for nested schema)
             max: (String) Maximum validity period (e.g., '90d', '2y', '6m')
+            max_path_length: (Number) Maximum path length constraint for CA certificates. Use -1 for unlimited, or a non-negative integer to cap how many intermediate CAs may appear below a certificate issued under this policy. Only applies when is_ca is allowed or required; it is ignored when is_ca is denied.
             name: (String) The name of the certificate policy
             required: '(List of String) List of required extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             sans: (Block List) Subject alternative name (SAN) policies for the certificate policy (see below for nested schema)
             signature: '(List of String) List of allowed signature algorithms (at least one required). Supported values: SHA256-RSA, SHA512-RSA, SHA384-ECDSA, SHA384-RSA, SHA256-ECDSA, SHA512-ECDSA'
-            subject: (Block List) Subject attribute policies for the certificate policy (see below for nested schema)
+            subject: '(Block List) Subject attribute policies for the certificate policy. Each block constrains a single subject DN attribute (e.g. common_name, organization). Values are matched against the corresponding attribute parsed from the CSR; the ''*'' wildcard matches any sequence of characters (including dots). common_name matches the CN attribute only. domain_component (DC) is an independent attribute matched separately from common_name: a certificate may carry multiple DC values, and each is matched individually against this block. (see below for nested schema)'
             type: '(String) The SAN type. Possible values: dns_name, ip_address, email, uri'
             validity: (Block, Optional) Validity constraints for the certificate policy (see below for nested schema)
         importStatements:
@@ -1707,6 +1837,7 @@ resources:
             country: (String) Default country (C)
             defaults: (Block, Optional) Default certificate attribute values applied when issuing certificates from this profile (see below for nested schema)
             description: (String) The description of the certificate profile
+            domain_components: (List of String) Default domain components (DC). Multi-valued; each entry becomes a DC attribute in the certificate subject.
             extended_key_usages: '(List of String) Default extended key usages. Supported values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             id: (String) The ID of the certificate profile
             issuer_type: '(String) The issuer type for the profile. Supported values: ca, self-signed. Defaults to ''ca''.'
@@ -3663,6 +3794,63 @@ resources:
             - |-
               # This will import the project role by its ID
               terraform import infisical_project_role.example <role_id>
+    infisical_project_scoped_identity:
+        subCategory: Projects
+        description: Create and manage a machine identity scoped to a single project in Infisical, including its project role(s). Project-scoped identities are bound to one project and cannot be assigned to other projects. Only Machine Identity authentication is supported for this resource.
+        name: infisical_project_scoped_identity
+        title: infisical_project_scoped_identity Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "has_delete_protection": false,
+                  "metadata": [
+                    {
+                      "key": "team",
+                      "value": "backend"
+                    },
+                    {
+                      "key": "environment",
+                      "value": "production"
+                    }
+                  ],
+                  "name": "my-project-identity",
+                  "project_id": "${infisical_project.example.id}",
+                  "roles": [
+                    {
+                      "role_slug": "admin"
+                    }
+                  ]
+                }
+              references:
+                project_id: infisical_project.example.id
+              dependencies:
+                infisical_project.example: |-
+                    {
+                      "name": "example",
+                      "slug": "example"
+                    }
+        argumentDocs:
+            auth_methods: (List of String) The authentication methods configured for the identity.
+            custom_role_id: (String) The id of the custom role. Read-only; reference custom roles via role_slug.
+            has_delete_protection: (Boolean) Whether the identity has delete protection enabled. Defaults to false.
+            id: (String) The ID of the project-scoped identity.
+            is_temporary: (Boolean) Flag to indicate the assigned role is temporary or not. When is_temporary is true fields temporary_mode, temporary_range and temporary_access_start_time is required.
+            key: (String) The key of the metadata entry.
+            metadata: (Attributes Set) The metadata associated with this identity. (see below for nested schema)
+            name: (String) The name of the identity.
+            project_id: (String) The ID of the project that owns this identity.
+            role_slug: (String) The slug of the role. To assign a custom role, set this to the custom role's slug.
+            roles: (Attributes List) The roles assigned to the project-scoped identity. At least one permanent (non-temporary) role is required. (see below for nested schema)
+            temporary_access_end_time: (String) ISO time for which temporary access will end. Computed based on temporary_range and temporary_access_start_time
+            temporary_access_start_time: (String) ISO time for which temporary access should begin. The current time is used by default.
+            temporary_mode: '(String) Type of temporary access given. Types: relative. Default: relative'
+            temporary_range: '(String) TTL for the temporary time. Eg: 1m, 1h, 1d. Default: 1h'
+            value: (String) The value of the metadata entry.
+        importStatements:
+            - |-
+              # Import a project-scoped identity using <project_id>,<identity_id>
+              terraform import infisical_project_scoped_identity.example <project_id>,<identity_id>
     infisical_project_template:
         subCategory: Projects
         description: Create project templates & save to Infisical. Only Machine Identity authentication is supported for this resource.
@@ -3817,46 +4005,41 @@ resources:
             - name: prod-policy
               manifest: |-
                 {
-                  "approvers": [
-                    {
-                      "id": "52c70c28-9504-4b88-b5af-ca2495dd277d",
-                      "type": "group"
-                    },
-                    {
-                      "type": "user",
-                      "username": "name@infisical.com"
-                    }
-                  ],
-                  "enforcement_level": "hard",
+                  "allow_self_approval": false,
+                  "enforcement_level": "soft",
                   "environment_slugs": [
                     "prod"
                   ],
-                  "name": "my-prod-policy",
-                  "project_id": "${infisical_project.example.id}",
-                  "required_approvals": 1,
-                  "secret_path": "/"
+                  "group_approvers": [
+                    "6629e33a-ab1d-4d0d-958b-63640e7988db"
+                  ],
+                  "group_bypassers": [
+                    "6629e33a-ab1d-4d0d-958b-63640e7988db"
+                  ],
+                  "name": "my-secret-approval-policy",
+                  "project_id": "c9a38c17-0cea-4130-9b7a-059f9f1c8fbd",
+                  "required_approvals": 2,
+                  "secret_path": "/",
+                  "user_approvers": [
+                    "admin@infisical.com"
+                  ],
+                  "user_bypassers": [
+                    "admin@infisical.com"
+                  ]
                 }
-              references:
-                project_id: infisical_project.example.id
-              dependencies:
-                infisical_project.example: |-
-                    {
-                      "name": "example",
-                      "slug": "example"
-                    }
         argumentDocs:
-            allow_self_approval: (Boolean) Whether to allow the  approvers to approve their own changes
-            approvers: (Attributes Set) The required approvers (see below for nested schema)
+            allow_self_approval: (Boolean) Whether to allow the approvers to approve their own changes
             enforcement_level: (String) The enforcement level of the policy. This can either be hard or soft
-            environment_slug: (String) (DEPRECATED, Use environment_slugs instead) The environment to apply the secret approval policy to
             environment_slugs: (List of String) The environments to apply the secret approval policy to
+            group_approvers: (List of String) Array of group IDs to assign as approvers
+            group_bypassers: (List of String) Array of group IDs belonging to the groups to assign as bypassers
             id: (String) The ID of the secret approval policy
             name: (String) The name of the secret approval policy
             project_id: (String) The ID of the project to add the secret approval policy
             required_approvals: (Number) The number of required approvers
             secret_path: (String) The secret path to apply the secret approval policy to
-            type: (String) The type of approver. Either group or user
-            username: (String) The username of the approver. By default, this is the email
+            user_approvers: (List of String) Array of usernames to assign as approvers
+            user_bypassers: (List of String) Array of usernames belonging to the users to assign as bypassers
         importStatements: []
     infisical_secret_folder Resource - terraform-provider-infisical:
         subCategory: Secrets
@@ -4836,6 +5019,27 @@ resources:
             - |-
               # Import a secret tag using its project ID and tag ID
               terraform import infisical_secret_tag.example <project_id>,<tag_id>
+    infisical_sub_organization:
+        subCategory: Organization
+        description: Create and manage sub-organizations in Infisical. Requires an Infisical Enterprise plan, and only Machine Identity authentication scoped to the root organization is supported. The authenticating identity needs the sub-organization create permission and must not be scoped to a sub-organization.
+        name: infisical_sub_organization
+        title: infisical_sub_organization Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "name": "Engineering",
+                  "slug": "engineering"
+                }
+        argumentDocs:
+            id: (String) The ID of the sub-organization.
+            name: (String) The name of the sub-organization.
+            parent_org_id: (String) The ID of the parent (root) organization.
+            slug: (String) The slug of the sub-organization. If omitted when the sub-organization is first created, Infisical generates one from the name. Changing this value updates the sub-organization. Once a slug is set, removing it from your configuration does not regenerate it; the existing value is retained.
+        importStatements:
+            - |-
+              # This will import the sub-organization by its ID
+              terraform import infisical_sub_organization.example <sub_organization_id>
     infisical_webhook:
         subCategory: Webhooks
         description: Create and manage webhooks in Infisical. Webhooks notify an external URL when secrets change at a given path.

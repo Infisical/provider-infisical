@@ -29,3 +29,6 @@ func (tr *ProjectTemplate) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *ProjectUser) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *SecretApprovalPolicy) Hub() {}
