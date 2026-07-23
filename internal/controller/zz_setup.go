@@ -21,6 +21,7 @@ import (
 	projectrole "github.com/infisical/provider-infisical/internal/controller/project/projectrole"
 	projecttemplate "github.com/infisical/provider-infisical/internal/controller/project/projecttemplate"
 	projectuser "github.com/infisical/provider-infisical/internal/controller/project/projectuser"
+	secretapprovalpolicy "github.com/infisical/provider-infisical/internal/controller/project/secretapprovalpolicy"
 	providerconfig "github.com/infisical/provider-infisical/internal/controller/providerconfig"
 	secret "github.com/infisical/provider-infisical/internal/controller/secret/secret"
 	secretsyncgithub "github.com/infisical/provider-infisical/internal/controller/secretsync/secretsyncgithub"
@@ -42,6 +43,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		projectrole.Setup,
 		projecttemplate.Setup,
 		projectuser.Setup,
+		secretapprovalpolicy.Setup,
 		providerconfig.Setup,
 		secret.Setup,
 		secretsyncgithub.Setup,
