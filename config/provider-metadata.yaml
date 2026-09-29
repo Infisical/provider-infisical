@@ -50,6 +50,110 @@ resources:
             user_approvers: (List of String) Array of usernames to assign as approvers
             user_bypassers: (List of String) Array of usernames belonging to the users to assign as bypassers
         importStatements: []
+    infisical_alert:
+        subCategory: Alerts
+        description: Create and manage alerts that notify you about a resource in Infisical. An alert watches one resource for one event, and a resource can only have one alert per event within a scope.
+        name: infisical_alert
+        title: infisical_alert Resource - terraform-provider-infisical
+        examples:
+            - name: ci_identity
+              manifest: |-
+                {
+                  "channels": {
+                    "security_team": {
+                      "email": {
+                        "recipients": [
+                          {
+                            "id": "\u003cyour-user-id\u003e",
+                            "type": "user"
+                          },
+                          {
+                            "id": "\u003cyour-group-id\u003e",
+                            "type": "group"
+                          }
+                        ]
+                      },
+                      "name": "Security team"
+                    }
+                  },
+                  "description": "Rotate the CI machine identity client secret before it expires",
+                  "expiry": {
+                    "alert_before_days": 30
+                  },
+                  "name": "CI identity credentials expiring",
+                  "resource_id": "\u003cyour-machine-identity-id\u003e",
+                  "resource_type": "identity.authentication"
+                }
+            - name: deploy_identity
+              manifest: |-
+                {
+                  "channels": {
+                    "internal_automation": {
+                      "name": "Internal automation",
+                      "webhook": {
+                        "signing_secret": "\u003csigning-secret\u003e",
+                        "url": "https://example.com/infisical-alerts"
+                      }
+                    },
+                    "on_call": {
+                      "enabled": false,
+                      "name": "On-call",
+                      "pagerduty": {
+                        "integration_key": "\u003cyour-pagerduty-events-api-v2-integration-key\u003e"
+                      }
+                    },
+                    "platform_slack": {
+                      "name": "Platform Slack",
+                      "slack": {
+                        "webhook_url": "https://hooks.slack.com/services/\u003cyour-slack-webhook-path\u003e"
+                      }
+                    }
+                  },
+                  "expiry": {
+                    "alert_before_days": 7,
+                    "daily_reminder": true
+                  },
+                  "name": "Deploy identity credentials expiring",
+                  "project_id": "\u003cyour-project-id\u003e",
+                  "resource_id": "\u003cyour-machine-identity-id\u003e",
+                  "resource_type": "identity.authentication"
+                }
+        argumentDocs:
+            alert_before_days: (Number) How many days before the watched resource expires the alert fires. Must be between 1 and 90.
+            channels: (Attributes Map) The channels the alert is delivered to, keyed by a name of your choosing. The key is what identifies a channel to Terraform and is never sent to Infisical, so renaming a channel updates it in place and it keeps the deliveries it has already made. Changing a key, on the other hand, deletes the channel and creates a new one, so the new channel notifies about everything that is still expiring, even if the old one already did. Each channel carries exactly one configuration block, and that block is what gives the channel its type. At least one and at most 10 channels are allowed. (see below for nested schema)
+            daily_reminder: (Boolean) Whether to keep notifying once a day until the watched resource expires, instead of notifying once. Defaults to false.
+            description: (String) An optional description of the alert.
+            email: (Attributes) Notifies principals of your organization or project by email. (see below for nested schema)
+            enabled: (Boolean) Whether the alert is evaluated. Defaults to true.
+            expiry: '(Attributes) Fires before the watched resource expires. Only for alerts on these resource types: identity.authentication. (see below for nested schema)'
+            id: (String) The ID of the alert.
+            integration_key: '(String, Sensitive) The PagerDuty Events API v2 integration key incidents are created with, a 32 character hex string. Write-only: it is never returned by the API, so it cannot be imported.'
+            name: (String) The name of the alert.
+            org_id: (String) The ID of the organization the alert belongs to. Always set, whether the alert is scoped to the organization or to a project, so it is what tells you which organization a project level alert was created under.
+            pagerduty: (Attributes) Creates PagerDuty incidents through the Events API v2. (see below for nested schema)
+            project_id: (String) The ID of the project the resource belongs to. Required for project level resources, and must be omitted for organization level ones.
+            recipients: (Attributes Set) The principals to notify. At least one and at most 20 are allowed. (see below for nested schema)
+            resource_id: (String) The ID of the resource to watch. For the identity.authentication resource type this is a machine identity's ID.
+            resource_type: '(String) The type of the resource to watch. Options: identity.authentication.'
+            signing_secret: '(String, Sensitive) The secret used to sign the payload so the receiver can verify it. Write-only: it is never returned by the API, so an imported channel keeps the secret it was created with until one is set here.'
+            slack: (Attributes) Posts notifications to a Slack channel through an incoming webhook. (see below for nested schema)
+            type: '(String) The type of the recipient. Options: user, group.'
+            url: (String) The HTTPS URL the CloudEvents payload is sent to.
+            webhook: (Attributes) Sends notifications to an HTTPS endpoint as a CloudEvents payload. (see below for nested schema)
+            webhook_url: '(String, Sensitive) The Slack incoming webhook URL notifications are posted to. Must be a https://hooks.slack.com URL. Write-only: it is never returned by the API, so it cannot be imported.'
+        importStatements:
+            - |-
+              terraform import infisical_alert.example <alert_id>
+
+              # An imported alert keys each of its channels by the name it has in Infisical, so write the
+              # channels in your configuration under those same keys, or the import deletes them and creates
+              # new ones that notify about everything still expiring, even though the imported channels
+              # already did. The keys are yours to choose from then on, since only the name attribute reaches
+              # Infisical.
+              #
+              # Write-only channel secrets (a Slack webhook URL, a PagerDuty integration key, a webhook
+              # signing secret) are never returned by the API, so the first plan after an import shows them
+              # being set. A signing secret left out of the configuration keeps whatever is stored.
     infisical_app_connection_1password:
         subCategory: App Connections
         description: Create and manage 1Password App Connection
@@ -280,6 +384,33 @@ resources:
             name: (String) The name of the Bitbucket App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
+    infisical_app_connection_circleci:
+        subCategory: App Connections
+        description: Create and manage CircleCI App Connection
+        name: infisical_app_connection_circleci
+        title: infisical_app_connection_circleci Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_token": "\u003cyour-circleci-api-token\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "api-token",
+                  "name": "circleci-connection"
+                }
+        argumentDocs:
+            api_token: (String, Sensitive) The CircleCI API token for authentication.
+            credentials: (Attributes) The credentials for the CircleCI App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the CircleCI App Connection credentials
+            description: (String) An optional description for the CircleCI App Connection.
+            host: '(String) The CircleCI host to connect with, for self-hosted instances. (default: https://circleci.com)'
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with CircleCI. Possible values are: api-token'
+            name: (String) The name of the CircleCI App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+        importStatements: []
     infisical_app_connection_cloudflare:
         subCategory: App Connections
         description: Create and manage Cloudflare App Connection
@@ -367,6 +498,34 @@ resources:
             name: (String) The name of the Datadog App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             url: (String) The Datadog API URL for your site (e.g. https://api.datadoghq.com). For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/datadog
+        importStatements: []
+    infisical_app_connection_digicert:
+        subCategory: App Connections
+        description: Create and manage DigiCert App Connection
+        name: infisical_app_connection_digicert
+        title: infisical_app_connection_digicert Resource - terraform-provider-infisical
+        examples:
+            - name: digicert-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_key": "\u003cAPI_KEY\u003e",
+                    "region": "us"
+                  },
+                  "description": "This is a demo DigiCert connection.",
+                  "method": "api-key",
+                  "name": "digicert-demo"
+                }
+        argumentDocs:
+            api_key: (String, Sensitive) The DigiCert CertCentral API key used to authenticate requests. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/digicert
+            credentials: (Attributes) The credentials for the DigiCert App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the DigiCert App Connection credentials
+            description: (String) An optional description for the DigiCert App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with DigiCert. Possible values are: api-key'
+            name: (String) The name of the DigiCert App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            region: '(String) The DigiCert CertCentral region your account belongs to. Possible values are: us, eu'
         importStatements: []
     infisical_app_connection_flyio:
         subCategory: App Connections
@@ -935,7 +1094,8 @@ resources:
                     "allow_cert_based_renewal": true,
                     "challenge_password": "change-me-scep-secret",
                     "challenge_type": "static",
-                    "include_ca_cert_in_response": true
+                    "include_ca_cert_in_response": true,
+                    "sign_ra_with_ca": false
                   }
                 }
               references:
@@ -1048,6 +1208,7 @@ resources:
             renew_before_days: (Number) Number of days before expiration to renew (1-30). Defaults to 7 when omitted.
             scep_config: (Attributes) Enable the SCEP enrollment method. Omit the block to disable SCEP enrollment. (see below for nested schema)
             scep_endpoint_url: (String) The SCEP endpoint URL clients should use.
+            sign_ra_with_ca: (Boolean) Sign the RA certificate with the profile's CA instead of self-signing it, so it chains to the CA root. Required by strict clients such as Apple and Microsoft Intune. Only supported for internal CAs. Cannot be changed once SCEP enrollment is configured. To change it, remove scep_config (or the whole resource) to disable SCEP enrollment in one apply, then add scep_config back with the new value in a subsequent apply. Defaults to false.
             skip_dns_ownership_verification: (Boolean) Skip DNS ownership verification. Defaults to false.
             skip_eab_binding: (Boolean) Skip External Account Binding. Defaults to false. Cannot be set to true at the same time as skip_dns_ownership_verification.
         importStatements:
@@ -1595,22 +1756,22 @@ resources:
                   ]
                 }
         argumentDocs:
-            algorithms: (Block, Optional) Algorithm constraints for the certificate policy. At least one signature algorithm and one key algorithm must be specified. (see below for nested schema)
+            algorithms: (Block, Optional) Algorithm constraints for the certificate policy. Omit the block to accept any algorithm; each list restricts its own kind independently and needs at least one value when set. (see below for nested schema)
             allowed: '(List of String) List of allowed extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             basic_constraints: (Block, Optional) Basic constraints policy for the certificate policy, controlling whether issued certificates may act as certificate authorities. (see below for nested schema)
             denied: '(List of String) List of denied extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
-            description: (String) The description of the certificate policy
-            extended_key_usages: (Block, Optional) Extended key usage policies for the certificate policy (see below for nested schema)
+            description: (String) The description of the certificate policy (max 255 characters). Omit the attribute instead of passing an empty string.
+            extended_key_usages: (Block, Optional) Extended key usage policies for the certificate policy. When this block is present, requested extended key usages must be within the union of allowed and required; setting allowed and required to empty lists denies all extended key usages. Omit the block for no constraint. (see below for nested schema)
             id: (String) The ID of the certificate policy
             is_ca: '(String) Policy for the CA flag (basic constraints CA:TRUE) on issued certificates. Possible values: allowed, required, denied'
-            key_algorithm: '(List of String) List of allowed key algorithms (at least one required). Supported values: RSA-2048, RSA-3072, RSA-4096, ECDSA-P256, ECDSA-P521, ECDSA-P384'
-            key_usages: (Block, Optional) Key usage policies for the certificate policy (see below for nested schema)
+            key_algorithm: '(List of String) List of allowed key algorithms (at least one value when set). Supported values: RSA-2048, RSA-3072, RSA-4096, ECDSA-P256, ECDSA-P521, ECDSA-P384'
+            key_usages: (Block, Optional) Key usage policies for the certificate policy. When this block is present, requested key usages must be within the union of allowed and required; setting allowed and required to empty lists denies all key usages. Omit the block for no constraint. (see below for nested schema)
             max: (String) Maximum validity period (e.g., '90d', '2y', '6m')
             max_path_length: (Number) Maximum path length constraint for CA certificates. Use -1 for unlimited, or a non-negative integer to cap how many intermediate CAs may appear below a certificate issued under this policy. Only applies when is_ca is allowed or required; it is ignored when is_ca is denied.
-            name: (String) The name of the certificate policy
+            name: '(String) The name of the certificate policy. Must be in slug format: lowercase letters and numbers, separated by single hyphens (e.g. ''web-server-policy'').'
             required: '(List of String) List of required extended key usages. Possible values: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
             sans: (Block List) Subject alternative name (SAN) policies for the certificate policy (see below for nested schema)
-            signature: '(List of String) List of allowed signature algorithms (at least one required). Supported values: SHA256-RSA, SHA512-RSA, SHA384-ECDSA, SHA384-RSA, SHA256-ECDSA, SHA512-ECDSA'
+            signature: '(List of String) List of allowed signature algorithms (at least one value when set). Supported values: SHA256-RSA, SHA512-RSA, SHA384-ECDSA, SHA384-RSA, SHA256-ECDSA, SHA512-ECDSA'
             subject: '(Block List) Subject attribute policies for the certificate policy. Each block constrains a single subject DN attribute (e.g. common_name, organization). Values are matched against the corresponding attribute parsed from the CSR; the ''*'' wildcard matches any sequence of characters (including dots). common_name matches the CN attribute only. domain_component (DC) is an independent attribute matched separately from common_name: a certificate may carry multiple DC values, and each is matched individually against this block. (see below for nested schema)'
             type: '(String) The SAN type. Possible values: dns_name, ip_address, email, uri'
             validity: (Block, Optional) Validity constraints for the certificate policy (see below for nested schema)
@@ -1908,6 +2069,81 @@ resources:
             - |-
               # This will import the external ADCS CA by its ID
               terraform import infisical_cert_manager_external_ca_adcs.example <ca_id>
+    infisical_cert_manager_external_ca_digicert:
+        subCategory: Certificate Management
+        description: Create and manage external DigiCert (CertCentral) certificate authorities in Certificate Manager. Only Machine Identity authentication is supported for this resource.
+        name: infisical_cert_manager_external_ca_digicert
+        title: infisical_cert_manager_external_ca_digicert Resource - terraform-provider-infisical
+        examples:
+            - name: ssl
+              manifest: |-
+                {
+                  "app_connection_id": "${infisical_app_connection_digicert.digicert.id}",
+                  "name": "digicert-ssl",
+                  "organization_id": 123456,
+                  "product_name_id": "ssl_plus",
+                  "purpose": "ssl",
+                  "status": "active"
+                }
+              references:
+                app_connection_id: infisical_app_connection_digicert.digicert.id
+              dependencies:
+                infisical_app_connection_digicert.digicert: |-
+                    {
+                      "credentials": {
+                        "api_key": "${var.digicert_api_key}",
+                        "region": "us"
+                      },
+                      "method": "api-key",
+                      "name": "digicert-connection"
+                    }
+            - name: code_signing
+              manifest: |-
+                {
+                  "app_connection_id": "${infisical_app_connection_digicert.digicert.id}",
+                  "name": "digicert-code-signing",
+                  "organization_id": 123456,
+                  "product_name_id": "code_signing",
+                  "purpose": "code_signing",
+                  "status": "active",
+                  "verified_contact": {
+                    "email": "jane.doe@example.com",
+                    "first_name": "Jane",
+                    "job_title": "Security Engineer",
+                    "last_name": "Doe",
+                    "telephone": "+1-555-000-0000"
+                  }
+                }
+              references:
+                app_connection_id: infisical_app_connection_digicert.digicert.id
+              dependencies:
+                infisical_app_connection_digicert.digicert: |-
+                    {
+                      "credentials": {
+                        "api_key": "${var.digicert_api_key}",
+                        "region": "us"
+                      },
+                      "method": "api-key",
+                      "name": "digicert-connection"
+                    }
+        argumentDocs:
+            app_connection_id: (String) The ID of the DigiCert app connection used for certificate issuance
+            email: (String) The email address of the verified contact
+            first_name: (String) The first name of the verified contact
+            id: (String) The ID of the DigiCert CA
+            job_title: (String) The job title of the verified contact
+            last_name: (String) The last name of the verified contact
+            name: (String) The name of the DigiCert CA
+            organization_id: (Number) The CertCentral organization ID that will be listed on issued certificates
+            product_name_id: (String) The DigiCert product name ID used for issuance (e.g. ssl_plus, code_signing, code_signing_ev)
+            purpose: '(String) Whether this CA issues SSL/TLS or code signing certificates. Supported values: ssl, code_signing. Defaults to ''ssl''.'
+            status: '(String) The status of the CA. Supported values: active, disabled. Defaults to ''active''.'
+            telephone: (String) The telephone number of the verified contact
+            verified_contact: (Attributes) Contact info for the user who approves first-time code signing orders for the organization. Required when purpose is 'code_signing'. (see below for nested schema)
+        importStatements:
+            - |-
+              # This will import the external DigiCert CA by its ID
+              terraform import infisical_cert_manager_external_ca_digicert.example <ca_id>
     infisical_cert_manager_group:
         subCategory: Certificate Management
         description: Manage group memberships in Certificate Manager. Only Machine Identity authentication is supported for this resource.
@@ -2035,6 +2271,70 @@ resources:
             - |-
               # This will import the Certificate Manager user membership by email
               terraform import infisical_cert_manager_user.example <email>
+    infisical_certificate_sync_aws_certificate_manager:
+        subCategory: Certificate Syncs
+        description: Create and manage AWS Certificate Manager certificate syncs
+        name: infisical_certificate_sync_aws_certificate_manager
+        title: infisical_certificate_sync_aws_certificate_manager Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of AWS Certificate Manager certificate sync",
+                  "destination_config": {
+                    "aws_region": "\u003caws-region\u003e"
+                  },
+                  "name": "aws-certificate-manager-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "Infisical-{{certificateId}}",
+                    "include_root_ca": false,
+                    "preserve_arn": true
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            aws_region: (String) The AWS region to sync certificates to (e.g. us-east-1).
+            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from AWS Certificate Manager when they are no longer managed in Infisical.
+            certificate_name_schema: '(String) The naming scheme for synced certificates. Must include the {{certificateId}} or {{shortCertificateId}} placeholder. Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            connection_id: (String) The ID of the aws Connection to use for syncing.
+            description: (String) An optional description for the AWS Certificate Manager sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            id: (String) The ID of the AWS Certificate Manager certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain.
+            name: (String) The name of the AWS Certificate Manager sync to create.
+            preserve_arn: (Boolean) Whether to preserve the AWS Certificate Manager ARN when a certificate is renewed, reimporting into the existing certificate instead of creating a new one.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+        importStatements:
+            - |-
+              # This will import the AWS Certificate Manager certificate sync by its ID
+              terraform import infisical_certificate_sync_aws_certificate_manager.example <certificate_sync_id>
+    infisical_certificate_sync_certificate:
+        subCategory: Certificate Syncs
+        description: 'Attach a certificate to a certificate sync so it is synced to the destination. The certificate must belong to the same application as the certificate sync. Only a currently valid certificate can be synced: certificates that have been renewed, revoked, or expired are rejected. Because Infisical attaches the renewed certificate and drops the superseded one when a certificate is renewed, pinning a literal certificate ID will break at the next renewal. Reference the resource that issues or renews the certificate instead so the ID stays in step automatically.'
+        name: infisical_certificate_sync_certificate
+        title: infisical_certificate_sync_certificate Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "certificate_id": "${infisical_cert_manager_certificate.example.id}",
+                  "certificate_sync_id": "${infisical_certificate_sync_aws_certificate_manager.example.id}"
+                }
+              references:
+                certificate_id: infisical_cert_manager_certificate.example.id
+                certificate_sync_id: infisical_certificate_sync_aws_certificate_manager.example.id
+        argumentDocs:
+            certificate_id: (String) The ID of the certificate to associate with the certificate sync.
+            certificate_sync_id: (String) The ID of the certificate sync to associate the certificate with.
+            id: (String) The ID of the certificate association.
+        importStatements:
+            - |-
+              # This will import a certificate association using the composite ID "<certificate_sync_id>:<certificate_id>"
+              terraform import infisical_certificate_sync_certificate.example <certificate_sync_id>:<certificate_id>
     infisical_dynamic_secret_aws_iam:
         subCategory: Dynamic Secrets
         description: Create and manage AWS IAM Dynamic Secret
@@ -2188,7 +2488,9 @@ resources:
                   "username_template": "{{randomUsername}}"
                 }
         argumentDocs:
-            admin_private_key: (String, Sensitive) Admin user private API key
+            admin_private_key: (String, Sensitive) Admin user private API key. This value is stored in the Terraform state; use admin_private_key_wo to keep it out of state. Exactly one of admin_private_key or admin_private_key_wo must be set.
+            admin_private_key_wo: (String, Sensitive) Admin user private API key (write-only). This value is never stored in the Terraform state and can accept ephemeral values. Because it is not stored, changes to it are not detected; increment admin_private_key_wo_version to push a new value. Requires Terraform 1.11+.
+            admin_private_key_wo_version: (Number) The version of the admin_private_key_wo value. Increment this to trigger an update of the private key.
             admin_public_key: (String) Admin user public API key
             collection_name: (String) Collection on which this role applies.
             configuration: (Attributes) The configuration of the dynamic secret (see below for nested schema)
@@ -2315,8 +2617,10 @@ resources:
             max_ttl: (String) The maximum limit a TTL can be leased or renewed for.
             metadata: (Attributes Set) The metadata associated with this dynamic secret (see below for nested schema)
             name: (String) The name of the dynamic secret.
-            password: (String, Sensitive) The password to use to connect to the database.
+            password: (String, Sensitive) The password to use to connect to the database. This value is stored in the Terraform state; use password_wo to keep it out of state. Exactly one of password or password_wo must be set.
             password_requirements: (Attributes) The password requirements to use to create the dynamic secret lease. (see below for nested schema)
+            password_wo: (String, Sensitive) The password to use to connect to the database (write-only). This value is never stored in the Terraform state and can accept ephemeral values. Because it is not stored, changes to it are not detected; increment password_wo_version to push a new value. Requires Terraform 1.11+.
+            password_wo_version: (Number) The version of the password_wo value. Increment this to trigger an update of the password.
             path: (String) The path to create the dynamic secret in.
             port: (Number) The port of the database server.
             project_slug: (String) The slug of the project to create dynamic secret in.
@@ -2379,6 +2683,139 @@ resources:
             role_external_id: (String, Sensitive) The external ID of the role to assume for performing operations. Required for assume-role type. For more details, refer to the documentation here https://infisical.com/docs/documentation/platform/kms-configuration/aws-kms#param-assume-role-external-id
             secret_access_key: (String, Sensitive) The AWS Secret Access Key associated with the Access Key ID to authenticate requests to AWS services. Required for access-key type. For more details, refer to the documentation here https://infisical.com/docs/documentation/platform/kms-configuration/aws-kms#param-secret-access-key
             type: (String) The Authentication Type to use. Must be access-key or assume-role
+        importStatements: []
+    infisical_gateway:
+        subCategory: Gateways
+        description: 'Create and manage a gateway in Infisical. This resource is the gateway''s record and its auth method, not the machine that runs it: deploy that separately with the Helm chart or the CLI, pointing it at this resource''s id. Exactly one auth method block must be set.'
+        name: infisical_gateway
+        title: infisical_gateway Resource - terraform-provider-infisical
+        examples:
+            - name: aws
+              manifest: |-
+                {
+                  "aws_auth": {
+                    "allowed_account_ids": [
+                      "123456789012"
+                    ],
+                    "allowed_principal_arns": [
+                      "arn:aws:iam::123456789012:role/infisical-gateway"
+                    ]
+                  },
+                  "name": "prod-us-east"
+                }
+            - name: gcp
+              manifest: |-
+                {
+                  "gcp_auth": {
+                    "allowed_projects": [
+                      "my-project"
+                    ],
+                    "allowed_service_accounts": [
+                      "infisical-gateway@my-project.iam.gserviceaccount.com"
+                    ],
+                    "allowed_zones": [
+                      "us-central1-a"
+                    ],
+                    "type": "gce"
+                  },
+                  "name": "prod-gce"
+                }
+            - name: gke
+              manifest: |-
+                {
+                  "kubernetes_auth": {
+                    "allowed_namespaces": [
+                      "infisical"
+                    ],
+                    "allowed_service_account_names": [
+                      "infisical-gateway"
+                    ],
+                    "ca_certificate": "${file(\"${path.module}/cluster-ca.crt\")}",
+                    "kubernetes_host": "https://10.0.0.1",
+                    "token_reviewer_jwt": "${var.token_reviewer_jwt}"
+                  },
+                  "name": "gke-prod"
+                }
+            - name: gke_second
+              manifest: |-
+                {
+                  "kubernetes_auth": {
+                    "allowed_namespaces": [
+                      "infisical"
+                    ],
+                    "allowed_service_account_names": [
+                      "infisical-gateway"
+                    ],
+                    "reviewer_gateway_id": "${infisical_gateway.gke.id}",
+                    "token_review_mode": "gateway"
+                  },
+                  "name": "gke-prod-2"
+                }
+            - name: datacenter
+              manifest: |-
+                {
+                  "name": "datacenter-01",
+                  "token_auth": {}
+                }
+        argumentDocs:
+            allowed_account_ids: (Set of String) AWS account IDs allowed to authenticate as this gateway.
+            allowed_audience: (String) The audience the service account token must carry. Leave empty to skip the audience check.
+            allowed_namespaces: (Set of String) Kubernetes namespaces whose service accounts are allowed to authenticate as this gateway. Supports * wildcards.
+            allowed_principal_arns: (Set of String) IAM principal ARNs allowed to authenticate as this gateway. Supports * wildcards.
+            allowed_projects: (Set of String) GCP project IDs whose Compute Engine instances are allowed to authenticate as this gateway. Only applies when type is gce.
+            allowed_service_account_names: (Set of String) Kubernetes service account names allowed to authenticate as this gateway. Supports * wildcards.
+            allowed_service_accounts: (Set of String) GCP service account emails allowed to authenticate as this gateway.
+            allowed_zones: (Set of String) GCP zones whose Compute Engine instances are allowed to authenticate as this gateway. Only applies when type is gce.
+            aws_auth: (Attributes) Authenticate the gateway with its AWS IAM identity. The machine re-authenticates on every start, so no secret is stored. At least one of allowed_principal_arns or allowed_account_ids must be non-empty. (see below for nested schema)
+            ca_certificate: (String) The PEM-encoded CA certificate that issued the Kubernetes API server's TLS certificate.
+            gcp_auth: (Attributes) Authenticate the gateway with its GCP identity. The machine re-authenticates on every start, so no secret is stored. At least one of allowed_service_accounts or allowed_projects must be non-empty. (see below for nested schema)
+            has_token_reviewer_jwt: (Boolean) Whether Infisical holds a token reviewer JWT for this gateway. The JWT itself is never returned, so this is the only way to tell a stored one apart from none.
+            id: (String) The ID of the gateway.
+            kubernetes_auth: (Attributes) Authenticate the gateway with its Kubernetes service account token. The pod re-authenticates on every start, so no secret is stored. At least one of allowed_namespaces or allowed_service_account_names must be non-empty. (see below for nested schema)
+            kubernetes_host: (String) The URL of the Kubernetes API server, for example https://my-cluster.example.com:6443. Must be https with no path, and reachable from Infisical over the public internet. Required unless token_review_mode is gateway, where it must be omitted.
+            name: (String) The name of the gateway. Unique within the organization. Renaming is an in-place update, so the gateway keeps its ID and anything referencing it keeps working.
+            reviewer_gateway_id: (String) The gateway that performs the TokenReview. Required when token_review_mode is gateway, and must be a different gateway that is already connected in the cluster. Mutually exclusive with reviewer_gateway_pool_id.
+            reviewer_gateway_pool_id: (String) The gateway pool to route TokenReview traffic through. Mutually exclusive with reviewer_gateway_id, and rejected when token_review_mode is gateway.
+            token_auth: '(Attributes) Authenticate the gateway with a one-time enrollment token. The token itself is minted by a separate infisical_gateway_enrollment_token resource. This block takes no arguments, because token auth has nothing to configure: write token_auth = {}. Prefer aws_auth, gcp_auth or kubernetes_auth where the platform can vouch for the machine, since those re-authenticate on every start and put no secret in state. (see below for nested schema)'
+            token_review_mode: (String) Who performs the TokenReview. api means Infisical does, calling kubernetes_host directly. gateway means another already-connected gateway does it with its own in-cluster service account, which needs no host or reviewer token. Defaults to api.
+            token_reviewer_jwt: '(String, Sensitive) A long-lived service account token with the system:auth-delegator ClusterRole, used to submit TokenReview requests. Write-only: Infisical never returns it, so Terraform cannot detect a change made outside this configuration, and an imported gateway leaves it empty.'
+            type: (String) How the gateway proves its identity. gce verifies an ID token from the instance metadata server, which covers Compute Engine VMs and GKE workload identity. iam verifies a JWT the service account signed through the IAM Credentials API, for hosts outside Compute Engine. Defaults to gce.
+            verify_tls_certificate: (Boolean) Whether to verify the Kubernetes API server's TLS certificate. Defaults to true.
+        importStatements:
+            - |-
+              terraform import infisical_gateway.example <gateway_id>
+
+              # token_reviewer_jwt is write-only, so an imported Kubernetes gateway has it empty.
+              # Gateways bound to a machine identity predate auth methods and cannot be imported.
+    infisical_gateway_enrollment_token:
+        subCategory: Gateways
+        description: Mint the one-time enrollment token a token-auth gateway uses to bootstrap. The token is single-use and expires an hour after it is issued, and minting a new one invalidates any token issued earlier for the same gateway. Use keepers to tie re-minting to whatever forces the machine that consumes the token to be rebuilt. Where the platform can vouch for the machine, prefer aws_auth, gcp_auth or kubernetes_auth on the gateway instead, since those re-authenticate on every start and need none of this.
+        name: infisical_gateway_enrollment_token
+        title: infisical_gateway_enrollment_token Resource - terraform-provider-infisical
+        examples:
+            - name: datacenter
+              manifest: |-
+                {
+                  "gateway_id": "${infisical_gateway.datacenter.id}",
+                  "keepers": {
+                    "ami_id": "${data.aws_ami.ubuntu.id}",
+                    "subnet_id": "${var.subnet_id}"
+                  }
+                }
+              references:
+                gateway_id: infisical_gateway.datacenter.id
+              dependencies:
+                infisical_gateway.datacenter: |-
+                    {
+                      "name": "datacenter-01",
+                      "token_auth": {}
+                    }
+        argumentDocs:
+            expires_at: (String) When the token expires. A token that has already been used is invalid before this.
+            gateway_id: (String) The ID of the gateway to mint the token for. The gateway must be configured with token_auth.
+            id: (String) The ID of the gateway the token was minted for. An enrollment token has no identifier of its own, because a gateway holds at most one at a time.
+            keepers: (Map of String) Arbitrary values that force a new token when any of them changes. List whatever forces the machine that consumes the token to be rebuilt, for example the AMI ID and subnet of an EC2 instance. Nothing validates this list, so an input you leave out means the rebuilt machine boots with a token that was already consumed, stays offline, and shows no drift.
+            token: (String, Sensitive) The enrollment token. Single-use, valid for one hour, and stored in Terraform state in plaintext.
         importStatements: []
     infisical_group:
         subCategory: Groups
@@ -3192,6 +3629,57 @@ resources:
             oidc_ca_certificate: (String) The PEM-encoded CA cert for establishing secure communication with the Identity Provider endpoints
             oidc_discovery_url: (String) The URL used to retrieve the OpenID Connect configuration from the identity provider.
         importStatements: []
+    infisical_identity_tls_cert_auth:
+        subCategory: Identities
+        description: Create and manage identity tls certificate auth in Infisical.
+        name: infisical_identity_tls_cert_auth
+        title: infisical_identity_tls_cert_auth Resource - terraform-provider-infisical
+        examples:
+            - name: tls-cert-auth
+              manifest: |-
+                {
+                  "access_token_max_ttl": 2592000,
+                  "access_token_trusted_ips": [
+                    {
+                      "ip_address": "0.0.0.0/0"
+                    }
+                  ],
+                  "access_token_ttl": 2592000,
+                  "allowed_common_names": [
+                    "my-service.example.com"
+                  ],
+                  "allowed_subject_alt_names": [
+                    "URI:spiffe://example.org/my-service"
+                  ],
+                  "ca_certificate": "${file(\"${path.module}/ca.pem\")}",
+                  "identity_id": "${infisical_identity.machine-identity-1.id}",
+                  "verify_client_certificate_chain": false
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-1.id
+              dependencies:
+                infisical_identity.machine-identity-1: |-
+                    {
+                      "name": "machine-identity-1",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+        argumentDocs:
+            access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
+            access_token_trusted_ips: (Attributes List) A list of IPs or CIDR ranges that access tokens can be used from. You can use 0.0.0.0/0, to allow usage from any network address.. (see below for nested schema)
+            access_token_ttl: '(Number) The lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
+            allowed_common_names: (List of String) List of trusted common names that client certificates must have to authenticate with Infisical. When omitted, any common name is accepted.
+            allowed_subject_alt_names: (List of String) List of trusted subject alternative names that client certificates must have to authenticate with Infisical. Non-DNS entries must be prefixed with their type (e.g. URI:spiffe://example.org/service, IP:10.0.0.1, EMAIL:svc@example.com). When omitted, any subject alternative name is accepted.
+            ca_certificate: (String) The PEM-encoded CA certificate that client certificates must be issued by to authenticate with Infisical.
+            id: (String) The ID of the tls certificate auth
+            identity_id: (String) The ID of the identity to attach the configuration onto.
+            ip_address: (String)
+            verify_client_certificate_chain: '(Boolean) Whether to build and verify the full certificate chain presented by the client up to the configured CA certificate, instead of requiring the client certificate to be signed directly by it. Default: false'
+        importStatements:
+            - |-
+              # This will import the resource by its identity ID
+              terraform import infisical_identity_tls_cert_auth.example <identity_id>
     infisical_identity_token_auth:
         subCategory: Identities
         description: Create and manage identity token auth in Infisical.
@@ -3301,7 +3789,7 @@ resources:
         importStatements: []
     infisical_integration_aws_parameter_store:
         subCategory: Native Integrations - DEPRECATED
-        description: 'Deprecated: This resource is deprecated and will be removed in a future version. Use infisical_secret_sync_aws_parameter_store instead. Create AWS Parameter Store integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
+        description: 'Deprecated: Native Integrations are being retired on August 19, 2027. Secret Syncs are the recommended replacement, and they support the same services and offer additional features. Existing integrations continue to work until the retirement date. You can read more about the migration on Migrating from Native Integrations https://infisical.com/docs/integrations/secret-syncs/native-integrations-migration. Create AWS Parameter Store integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_aws_parameter_store
         title: infisical_integration_aws_parameter_store Resource - terraform-provider-infisical
         examples:
@@ -3345,7 +3833,7 @@ resources:
         importStatements: []
     infisical_integration_aws_secrets_manager:
         subCategory: Native Integrations - DEPRECATED
-        description: 'Deprecated: This resource is deprecated and will be removed in a future version. Use infisical_secret_sync_aws_secrets_manager instead. Create AWS Secrets Manager integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
+        description: 'Deprecated: Native Integrations are being retired on August 19, 2027. Secret Syncs are the recommended replacement, and they support the same services and offer additional features. Existing integrations continue to work until the retirement date. You can read more about the migration on Migrating from Native Integrations https://infisical.com/docs/integrations/secret-syncs/native-integrations-migration. Create AWS Secrets Manager integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_aws_secrets_manager
         title: infisical_integration_aws_secrets_manager Resource - terraform-provider-infisical
         examples:
@@ -3392,7 +3880,7 @@ resources:
         importStatements: []
     infisical_integration_circleci:
         subCategory: Native Integrations - DEPRECATED
-        description: Create CircleCI integration & save to Infisical. Only Machine Identity authentication is supported for this data source
+        description: 'Deprecated: Native Integrations are being retired on August 19, 2027. Secret Syncs are the recommended replacement, and they support the same services and offer additional features. Existing integrations continue to work until the retirement date. You can read more about the migration on Migrating from Native Integrations https://infisical.com/docs/integrations/secret-syncs/native-integrations-migration. Create CircleCI integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_circleci
         title: infisical_integration_circleci Resource - terraform-provider-infisical
         examples:
@@ -3418,7 +3906,7 @@ resources:
         importStatements: []
     infisical_integration_databricks:
         subCategory: Native Integrations - DEPRECATED
-        description: 'Deprecated: This resource is deprecated and will be removed in a future version. Use infisical_secret_sync_databricks instead. Create Databricks integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
+        description: 'Deprecated: Native Integrations are being retired on August 19, 2027. Secret Syncs are the recommended replacement, and they support the same services and offer additional features. Existing integrations continue to work until the retirement date. You can read more about the migration on Migrating from Native Integrations https://infisical.com/docs/integrations/secret-syncs/native-integrations-migration. Create Databricks integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_databricks
         title: infisical_integration_databricks Resource - terraform-provider-infisical
         examples:
@@ -3444,7 +3932,7 @@ resources:
         importStatements: []
     infisical_integration_gcp_secret_manager:
         subCategory: Native Integrations - DEPRECATED
-        description: 'Deprecated: This resource is deprecated and will be removed in a future version. Use infisical_secret_sync_gcp_secret_manager instead. Create GCP Secret Manager integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
+        description: 'Deprecated: Native Integrations are being retired on August 19, 2027. Secret Syncs are the recommended replacement, and they support the same services and offer additional features. Existing integrations continue to work until the retirement date. You can read more about the migration on Migrating from Native Integrations https://infisical.com/docs/integrations/secret-syncs/native-integrations-migration. Create GCP Secret Manager integration & save to Infisical. Only Machine Identity authentication is supported for this resource.'
         name: infisical_integration_gcp_secret_manager
         title: infisical_integration_gcp_secret_manager Resource - terraform-provider-infisical
         examples:
@@ -3495,12 +3983,23 @@ resources:
                   "name": "my-signing-key",
                   "project_id": "\u003cyour-project-id\u003e"
                 }
+            - name: non_exportable_key
+              manifest: |-
+                {
+                  "description": "KMS key that cannot be exported",
+                  "encryption_algorithm": "aes-256-gcm",
+                  "is_exportable": false,
+                  "key_usage": "encrypt-decrypt",
+                  "name": "my-non-exportable-key",
+                  "project_id": "\u003cyour-project-id\u003e"
+                }
         argumentDocs:
             created_at: (String) The creation timestamp of the key.
             description: (String) The description of the KMS key. Maximum 500 characters.
             encryption_algorithm: '(String) The encryption algorithm for the key. Options: aes-256-gcm, aes-128-gcm, RSA_4096, ECC_NIST_P256. Defaults to ''aes-256-gcm''.'
             id: (String) The ID of the KMS key.
             is_disabled: (Boolean) Whether the key is disabled. Defaults to false.
+            is_exportable: (Boolean) Whether the raw key material can be exported. Defaults to true. Changing this value requires replacing the key.
             key_usage: '(String) The usage of the key. Options: encrypt-decrypt, sign-verify. Defaults to ''encrypt-decrypt''.'
             name: (String) The name of the KMS key. Must be 1-32 characters.
             org_id: (String) The ID of the organization.
@@ -4041,11 +4540,30 @@ resources:
             user_approvers: (List of String) Array of usernames to assign as approvers
             user_bypassers: (List of String) Array of usernames belonging to the users to assign as bypassers
         importStatements: []
-    infisical_secret_folder Resource - terraform-provider-infisical:
+    infisical_secret_folder:
         subCategory: Secrets
         description: Create secret folder & save to Infisical.
-        name: infisical_secret_folder Resource - terraform-provider-infisical
+        name: infisical_secret_folder
         title: infisical_secret_folder Resource - terraform-provider-infisical
+        examples:
+            - name: folder-1
+              manifest: |-
+                {
+                  "description": "This is a description of the folder",
+                  "environment_slug": "dev",
+                  "folder_path": "/",
+                  "name": "folder-1",
+                  "project_id": "\u003cPROJECT-ID\u003e"
+                }
+            - name: folder-2
+              manifest: |-
+                {
+                  "description": "This is a description of the nested folder",
+                  "environment_slug": "prod",
+                  "folder_path": "/nested",
+                  "name": "folder-2",
+                  "project_id": "\u003cPROJECT-ID\u003e"
+                }
         argumentDocs:
             description: (String) The description of the folder. Defaults to an empty string.
             environment_id: (String) The ID of the environment
@@ -4070,6 +4588,47 @@ resources:
             import_folder_path: (String) The path where the secret should be imported from
             is_replication: (Boolean) The is_replication of the secret import to modify/create
             project_id: (String) The Infisical project ID
+        importStatements: []
+    infisical_secret_rotation_auth0_client_secret:
+        subCategory: Secret Rotations
+        description: Create and manage Auth0 Client Secret Secret Rotations
+        name: infisical_secret_rotation_auth0_client_secret
+        title: infisical_secret_rotation_auth0_client_secret Resource - terraform-provider-infisical
+        examples:
+            - name: auth0-client-secret
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "auth0-client-secret-secret-rotation-example",
+                  "parameters": {
+                    "client_id": "\u003cauth0-application-client-id\u003e"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "client_id": "AUTH0_CLIENT_ID",
+                    "client_secret": "AUTH0_CLIENT_SECRET"
+                  }
+                }
+        argumentDocs:
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            client_id: (String) The client ID of the Auth0 application to rotate the client secret for.
+            client_secret: (String) The name of the secret that the rotated client secret will be mapped to.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
         importStatements: []
     infisical_secret_rotation_aws_iam_user_secret:
         subCategory: Secret Rotations
@@ -4150,6 +4709,47 @@ resources:
             minutes: (Number) The minute at which the rotation should occur (UTC).
             name: (String) The name of the secret rotation.
             object_id: (String) The ID of the Azure Application to rotate the client secret for.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+        importStatements: []
+    infisical_secret_rotation_datadog_api_key:
+        subCategory: Secret Rotations
+        description: Create and manage Datadog API Key Secret Rotations
+        name: infisical_secret_rotation_datadog_api_key
+        title: infisical_secret_rotation_datadog_api_key Resource - terraform-provider-infisical
+        examples:
+            - name: datadog-api-key
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "datadog-api-key-rotation-example",
+                  "parameters": {
+                    "name": "\u003cdatadog-api-key-name\u003e"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "api_key": "DATADOG_API_KEY",
+                    "api_key_id": "DATADOG_API_KEY_ID"
+                  }
+                }
+        argumentDocs:
+            api_key: (String) The name of the secret that the rotated Datadog API key will be mapped to.
+            api_key_id: (String) The name of the secret that the Datadog API key ID will be mapped to.
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
             parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
             project_id: (String) The ID of the Infisical project to create the secret rotation in.
             rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
@@ -4436,7 +5036,10 @@ resources:
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
             value_label: '(optional): The label of the 1Password item field which will hold your secret value. For example, if you were to sync Infisical secret ''foo: bar'', the 1Password item equivalent would have an item title of ''foo'', and a field on that item ''value: bar''. The field label ''value'' is what gets changed by this option'
             vault_id: '(required): The ID of the 1Password vault to sync secrets to'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the 1Password secret sync by its ID
+              terraform import infisical_secret_sync_1password.example <secret_sync_id>
     infisical_secret_sync_aws_parameter_store:
         subCategory: Secret Syncs
         description: Create and manage AWS Parameter Store secret syncs
@@ -4473,7 +5076,10 @@ resources:
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
             sync_secret_metadata_as_tags: '(optional): Whether to sync the secret metadata as tags'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the AWS Parameter Store secret sync by its ID
+              terraform import infisical_secret_sync_aws_parameter_store.example <secret_sync_id>
     infisical_secret_sync_aws_secrets_manager:
         subCategory: Secret Syncs
         description: Create and manage AWS Secrets Manager secret syncs
@@ -4511,7 +5117,10 @@ resources:
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
             sync_secret_metadata_as_tags: '(optional): Whether to sync the secret metadata as tags. This is only supported for the ''one-to-one'' mapping behavior.'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the AWS Secrets Manager secret sync by its ID
+              terraform import infisical_secret_sync_aws_secrets_manager.example <secret_sync_id>
     infisical_secret_sync_azure_app_configuration:
         subCategory: Secret Syncs
         description: Create and manage Azure App Configuration secret syncs
@@ -4546,7 +5155,10 @@ resources:
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Azure App Configuration secret sync by its ID
+              terraform import infisical_secret_sync_azure_app_configuration.example <secret_sync_id>
     infisical_secret_sync_azure_devops:
         subCategory: Secret Syncs
         description: Create and manage Azure DevOps secret syncs
@@ -4579,7 +5191,10 @@ resources:
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Azure DevOps secret sync by its ID
+              terraform import infisical_secret_sync_azure_devops.example <secret_sync_id>
     infisical_secret_sync_azure_key_vault:
         subCategory: Secret Syncs
         description: Create and manage Azure Key Vault secret syncs
@@ -4613,7 +5228,10 @@ resources:
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
             vault_base_url: '(required): The base URL of your Azure Key Vault'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Azure Key Vault secret sync by its ID
+              terraform import infisical_secret_sync_azure_key_vault.example <secret_sync_id>
     infisical_secret_sync_bitbucket:
         subCategory: Secret Syncs
         description: Create and manage Bitbucket secret syncs
@@ -4650,7 +5268,57 @@ resources:
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
             workspace_slug: '(required): The Bitbucket workspace slug.'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Bitbucket secret sync by its ID
+              terraform import infisical_secret_sync_bitbucket.example <secret_sync_id>
+    infisical_secret_sync_circleci:
+        subCategory: Secret Syncs
+        description: Create and manage CircleCI secret syncs
+        name: infisical_secret_sync_circleci
+        title: infisical_secret_sync_circleci Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "auto_sync_enabled": true,
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Sync secrets to a CircleCI project",
+                  "destination_config": {
+                    "org_name": "\u003ccircleci-organization-name\u003e",
+                    "project_id": "\u003ccircleci-project-id\u003e",
+                    "project_name": "\u003ccircleci-project-name\u003e"
+                  },
+                  "environment": "\u003cenv-slug\u003e",
+                  "name": "circleci-secret-sync",
+                  "project_id": "\u003cyour-infisical-project-id\u003e",
+                  "secret_path": "\u003cinfisical-secret-path\u003e",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "initial_sync_behavior": "overwrite-destination",
+                    "key_schema": "{{secretKey}}_{{environment}}"
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            connection_id: (String) The ID of the circleci Connection to use for syncing.
+            description: (String) An optional description for the CircleCI sync.
+            destination_config: '(String) The destination configuration for the secret sync. Must be a JSON string with the following structure:'
+            disable_secret_deletion: '(optional): When set to true, Infisical will not remove secrets from CircleCI. Enable this option if you intend to manage some secrets manually outside of Infisical.'
+            environment: (String) The slug of the project environment to sync secrets from.
+            id: (String) The ID of the CircleCI secret sync
+            initial_sync_behavior: '(required): Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
+            key_schema: '(optional): The format to use for structuring secret keys in the CircleCI destination.'
+            name: (String) The name of the CircleCI sync to create. Must be slug-friendly.
+            org_name: '(required): The name of the CircleCI organization to sync secrets to.'
+            project_id: '(required): The ID of the CircleCI project to sync secrets to.'
+            project_name: '(required): The name of the CircleCI project to sync secrets to.'
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
+        importStatements:
+            - |-
+              # This will import the CircleCI secret sync by its ID
+              terraform import infisical_secret_sync_circleci.example <secret_sync_id>
     infisical_secret_sync_cloudflare_pages:
         subCategory: Secret Syncs
         description: Create and manage Cloudflare Pages secret syncs
@@ -4684,7 +5352,10 @@ resources:
             project_name: '(required): The Cloudflare Pages project name where the secrets will be synced'
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Cloudflare Pages secret sync by its ID
+              terraform import infisical_secret_sync_cloudflare_pages.example <secret_sync_id>
     infisical_secret_sync_cloudflare_workers:
         subCategory: Secret Syncs
         description: Create and manage Cloudflare Workers secret syncs
@@ -4718,7 +5389,10 @@ resources:
             script_id: '(required): The Cloudflare Workers script ID where the secrets will be synced'
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Cloudflare Workers secret sync by its ID
+              terraform import infisical_secret_sync_cloudflare_workers.example <secret_sync_id>
     infisical_secret_sync_databricks:
         subCategory: Secret Syncs
         description: Create and manage Databricks secret syncs
@@ -4753,7 +5427,10 @@ resources:
             scope: '(required): The Databricks secret scope to sync secrets to.'
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Databricks secret sync by its ID
+              terraform import infisical_secret_sync_databricks.example <secret_sync_id>
     infisical_secret_sync_flyio:
         subCategory: Secret Syncs
         description: Create and manage Fly.io secret syncs
@@ -4788,7 +5465,10 @@ resources:
             project_id: (String) The ID of the Infisical project to create the sync in.
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Fly.io secret sync by its ID
+              terraform import infisical_secret_sync_flyio.example <secret_sync_id>
     infisical_secret_sync_gcp_secret_manager:
         subCategory: Secret Syncs
         description: Create and manage GCP Secret Manager secret syncs
@@ -4823,7 +5503,11 @@ resources:
             scope: '(optional): The scope of the sync with GCP Secret Manager. Supported options: global, region'
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
-        importStatements: []
+            user_replica_location_ids: '(optional): The GCP regions to replicate secrets to (e.g. us-east1). Only applicable when scope is ''global''. When not defined, it will use the automatic replication policy'
+        importStatements:
+            - |-
+              # This will import the GCP Secret Manager secret sync by its ID
+              terraform import infisical_secret_sync_gcp_secret_manager.example <secret_sync_id>
     infisical_secret_sync_github:
         subCategory: Secret Syncs
         description: Create and manage Github secret syncs
@@ -4862,7 +5546,10 @@ resources:
             selected_repository_ids: '(optional): The repository ids to sync the secrets to, required if scope is organization and the visibility field is set to selected'
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
             visibility: '(optional): The visibility of the Github repository, required if scope is organization. Accepted values are: all|private|selected'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Github secret sync by its ID
+              terraform import infisical_secret_sync_github.example <secret_sync_id>
     infisical_secret_sync_gitlab:
         subCategory: Secret Syncs
         description: Create and manage GitLab secret syncs
@@ -4915,7 +5602,10 @@ resources:
             should_protect_secrets: '(optional): Whether variables should be protected'
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
             target_environment: '(required): The GitLab environment scope that secrets should be synced to. (default: *)'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the GitLab secret sync by its ID
+              terraform import infisical_secret_sync_gitlab.example <secret_sync_id>
     infisical_secret_sync_render:
         subCategory: Secret Syncs
         description: Create and manage Render secret syncs
@@ -4951,7 +5641,10 @@ resources:
             service_id: '(required): The ID of the Render service to sync secrets to.'
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
             type: '(required): The Render resource type to sync secrets to. Supported options: env, file'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Render secret sync by its ID
+              terraform import infisical_secret_sync_render.example <secret_sync_id>
     infisical_secret_sync_supabase:
         subCategory: Secret Syncs
         description: Create and manage Supabase secret syncs
@@ -4986,7 +5679,10 @@ resources:
             project_name: '(optional): The Supabase project name (optional).'
             secret_path: (String) The folder path to sync secrets from.
             sync_options: '(String) Parameters to modify how secrets are synced. Must be a JSON string with the following structure:'
-        importStatements: []
+        importStatements:
+            - |-
+              # This will import the Supabase secret sync by its ID
+              terraform import infisical_secret_sync_supabase.example <secret_sync_id>
     infisical_secret_tag:
         subCategory: Secrets
         description: Create secret tag & save to Infisical.
