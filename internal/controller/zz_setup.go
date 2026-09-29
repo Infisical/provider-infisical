@@ -24,6 +24,7 @@ import (
 	secretapprovalpolicy "github.com/infisical/provider-infisical/internal/controller/project/secretapprovalpolicy"
 	providerconfig "github.com/infisical/provider-infisical/internal/controller/providerconfig"
 	secret "github.com/infisical/provider-infisical/internal/controller/secret/secret"
+	secretfolder "github.com/infisical/provider-infisical/internal/controller/secret/secretfolder"
 	secretsyncgithub "github.com/infisical/provider-infisical/internal/controller/secretsync/secretsyncgithub"
 )
 
@@ -46,6 +47,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		secretapprovalpolicy.Setup,
 		providerconfig.Setup,
 		secret.Setup,
+		secretfolder.Setup,
 		secretsyncgithub.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {
