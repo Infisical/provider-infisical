@@ -47,8 +47,8 @@ NPROCS ?= 1
 # to half the number of CPU cores.
 GO_TEST_PARALLEL := $(shell echo $$(( $(NPROCS) / 2 )))
 
-GO_REQUIRED_VERSION ?= 1.21
-GOLANGCILINT_VERSION ?= 1.54.0
+GO_REQUIRED_VERSION ?= 1.26
+GOLANGCILINT_VERSION ?= 2.13.0
 GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/provider $(GO_PROJECT)/cmd/generator
 GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.Version=$(VERSION)
 GO_SUBDIRS += cmd internal apis
@@ -57,10 +57,10 @@ GO_SUBDIRS += cmd internal apis
 # ====================================================================================
 # Setup Kubernetes tools
 
-KIND_VERSION = v0.15.0
-UP_VERSION = v0.28.0
-UP_CHANNEL = stable
-UPTEST_VERSION = v0.5.0
+KIND_VERSION = v0.31.0
+UPTEST_VERSION = v2.2.0
+CRDDIFF_VERSION = v0.12.1
+CROSSPLANE_CLI_VERSION = v2.2.1
 -include build/makelib/k8s_tools.mk
 
 # ====================================================================================
@@ -100,7 +100,7 @@ xpkg.build.provider-infisical: do.build.images
 
 # NOTE(hasheddan): we ensure up is installed prior to running platform-specific
 # build steps in parallel to avoid encountering an installation race condition.
-build.init: $(UP) check-terraform-version
+build.init: $(CROSSPLANE_CLI) check-terraform-version
 
 # ====================================================================================
 # Setup Terraform for fetching provider schema
@@ -154,7 +154,17 @@ pull-docs:
 	@curl -L -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/crossplane-tf-provider-docs.zip
 	@unzip -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip -d $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 
-generate.init: $(TERRAFORM_PROVIDER_SCHEMA) pull-docs
+# The upjet code generator runs goimports on the generated files. Install the
+# version pinned by the tool directive in go.mod and put it on the PATH.
+GOIMPORTS := $(TOOLS_HOST_DIR)/goimports
+export PATH := $(TOOLS_HOST_DIR):$(PATH)
+
+$(GOIMPORTS):
+	@$(INFO) installing goimports
+	@GOBIN=$(TOOLS_HOST_DIR) go install golang.org/x/tools/cmd/goimports
+	@$(OK) installing goimports
+
+generate.init: $(GOIMPORTS) $(TERRAFORM_PROVIDER_SCHEMA) pull-docs
 
 .PHONY: $(TERRAFORM_PROVIDER_SCHEMA) pull-docs check-terraform-version
 # ====================================================================================
@@ -195,8 +205,8 @@ run: go.build download-provider-binary
 
 # ====================================================================================
 # End to End Testing
-CROSSPLANE_VERSION = 1.16.0
-CROSSPLANE_NAMESPACE = upbound-system
+CROSSPLANE_VERSION ?= 2.2.1
+CROSSPLANE_NAMESPACE ?= crossplane-system
 -include build/makelib/local.xpkg.mk
 -include build/makelib/controlplane.mk
 
@@ -214,18 +224,35 @@ CROSSPLANE_NAMESPACE = upbound-system
 #   aws_secret_access_key = REDACTED'
 #   The associated `ProviderConfig`s will be named as `default` and `peer`.
 # - UPTEST_DATASOURCE_PATH (optional), please see https://github.com/crossplane/uptest#injecting-dynamic-values-and-datasource
-uptest: $(UPTEST) $(KUBECTL) $(KUTTL)
+uptest: $(UPTEST) $(KUBECTL) $(CHAINSAW) $(CROSSPLANE_CLI)
 	@$(INFO) running automated tests
-	@KUBECTL=$(KUBECTL) KUTTL=$(KUTTL) $(UPTEST) e2e "${UPTEST_EXAMPLE_LIST}" --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=cluster/test/setup.sh --default-conditions="Test" || $(FAIL)
+	@KUBECTL=$(KUBECTL) CHAINSAW=$(CHAINSAW) CROSSPLANE_CLI=$(CROSSPLANE_CLI) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) $(UPTEST) e2e "${UPTEST_EXAMPLE_LIST}" --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=cluster/test/setup.sh --default-conditions="Test" || $(FAIL)
 	@$(OK) running automated tests
 
 local-deploy: build controlplane.up local.xpkg.deploy.provider.$(PROJECT_NAME)
 	@$(INFO) running locally built provider
 	@$(KUBECTL) wait provider.pkg $(PROJECT_NAME) --for condition=Healthy --timeout 5m
-	@$(KUBECTL) -n upbound-system wait --for=condition=Available deployment --all --timeout=5m
+	@$(KUBECTL) -n $(CROSSPLANE_NAMESPACE) wait --for=condition=Available deployment --all --timeout=5m
 	@$(OK) running locally built provider
 
 e2e: local-deploy uptest
+
+# Crossplane compatibility test. It creates a kind cluster, installs Crossplane
+# $(CROSSPLANE_VERSION) and tests the provider that "make build" produced.
+#   COMPAT_MODE=fresh    install the local provider package
+#   COMPAT_MODE=upgrade  install the released provider, then upgrade it in place
+# Set COMPAT_ENV_FILE to a file with INFISICAL_* variables to test against a
+# real Infisical instance. See cluster/test/compat.sh for details.
+COMPAT_MODE ?= fresh
+COMPAT_PROVIDER_IMAGE ?= $(BUILD_REGISTRY)/$(PROJECT_NAME)-$(ARCH)
+COMPAT_PROVIDER_XPKG ?= $(XPKG_OUTPUT_DIR)/linux_$(ARCH)/$(PROJECT_NAME)-$(VERSION).xpkg
+compat-test: $(KIND) $(HELM) $(KUBECTL) $(CROSSPLANE_CLI)
+	@$(INFO) running the Crossplane $(CROSSPLANE_VERSION) compatibility test, mode $(COMPAT_MODE)
+	@CROSSPLANE_VERSION=$(CROSSPLANE_VERSION) KIND=$(KIND) HELM=$(HELM) KUBECTL=$(KUBECTL) CROSSPLANE_CLI=$(CROSSPLANE_CLI) \
+		KIND_CLUSTER_NAME=infisical-compat-$(subst .,-,$(CROSSPLANE_VERSION))-$(COMPAT_MODE) \
+		PROVIDER_IMAGE=$(COMPAT_PROVIDER_IMAGE) PROVIDER_XPKG=$(COMPAT_PROVIDER_XPKG) \
+		./cluster/test/compat.sh $(COMPAT_MODE) || $(FAIL)
+	@$(OK) running the Crossplane $(CROSSPLANE_VERSION) compatibility test, mode $(COMPAT_MODE)
 
 crddiff: $(UPTEST)
 	@$(INFO) Checking breaking CRD schema changes
@@ -235,7 +262,7 @@ crddiff: $(UPTEST)
 			continue ; \
 		fi ; \
 		echo "Checking $${crd} for breaking API changes..." ; \
-		changes_detected=$$($(UPTEST) crddiff revision <(git cat-file -p "$${GITHUB_BASE_REF}:$${crd}") "$${crd}" 2>&1) ; \
+		changes_detected=$$(go run github.com/crossplane/uptest/cmd/crddiff@$(CRDDIFF_VERSION) revision --enable-upjet-extensions <(git cat-file -p "$${GITHUB_BASE_REF}:$${crd}") "$${crd}" 2>&1) ; \
 		if [[ $$? != 0 ]] ; then \
 			printf "\033[31m"; echo "Breaking change detected!"; printf "\033[0m" ; \
 			echo "$${changes_detected}" ; \
@@ -254,7 +281,7 @@ schema-version-diff:
 	./scripts/version_diff.py config/generated.lst "$(WORK_DIR)/schema.json.$${PREV_PROVIDER_VERSION}" config/schema.json
 	@$(OK) Checking for native state schema version changes
 
-.PHONY: cobertura submodules fallthrough run crds.clean
+.PHONY: cobertura submodules fallthrough run crds.clean compat-test
 
 # ====================================================================================
 # Special Targets

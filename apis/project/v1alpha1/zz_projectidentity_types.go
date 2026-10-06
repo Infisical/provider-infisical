@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type ProjectIdentityInitParameters struct {
@@ -22,11 +22,11 @@ type ProjectIdentityInitParameters struct {
 
 	// Reference to a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+	IdentityIDRef *v2.Reference `json:"identityIdRef,omitempty" tf:"-"`
 
 	// Selector for a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
+	IdentityIDSelector *v2.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 
 	// (String) The id of the project
 	// The id of the project
@@ -35,11 +35,11 @@ type ProjectIdentityInitParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -76,11 +76,11 @@ type ProjectIdentityParameters struct {
 
 	// Reference to a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+	IdentityIDRef *v2.Reference `json:"identityIdRef,omitempty" tf:"-"`
 
 	// Selector for a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
+	IdentityIDSelector *v2.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 
 	// (String) The id of the project
 	// The id of the project
@@ -90,11 +90,11 @@ type ProjectIdentityParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this identity. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this identity. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -104,8 +104,8 @@ type ProjectIdentityParameters struct {
 
 // ProjectIdentitySpec defines the desired state of ProjectIdentity
 type ProjectIdentitySpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     ProjectIdentityParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   ProjectIdentityParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -121,8 +121,8 @@ type ProjectIdentitySpec struct {
 
 // ProjectIdentityStatus defines the observed state of ProjectIdentity.
 type ProjectIdentityStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        ProjectIdentityObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               ProjectIdentityObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

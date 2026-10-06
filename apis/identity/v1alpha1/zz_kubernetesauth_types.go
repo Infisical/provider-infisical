@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type KubernetesAuthInitParameters struct {
@@ -50,11 +50,11 @@ type KubernetesAuthInitParameters struct {
 
 	// Reference to a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+	IdentityIDRef *v2.Reference `json:"identityIdRef,omitempty" tf:"-"`
 
 	// Selector for a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
+	IdentityIDSelector *v2.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 
 	// encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
 	// The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
@@ -172,11 +172,11 @@ type KubernetesAuthParameters struct {
 
 	// Reference to a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+	IdentityIDRef *v2.Reference `json:"identityIdRef,omitempty" tf:"-"`
 
 	// Selector for a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
+	IdentityIDSelector *v2.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 
 	// encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
 	// The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
@@ -201,8 +201,8 @@ type KubernetesAuthParameters struct {
 
 // KubernetesAuthSpec defines the desired state of KubernetesAuth
 type KubernetesAuthSpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     KubernetesAuthParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   KubernetesAuthParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -218,8 +218,8 @@ type KubernetesAuthSpec struct {
 
 // KubernetesAuthStatus defines the observed state of KubernetesAuth.
 type KubernetesAuthStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        KubernetesAuthObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               KubernetesAuthObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

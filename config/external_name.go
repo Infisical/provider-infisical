@@ -5,14 +5,39 @@ Copyright 2022 Upbound Inc.
 package config
 
 import (
-	"github.com/crossplane/upjet/pkg/config"
+	"context"
+
+	"github.com/crossplane/upjet/v2/pkg/config"
 	"github.com/pkg/errors"
 )
+
+// emptyIDPlaceholder is the Terraform ID of a resource that is not created yet
+const emptyIDPlaceholder = "00000000-0000-0000-0000-000000000000"
+
+// returns a copy of the external name configuration that uses emptyIDPlaceholder as the Terraform ID while the external name is empty
+func withPlaceholderID(e config.ExternalName) config.ExternalName {
+	getID := e.GetIDFn
+	e.GetIDFn = func(ctx context.Context, externalName string, parameters map[string]any, providerConfig map[string]any) (string, error) {
+		if externalName == "" {
+			return emptyIDPlaceholder, nil
+		}
+		return getID(ctx, externalName, parameters, providerConfig)
+	}
+	getExternalName := e.GetExternalNameFn
+	e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
+		name, err := getExternalName(tfstate)
+		if err == nil && name == emptyIDPlaceholder {
+			return "", errors.New("cannot find id in tfstate")
+		}
+		return name, err
+	}
+	return e
+}
 
 // ExternalNameConfigs contains all external name configurations for this
 // provider.
 var ExternalNameConfigs = map[string]config.ExternalName{
-	"infisical_project":                  config.IdentifierFromProvider,
+	"infisical_project":                  withPlaceholderID(config.IdentifierFromProvider),
 	"infisical_identity":                 config.IdentifierFromProvider,
 	"infisical_group":                    config.IdentifierFromProvider,
 	"infisical_project_environment":      config.IdentifierFromProvider,

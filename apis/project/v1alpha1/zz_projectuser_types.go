@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type ProjectUserInitParameters struct {
@@ -22,11 +22,11 @@ type ProjectUserInitParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this user. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -67,11 +67,11 @@ type ProjectUserParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this user. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this user. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -86,8 +86,8 @@ type ProjectUserParameters struct {
 
 // ProjectUserSpec defines the desired state of ProjectUser
 type ProjectUserSpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     ProjectUserParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   ProjectUserParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -103,8 +103,8 @@ type ProjectUserSpec struct {
 
 // ProjectUserStatus defines the observed state of ProjectUser.
 type ProjectUserStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        ProjectUserObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               ProjectUserObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

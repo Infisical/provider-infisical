@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type AccessApprovalPolicyInitParameters struct {
@@ -50,11 +50,11 @@ type AccessApprovalPolicyInitParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
 	// The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
@@ -180,11 +180,11 @@ type AccessApprovalPolicyParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
 	// The time after which the access request expires, specified as a duration string (e.g. '1h', '3d', '72h'). Must be between 1 minute and 1 year. If omitted, the default behavior is 'never'.
@@ -214,8 +214,8 @@ type AccessApprovalPolicyParameters struct {
 
 // AccessApprovalPolicySpec defines the desired state of AccessApprovalPolicy
 type AccessApprovalPolicySpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     AccessApprovalPolicyParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   AccessApprovalPolicyParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -231,8 +231,8 @@ type AccessApprovalPolicySpec struct {
 
 // AccessApprovalPolicyStatus defines the observed state of AccessApprovalPolicy.
 type AccessApprovalPolicyStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        AccessApprovalPolicyObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               AccessApprovalPolicyObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

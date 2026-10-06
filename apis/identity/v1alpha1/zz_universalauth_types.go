@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type UniversalAuthInitParameters struct {
@@ -30,11 +30,11 @@ type UniversalAuthInitParameters struct {
 
 	// Reference to a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+	IdentityIDRef *v2.Reference `json:"identityIdRef,omitempty" tf:"-"`
 
 	// Selector for a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
+	IdentityIDSelector *v2.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 }
 
 type UniversalAuthObservation struct {
@@ -75,17 +75,17 @@ type UniversalAuthParameters struct {
 
 	// Reference to a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDRef *v1.Reference `json:"identityIdRef,omitempty" tf:"-"`
+	IdentityIDRef *v2.Reference `json:"identityIdRef,omitempty" tf:"-"`
 
 	// Selector for a Identity in identity to populate identityId.
 	// +kubebuilder:validation:Optional
-	IdentityIDSelector *v1.Selector `json:"identityIdSelector,omitempty" tf:"-"`
+	IdentityIDSelector *v2.Selector `json:"identityIdSelector,omitempty" tf:"-"`
 }
 
 // UniversalAuthSpec defines the desired state of UniversalAuth
 type UniversalAuthSpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     UniversalAuthParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   UniversalAuthParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -101,8 +101,8 @@ type UniversalAuthSpec struct {
 
 // UniversalAuthStatus defines the observed state of UniversalAuth.
 type UniversalAuthStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        UniversalAuthObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               UniversalAuthObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
