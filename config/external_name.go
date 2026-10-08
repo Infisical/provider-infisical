@@ -45,10 +45,10 @@ var ExternalNameConfigs = map[string]config.ExternalName{
 	"infisical_identity_kubernetes_auth": config.IdentifierFromProvider,
 	"infisical_project_role":             config.IdentifierFromProvider,
 	"infisical_project_template":         config.IdentifierFromProvider,
-	"infisical_secret_sync_github":       config.IdentifierFromProvider,
-	"infisical_access_approval_policy":   config.IdentifierFromProvider,
-	"infisical_secret_approval_policy":   config.IdentifierFromProvider,
-	"infisical_secret_folder":            config.IdentifierFromProvider,
+	"infisical_secret_sync_github":       withPlaceholderID(config.IdentifierFromProvider),
+	"infisical_access_approval_policy":   withPlaceholderID(config.IdentifierFromProvider),
+	"infisical_secret_approval_policy":   withPlaceholderID(config.IdentifierFromProvider),
+	"infisical_secret_folder":            withPlaceholderID(config.IdentifierFromProvider),
 	"infisical_project_identity": func() config.ExternalName {
 		e := config.IdentifierFromProvider
 		e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
@@ -110,7 +110,7 @@ var ExternalNameConfigs = map[string]config.ExternalName{
 		return e
 	}(),
 
-	"infisical_secret": func() config.ExternalName {
+	"infisical_secret": withPlaceholderID(func() config.ExternalName {
 		e := config.IdentifierFromProvider
 		e.GetExternalNameFn = func(tfstate map[string]any) (string, error) {
 			if id, ok := tfstate["id"]; ok && id != nil {
@@ -122,7 +122,7 @@ var ExternalNameConfigs = map[string]config.ExternalName{
 			return "", nil
 		}
 		return e
-	}(),
+	}()),
 }
 
 // ExternalNameConfigurations applies all external name configs listed in the
