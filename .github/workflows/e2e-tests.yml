@@ -58,11 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The oldest supported Crossplane version, and a recent v2 version.
         crossplane-version: ["1.16.5", "2.4.2"]
-        # install: API conversion and the lifecycle of every kind in both
-        #          API versions, with the provider of this commit.
-        # upgrade: in-place upgrade from the released provider.
         suite: [install, upgrade]
     steps:
       - name: Checkout
