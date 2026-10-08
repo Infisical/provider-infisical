@@ -31,6 +31,7 @@ import (
 	"github.com/infisical/provider-infisical/internal/clients"
 	"github.com/infisical/provider-infisical/internal/controller"
 	"github.com/infisical/provider-infisical/internal/features"
+	"github.com/infisical/provider-infisical/internal/version"
 )
 
 func main() {
@@ -44,10 +45,6 @@ func main() {
 		maxReconcileRate        = app.Flag("max-reconcile-rate", "The global maximum rate per second at which resources may be checked for drift from the desired state.").Default("10").Int()
 		metricsAddr             = app.Flag("metrics-bind-address", "The address the metric endpoint binds to.").Default("").Envar("METRICS_BIND_ADDRESS").String()
 
-		terraformVersion = app.Flag("terraform-version", "Terraform version.").Required().Envar("TERRAFORM_VERSION").String()
-		providerSource   = app.Flag("terraform-provider-source", "Terraform provider source.").Required().Envar("TERRAFORM_PROVIDER_SOURCE").String()
-		providerVersion  = app.Flag("terraform-provider-version", "Terraform provider version.").Required().Envar("TERRAFORM_PROVIDER_VERSION").String()
-
 		enableManagementPolicies = app.Flag("enable-management-policies", "Enable support for Management Policies.").Default("true").Envar("ENABLE_MANAGEMENT_POLICIES").Bool()
 
 		// External Secret Stores were removed in Crossplane v2. These flags
@@ -59,6 +56,14 @@ func main() {
 	)
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	// The build sets the Terraform settings from the Makefile, so that they
+	// always match the Terraform CLI and provider binaries in the image. The
+	// v1alpha1 resources use the Crossplane-specific legacy build of the
+	// Terraform provider.
+	if version.TerraformVersion == "" || version.TerraformProviderSource == "" || version.TerraformCrossplaneSpecificLegacyVersion == "" {
+		kingpin.Fatalf("the Terraform settings are not set: build the provider with make")
+	}
 
 	zl := zap.New(zap.UseDevMode(*debug))
 	log := logging.NewLogrLogger(zl.WithName("provider-infisical"))
@@ -118,7 +123,7 @@ func main() {
 		// use the following WorkspaceStoreOption to enable the shared gRPC mode
 		// terraform.WithProviderRunner(terraform.NewSharedProvider(log, os.Getenv("TERRAFORM_NATIVE_PROVIDER_PATH"), terraform.WithNativeProviderArgs("-debuggable")))
 		WorkspaceStore: terraform.NewWorkspaceStore(log),
-		SetupFn:        clients.TerraformSetupBuilder(*terraformVersion, *providerSource, *providerVersion),
+		SetupFn:        clients.TerraformSetupBuilder(version.TerraformVersion, version.TerraformProviderSource, version.TerraformCrossplaneSpecificLegacyVersion),
 	}
 
 	if *enableExternalSecretStores {

@@ -12,11 +12,18 @@ TERRAFORM_VERSION_VALID := $(shell [ "$(TERRAFORM_VERSION)" = "`printf "$(TERRAF
 
 export TERRAFORM_PROVIDER_SOURCE ?= Infisical/infisical
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provider-infisical
-export TERRAFORM_PROVIDER_VERSION ?= 0.0.20
+
+export TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION ?= 0.0.20 # DO NOT CHANGE. WILL BREAK OLD / LEGACY RESOURCES.
+
+# Version of the normal Terraform provider release (the "v*" tags), for new
+# resources. Nothing in the build uses it yet.
+export TERRAFORM_PROVIDER_VERSION ?= 0.20.1
+
+# The settings below are for the Crossplane-specific legacy build.
 export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical-crossplane
-export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_PROVIDER_VERSION)
+export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)
 export TERRAFORM_DOCS_PATH ?= docs/resources
-export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?= ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)
+export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?= ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)
 
 export TERRAFORM_LOCAL_PROVIDER_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/bin
 export TERRAFORM_LOCAL_PROVIDER_REPO_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
@@ -51,6 +58,9 @@ GO_REQUIRED_VERSION ?= 1.26
 GOLANGCILINT_VERSION ?= 2.13.0
 GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/provider $(GO_PROJECT)/cmd/generator
 GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.Version=$(VERSION)
+GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.TerraformVersion=$(TERRAFORM_VERSION)
+GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.TerraformProviderSource=$(TERRAFORM_PROVIDER_SOURCE)
+GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.TerraformCrossplaneSpecificLegacyVersion=$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)
 GO_SUBDIRS += cmd internal apis
 -include build/makelib/golang.mk
 
@@ -127,18 +137,18 @@ $(TERRAFORM_PROVIDER_SCHEMA): $(TERRAFORM) download-provider-binary
 	$(INFO) generating provider schema from GitHub binary
 	mkdir -p $(TERRAFORM_WORKDIR)
 	cp $(ROOT_DIR)/gen-terraformrc.hcl $(TERRAFORM_WORKDIR)/terraformrc.hcl
-	mkdir -p $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)
-	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)/
-	echo '{"terraform":[{"required_providers":[{"provider":{"source":"'"$(TERRAFORM_PROVIDER_SOURCE)"'","version":"'"$(TERRAFORM_PROVIDER_VERSION)"'"}}],"required_version":"'"$(TERRAFORM_VERSION)"'"}]}' > $(TERRAFORM_WORKDIR)/main.tf.json
+	mkdir -p $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)
+	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) $(TERRAFORM_WORKDIR)/.terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)/
+	echo '{"terraform":[{"required_providers":[{"provider":{"source":"'"$(TERRAFORM_PROVIDER_SOURCE)"'","version":"'"$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)"'"}}],"required_version":"'"$(TERRAFORM_VERSION)"'"}]}' > $(TERRAFORM_WORKDIR)/main.tf.json
 	$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) init -upgrade
 	$(TERRAFORM) -chdir=$(TERRAFORM_WORKDIR) providers schema -json=true | tee $(TERRAFORM_PROVIDER_SCHEMA)
 	$(OK) generating provider schema from GitHub binary
 
 download-provider-binary:
 	@$(INFO) downloading provider binary from GitHub releases
-	@echo "Downloading from: ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip"
+	@echo "Downloading from: ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip"
 	@mkdir -p $(WORK_DIR)
-	@curl -L -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip
+	@curl -L -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip
 	@unzip -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip -d $(WORK_DIR)
 	@chmod +x $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY)
 	@$(OK) downloaded provider binary from GitHub releases
@@ -146,12 +156,12 @@ download-provider-binary:
 .PHONY: download-provider-binary
 
 pull-docs:
-	@echo "Pulling docs for version v$(TERRAFORM_PROVIDER_VERSION)"
+	@echo "Pulling docs for version v$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)"
 	@if [ ! -d "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" ]; then \
 		mkdir -p "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"; \
 	fi
 	@rm -f $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip
-	@curl -L -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/crossplane-tf-provider-docs.zip
+	@curl -L -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)/crossplane-tf-provider-docs.zip
 	@unzip -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip -d $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 
 # The upjet code generator runs goimports on the generated files. Install the
@@ -198,8 +208,8 @@ run: go.build download-provider-binary
 	@$(INFO) Running Crossplane locally out-of-cluster . . .
 	mkdir -p $(TERRAFORM_WORKDIR)
 	cp $(ROOT_DIR)/local-terraformrc.hcl $(TERRAFORM_WORKDIR)/terraformrc.hcl
-	@mkdir -p /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)/
-	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_PROVIDER_VERSION)/$(HOSTOS)_$(HOSTARCH)/
+	@mkdir -p /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)/$(HOSTOS)_$(SAFEHOSTARCH)/
+	cp $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY) /tmp/terraform/plugins/registry.terraform.io/$(TERRAFORM_PROVIDER_SOURCE)/$(TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION)/$(HOSTOS)_$(HOSTARCH)/
 	@# To see other arguments that can be provided, run the command with --help instead
 	UPBOUND_CONTEXT="local" $(GO_OUT_DIR)/provider --debug --poll=60s
 
@@ -273,9 +283,9 @@ crddiff: $(UPTEST)
 
 schema-version-diff:
 	@$(INFO) Checking for native state schema version changes
-	@export PREV_PROVIDER_VERSION=$$(git cat-file -p "${GITHUB_BASE_REF}:Makefile" | sed -nr 's/^export[[:space:]]*TERRAFORM_PROVIDER_VERSION[[:space:]]*:=[[:space:]]*(.+)/\1/p'); \
+	@export PREV_PROVIDER_VERSION=$$(git cat-file -p "${GITHUB_BASE_REF}:Makefile" | sed -nr 's/^export[[:space:]]*TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION[[:space:]]*\??=[[:space:]]*(.+)/\1/p'); \
 	echo Detected previous Terraform provider version: $${PREV_PROVIDER_VERSION}; \
-	echo Current Terraform provider version: $${TERRAFORM_PROVIDER_VERSION}; \
+	echo Current Terraform provider version: $${TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION}; \
 	mkdir -p $(WORK_DIR); \
 	git cat-file -p "$${GITHUB_BASE_REF}:config/schema.json" > "$(WORK_DIR)/schema.json.$${PREV_PROVIDER_VERSION}"; \
 	./scripts/version_diff.py config/generated.lst "$(WORK_DIR)/schema.json.$${PREV_PROVIDER_VERSION}" config/schema.json
