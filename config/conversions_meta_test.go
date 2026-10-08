@@ -32,3 +32,29 @@ status:
 		t.Errorf("v1alpha1 external name after a round trip: got %q, annotations %v", got, back.GetAnnotations())
 	}
 }
+
+// TestNullAnnotation checks that an annotation with the value "null" counts as
+// no saved values, and does not break the conversion.
+func TestNullAnnotation(t *testing.T) {
+	s := setup(t)
+	v1 := decode(t, s, `
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectIdentity
+metadata:
+  name: pi
+  annotations:
+    conversion.crossplane.infisical.com/fields: "null"
+spec:
+  forProvider:
+    projectId: p
+    identityId: i
+    roles: '[{"role_slug":"admin"}]'
+`)
+	v2 := up(t, s, v1)
+	if got, want := jsonOf(t, value(t, v2, "spec.forProvider.roles")), `[{"roleSlug":"admin"}]`; got != want {
+		t.Errorf("v1alpha2 roles: want %s, got %s", want, got)
+	}
+	if got, want := value(t, down(t, s, v2), "spec.forProvider.roles"), `[{"role_slug":"admin"}]`; got != want {
+		t.Errorf("v1alpha1 roles after a round trip: want %s, got %v", want, got)
+	}
+}

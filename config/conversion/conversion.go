@@ -224,6 +224,10 @@ func storedFields(p *fieldpath.Paved) (map[string]any, error) {
 	if err := json.Unmarshal([]byte(raw), &stored); err != nil {
 		return nil, errors.Wrapf(err, "cannot parse the %s annotation", AnnotationKey)
 	}
+	// "null" decodes to a nil map. Treat it as no saved values.
+	if stored == nil {
+		stored = map[string]any{}
+	}
 	return stored, nil
 }
 
