@@ -16,6 +16,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -32,6 +33,8 @@ const conversionProviderConfig = "e2e-no-provider-config"
 //     as v1alpha1 with exactly the fields that the client wrote;
 //   - a v1alpha2 object reads as v1alpha1 with the converted fields, and a
 //     v1alpha1 client can update it without losing v1alpha2-only data;
+//   - a v1alpha1 client can change the spec of a v1alpha2 object that uses a
+//     v1alpha2-only field instead of a field that v1alpha1 required before;
 //   - the webhook works again after the provider pod restarts.
 func TestConversion(t *testing.T) {
 	t.Run("CRDs", testCRDs)
@@ -81,6 +84,15 @@ func TestConversion(t *testing.T) {
 			t.Run(o.testName(), func(t *testing.T) {
 				t.Parallel()
 				checkCreatedAsV1alpha2(t, s, o, fixtures[v1alpha2][o.file])
+			})
+		}
+	})
+	t.Run("v1alpha2-only-fields-updated-as-v1alpha1", func(t *testing.T) {
+		s := newSet(v1alpha2, "e2e-conv-alt", conversionProviderConfig)
+		for _, c := range v1alpha2OnlyAlternatives {
+			t.Run(objectByFile(c.file).testName(), func(t *testing.T) {
+				t.Parallel()
+				checkV1alpha2OnlyFieldUpdatedAsV1alpha1(t, s, c)
 			})
 		}
 	})
@@ -200,6 +212,67 @@ func checkCreatedAsV1alpha2(t *testing.T, s *set, o object, fixture *unstructure
 	}
 	if got, want := forProvider(asV2), forProvider(fixture); jsonString(got) != jsonString(want) {
 		t.Errorf("after an update as v1alpha1, the v1alpha2 spec.forProvider changed:\n got %s\nwant %s", jsonString(got), jsonString(want))
+	}
+}
+
+// alternative is an object that uses a field that only v1alpha2 has (set),
+// instead of a field that the v1alpha1 schema required before (remove).
+type alternative struct {
+	file   string
+	remove string
+	set    string
+	value  any
+}
+
+var v1alpha2OnlyAlternatives = []alternative{
+	{file: "projectrole", remove: "projectSlug", set: "projectId", value: "00000000-0000-0000-0000-000000000001"},
+	{file: "accessapprovalpolicy", remove: "environmentSlugs", set: "environmentSlug", value: "prod"},
+	{file: "secretapprovalpolicy", remove: "environmentSlugs", set: "environmentSlug", value: "prod"},
+}
+
+// checkV1alpha2OnlyFieldUpdatedAsV1alpha1 checks that a v1alpha1 client can
+// change a spec field of an object that uses a v1alpha2-only field. Kubernetes
+// validates the change with the v1alpha1 schema, so the v1alpha1 schema must
+// not require the field that the object does not use. The test changes a spec
+// field and not only a label, because Kubernetes 1.30 and later do not check
+// the rules of a part of the object that did not change.
+func checkV1alpha2OnlyFieldUpdatedAsV1alpha1(t *testing.T, s *set, c alternative) {
+	ctx := context.Background()
+	o := objectByFile(c.file)
+	u := s.render(t, o)
+	unstructured.RemoveNestedField(u.Object, "spec", "forProvider", c.remove)
+	if err := unstructured.SetNestedField(u.Object, c.value, "spec", "forProvider", c.set); err != nil {
+		t.Fatal(err)
+	}
+	if err := unstructured.SetNestedField(u.Object, "Orphan", "spec", "deletionPolicy"); err != nil {
+		t.Fatal(err)
+	}
+	if err := kube.Create(ctx, u); err != nil {
+		t.Fatalf("cannot create as v1alpha2 with %s instead of %s: %v", c.set, c.remove, err)
+	}
+	t.Cleanup(func() { _ = kube.Delete(context.Background(), u) })
+
+	asV1 := &unstructured.Unstructured{}
+	asV1.SetGroupVersionKind(schema.GroupVersionKind{Group: o.group, Version: v1alpha1, Kind: o.kind})
+	asV1.SetName(s.name(o))
+	patch := client.RawPatch(types.MergePatchType, []byte(`{"spec":{"forProvider":{"name":"updated-as-v1alpha1"}}}`))
+	if err := kube.Patch(ctx, asV1, patch); err != nil {
+		t.Fatalf("a v1alpha1 client cannot change a spec field: %v", err)
+	}
+
+	asV2, err := s.get(ctx, o, v1alpha2)
+	if err != nil {
+		t.Fatalf("cannot read as v1alpha2: %v", err)
+	}
+	fp, _, _ := unstructured.NestedMap(asV2.Object, "spec", "forProvider")
+	if fp["name"] != "updated-as-v1alpha1" {
+		t.Errorf("spec.forProvider.name is %v, want updated-as-v1alpha1", fp["name"])
+	}
+	if jsonString(fp[c.set]) != jsonString(c.value) {
+		t.Errorf("after the v1alpha1 update, spec.forProvider.%s is %s, want %s", c.set, jsonString(fp[c.set]), jsonString(c.value))
+	}
+	if v, ok := fp[c.remove]; ok {
+		t.Errorf("after the v1alpha1 update, spec.forProvider.%s is %s, want no value", c.remove, jsonString(v))
 	}
 }
 
