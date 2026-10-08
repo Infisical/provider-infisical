@@ -14,9 +14,8 @@ var (
 	// TERRAFORM_PROVIDER_SOURCE in the Makefile.
 	TerraformProviderSource string
 
-	// TerraformCrossplaneSpecificLegacyVersion is the version of the
-	// Crossplane-specific legacy build of the Terraform provider in the
-	// provider image. The v1alpha1 resources use it. The build sets it from
-	// TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION in the Makefile.
-	TerraformCrossplaneSpecificLegacyVersion string
+	// TerraformProviderVersion is the version of the Terraform provider in the
+	// provider image. The build sets it from TERRAFORM_PROVIDER_VERSION in the
+	// Makefile.
+	TerraformProviderVersion string
 )
