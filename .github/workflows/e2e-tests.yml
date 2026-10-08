@@ -85,13 +85,13 @@ jobs:
       - name: Run the e2e tests
         env:
           INFISICAL_HOST: ${{ secrets.E2E_INFISICAL_HOST }}
-          INFISICAL_CLIENT_ID: ${{ secrets.E2E_INFISICAL_CLIENT_ID }}
-          INFISICAL_CLIENT_SECRET: ${{ secrets.E2E_INFISICAL_CLIENT_SECRET }}
-          INFISICAL_ORG_ID: ${{ secrets.E2E_INFISICAL_ORG_ID }}
-          INFISICAL_USER_EMAIL: ${{ secrets.E2E_INFISICAL_USER_EMAIL }}
-          INFISICAL_GITHUB_CONNECTION_ID: ${{ secrets.E2E_INFISICAL_GITHUB_CONNECTION_ID }}
-          INFISICAL_GITHUB_REPO_OWNER: ${{ secrets.E2E_INFISICAL_GITHUB_REPO_OWNER }}
-          INFISICAL_GITHUB_REPO_NAME: ${{ secrets.E2E_INFISICAL_GITHUB_REPO_NAME }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          INFISICAL_ORG_ID: ${{ secrets.INFISICAL_ORG_ID }}
+          INFISICAL_USER_EMAIL: ${{ secrets.INFISICAL_USER_EMAIL }}
+          INFISICAL_GITHUB_CONNECTION_ID: ${{ secrets.INFISICAL_GITHUB_CONNECTION_ID }}
+          INFISICAL_GITHUB_REPO_OWNER: ${{ secrets.INFISICAL_GITHUB_REPO_OWNER }}
+          INFISICAL_GITHUB_REPO_NAME: ${{ secrets.INFISICAL_GITHUB_REPO_NAME }}
           E2E_ARTIFACTS_DIR: ${{ github.workspace }}/_output/e2e
         run: |
           make test-e2e \
