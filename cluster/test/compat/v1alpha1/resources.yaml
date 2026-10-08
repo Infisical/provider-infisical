@@ -1,4 +1,6 @@
-# Managed resources for the Crossplane compatibility tests (cluster/test/compat.sh).
+# v1alpha1 managed resources for the Crossplane compatibility tests
+# (cluster/test/compat.sh). They use the v1alpha1 API, which the released
+# provider also serves.
 #
 # Placeholders that compat.sh replaces before it applies this file:
 #   __RUN_ID__      unique suffix for each test run
@@ -12,6 +14,11 @@
 #   compat.infisical.com/tier: synced   the MR only needs a Synced condition. Use
 #                                       this for resources that need external
 #                                       services or a license.
+#   compat.infisical.com/new-provider-tier
+#                                       the tier when the provider under test
+#                                       creates the MR (fresh mode, and all
+#                                       v1alpha2 MRs). Use this for known gaps of
+#                                       the normal Terraform provider.
 apiVersion: project.crossplane.infisical.com/v1alpha1
 kind: Project
 metadata:
@@ -149,6 +156,10 @@ metadata:
   labels:
     compat.infisical.com/test: "true"
     compat.infisical.com/tier: ready
+    # Known gap: the ProjectRole Read of the normal Terraform provider (0.20.1)
+    # returns an error instead of removing the resource when the role is not
+    # found, so a NEW ProjectRole is never created. Existing ones keep working.
+    compat.infisical.com/new-provider-tier: synced
 spec:
   forProvider:
     name: compat-role

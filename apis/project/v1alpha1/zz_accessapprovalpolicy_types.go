@@ -237,7 +237,6 @@ type AccessApprovalPolicyStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // AccessApprovalPolicy is the Schema for the AccessApprovalPolicys API. Create access approval policy for your projects
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"

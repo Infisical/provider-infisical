@@ -211,7 +211,6 @@ type SecretApprovalPolicyStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // SecretApprovalPolicy is the Schema for the SecretApprovalPolicys API. Create secret approval policy for your projects
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"

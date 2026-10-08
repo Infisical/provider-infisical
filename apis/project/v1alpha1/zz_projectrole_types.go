@@ -115,7 +115,6 @@ type ProjectRoleStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // ProjectRole is the Schema for the ProjectRoles API. Create custom project roles & save to Infisical. Only Machine Identity authentication is supported for this resource.
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
