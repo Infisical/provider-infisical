@@ -252,22 +252,20 @@ local-deploy: build controlplane.up local.xpkg.deploy.provider.$(PROJECT_NAME)
 
 e2e: local-deploy uptest
 
-# Crossplane compatibility test. It creates a kind cluster, installs Crossplane
-# $(CROSSPLANE_VERSION) and tests the provider that "make build" produced.
-#   COMPAT_MODE=fresh    install the local provider package
-#   COMPAT_MODE=upgrade  install the released provider, then upgrade it in place
-# Set COMPAT_ENV_FILE to a file with INFISICAL_* variables to test against a
-# real Infisical instance. See cluster/test/compat.sh for details.
-COMPAT_MODE ?= fresh
-COMPAT_PROVIDER_IMAGE ?= $(BUILD_REGISTRY)/$(PROJECT_NAME)-$(ARCH)
-COMPAT_PROVIDER_XPKG ?= $(XPKG_OUTPUT_DIR)/linux_$(ARCH)/$(PROJECT_NAME)-$(VERSION).xpkg
-compat-test: $(KIND) $(HELM) $(KUBECTL) $(CROSSPLANE_CLI)
-	@$(INFO) running the Crossplane $(CROSSPLANE_VERSION) compatibility test, mode $(COMPAT_MODE)
+# End-to-end tests in test/e2e. Run "make build" first. The tests need the
+# INFISICAL_* environment variables, see test/e2e/README.md.
+#   E2E_SUITE=install  API conversion tests, and the lifecycle of every kind in
+#                      both API versions, with the provider under test
+#   E2E_SUITE=upgrade  in-place upgrade from the released provider
+E2E_SUITE ?= install
+E2E_PROVIDER_IMAGE ?= $(BUILD_REGISTRY)/$(PROJECT_NAME)-$(ARCH)
+E2E_PROVIDER_XPKG ?= $(XPKG_OUTPUT_DIR)/linux_$(ARCH)/$(PROJECT_NAME)-$(VERSION).xpkg
+test-e2e: $(KIND) $(HELM) $(KUBECTL) $(CROSSPLANE_CLI)
+	@$(INFO) running the e2e $(E2E_SUITE) tests with Crossplane $(CROSSPLANE_VERSION)
 	@CROSSPLANE_VERSION=$(CROSSPLANE_VERSION) KIND=$(KIND) HELM=$(HELM) KUBECTL=$(KUBECTL) CROSSPLANE_CLI=$(CROSSPLANE_CLI) \
-		KIND_CLUSTER_NAME=infisical-compat-$(subst .,-,$(CROSSPLANE_VERSION))-$(COMPAT_MODE) \
-		PROVIDER_IMAGE=$(COMPAT_PROVIDER_IMAGE) PROVIDER_XPKG=$(COMPAT_PROVIDER_XPKG) \
-		./cluster/test/compat.sh $(COMPAT_MODE) || $(FAIL)
-	@$(OK) running the Crossplane $(CROSSPLANE_VERSION) compatibility test, mode $(COMPAT_MODE)
+		PROVIDER_IMAGE=$(E2E_PROVIDER_IMAGE) PROVIDER_XPKG=$(E2E_PROVIDER_XPKG) \
+		./test/e2e/run.sh $(E2E_SUITE) || $(FAIL)
+	@$(OK) running the e2e $(E2E_SUITE) tests with Crossplane $(CROSSPLANE_VERSION)
 
 crddiff: $(UPTEST)
 	@$(INFO) Checking breaking CRD schema changes
@@ -296,7 +294,7 @@ schema-version-diff:
 	./scripts/version_diff.py config/generated.lst "$(WORK_DIR)/schema.json.$${PREV_PROVIDER_VERSION}" config/schema.json
 	@$(OK) Checking for native state schema version changes
 
-.PHONY: cobertura submodules fallthrough run crds.clean compat-test
+.PHONY: cobertura submodules fallthrough run crds.clean test-e2e
 
 # ====================================================================================
 # Special Targets

@@ -1,0 +1,14 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectUser
+metadata:
+  name: __PREFIX__-project-user
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    projectIdRef:
+      name: __PREFIX__-project
+    username: __USER_EMAIL__
+    roles: '[{"role_slug": "viewer"}]'
