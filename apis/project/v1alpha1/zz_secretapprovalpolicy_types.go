@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type SecretApprovalPolicyInitParameters struct {
@@ -46,11 +46,11 @@ type SecretApprovalPolicyInitParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (Number) The number of required approvers
 	// The number of required approvers
@@ -159,11 +159,11 @@ type SecretApprovalPolicyParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (Number) The number of required approvers
 	// The number of required approvers
@@ -188,8 +188,8 @@ type SecretApprovalPolicyParameters struct {
 
 // SecretApprovalPolicySpec defines the desired state of SecretApprovalPolicy
 type SecretApprovalPolicySpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     SecretApprovalPolicyParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   SecretApprovalPolicyParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -205,8 +205,8 @@ type SecretApprovalPolicySpec struct {
 
 // SecretApprovalPolicyStatus defines the observed state of SecretApprovalPolicy.
 type SecretApprovalPolicyStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        SecretApprovalPolicyObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               SecretApprovalPolicyObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

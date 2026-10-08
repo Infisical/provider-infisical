@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type ProjectEnvironmentInitParameters struct {
@@ -30,11 +30,11 @@ type ProjectEnvironmentInitParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) The slug of the environment
 	// The slug of the environment
@@ -83,11 +83,11 @@ type ProjectEnvironmentParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) The slug of the environment
 	// The slug of the environment
@@ -97,8 +97,8 @@ type ProjectEnvironmentParameters struct {
 
 // ProjectEnvironmentSpec defines the desired state of ProjectEnvironment
 type ProjectEnvironmentSpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     ProjectEnvironmentParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   ProjectEnvironmentParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -114,8 +114,8 @@ type ProjectEnvironmentSpec struct {
 
 // ProjectEnvironmentStatus defines the observed state of ProjectEnvironment.
 type ProjectEnvironmentStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        ProjectEnvironmentObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               ProjectEnvironmentObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

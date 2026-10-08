@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type ProjectGroupInitParameters struct {
@@ -22,11 +22,11 @@ type ProjectGroupInitParameters struct {
 
 	// Reference to a Group in group to populate groupId.
 	// +kubebuilder:validation:Optional
-	GroupIDRef *v1.Reference `json:"groupIdRef,omitempty" tf:"-"`
+	GroupIDRef *v2.Reference `json:"groupIdRef,omitempty" tf:"-"`
 
 	// Selector for a Group in group to populate groupId.
 	// +kubebuilder:validation:Optional
-	GroupIDSelector *v1.Selector `json:"groupIdSelector,omitempty" tf:"-"`
+	GroupIDSelector *v2.Selector `json:"groupIdSelector,omitempty" tf:"-"`
 
 	// (String) The name of the group.
 	// The name of the group.
@@ -39,11 +39,11 @@ type ProjectGroupInitParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this group. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -85,11 +85,11 @@ type ProjectGroupParameters struct {
 
 	// Reference to a Group in group to populate groupId.
 	// +kubebuilder:validation:Optional
-	GroupIDRef *v1.Reference `json:"groupIdRef,omitempty" tf:"-"`
+	GroupIDRef *v2.Reference `json:"groupIdRef,omitempty" tf:"-"`
 
 	// Selector for a Group in group to populate groupId.
 	// +kubebuilder:validation:Optional
-	GroupIDSelector *v1.Selector `json:"groupIdSelector,omitempty" tf:"-"`
+	GroupIDSelector *v2.Selector `json:"groupIdSelector,omitempty" tf:"-"`
 
 	// (String) The name of the group.
 	// The name of the group.
@@ -104,11 +104,11 @@ type ProjectGroupParameters struct {
 
 	// Reference to a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDRef *v1.Reference `json:"projectIdRef,omitempty" tf:"-"`
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
 
 	// Selector for a Project in project to populate projectId.
 	// +kubebuilder:validation:Optional
-	ProjectIDSelector *v1.Selector `json:"projectIdSelector,omitempty" tf:"-"`
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (String) JSON array of role assignments for this group. Each role object must include a role_slug field. Example: [{"role_slug":"admin"},{"role_slug":"member"}].
 	// JSON array of role assignments for this group. Each role object must include a `role_slug` field. Example: `[{"role_slug":"admin"},{"role_slug":"member"}]`.
@@ -118,8 +118,8 @@ type ProjectGroupParameters struct {
 
 // ProjectGroupSpec defines the desired state of ProjectGroup
 type ProjectGroupSpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     ProjectGroupParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   ProjectGroupParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -135,8 +135,8 @@ type ProjectGroupSpec struct {
 
 // ProjectGroupStatus defines the observed state of ProjectGroup.
 type ProjectGroupStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        ProjectGroupObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               ProjectGroupObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true

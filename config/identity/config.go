@@ -1,6 +1,6 @@
 package identity
 
-import "github.com/crossplane/upjet/pkg/config"
+import "github.com/crossplane/upjet/v2/pkg/config"
 
 func Configure(p *config.Provider) {
 	p.AddResourceConfigurator("infisical_identity", func(r *config.Resource) {

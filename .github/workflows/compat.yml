@@ -1,0 +1,117 @@
+name: Crossplane Compatibility
+
+# Builds the provider once, then installs it on a matrix of Crossplane
+# versions with cluster/test/compat.sh:
+#   fresh    install the provider from this commit
+#   upgrade  install the latest release, create MRs, then upgrade in place
+#
+# When the INFISICAL_* secrets are set, the MRs are created in that Infisical
+# instance and must become Ready. Otherwise the test runs in offline mode and
+# only checks that the provider starts and every controller reconciles.
+
+on:
+  push:
+    branches:
+      - main
+      - release-*
+  pull_request: {}
+  workflow_dispatch: {}
+
+env:
+  GO_VERSION: "1.26.8"
+  # The released provider that the upgrade test starts from.
+  OLD_PROVIDER_PACKAGE: xpkg.upbound.io/infisical-inc/provider-infisical:v0.1.15
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        with:
+          submodules: true
+
+      - name: Fetch History
+        run: git fetch --prune --unshallow
+
+      - name: Setup Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build the provider image and package
+        run: make build
+
+      - name: Export the image and package
+        run: |
+          image="$(docker images --format '{{.Repository}}' | grep '/provider-infisical-amd64$' | head -n 1)"
+          test -n "${image}"
+          mkdir -p compat-artifacts
+          docker save "${image}" -o compat-artifacts/image.tar
+          echo "${image}" > compat-artifacts/image-name
+          cp _output/xpkg/linux_amd64/*.xpkg compat-artifacts/provider.xpkg
+
+      - name: Upload the image and package
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
+        with:
+          name: compat-artifacts
+          path: compat-artifacts
+          retention-days: 1
+
+  compat:
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      # Each live job creates resources in the same Infisical instance. Every
+      # run uses a unique suffix, so the jobs can run in parallel.
+      matrix:
+        crossplane-version:
+          - 1.16.5
+          - 1.17.6
+          - 1.18.5
+          - 1.19.3
+          - 1.20.13
+          - 2.0.8
+          - 2.1.8
+          - 2.2.6
+          - 2.3.6
+          - 2.4.2
+        mode:
+          - fresh
+          - upgrade
+    name: crossplane ${{ matrix.crossplane-version }} (${{ matrix.mode }})
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        with:
+          submodules: true
+
+      - name: Download the image and package
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        with:
+          name: compat-artifacts
+          path: compat-artifacts
+
+      - name: Load the image
+        run: |
+          docker load -i compat-artifacts/image.tar
+          echo "COMPAT_PROVIDER_IMAGE=$(cat compat-artifacts/image-name)" >> "${GITHUB_ENV}"
+
+      # temporary. we will set up the full test suite like we have in the CLI at a later time
+      - name: Run the compatibility test
+        env:
+          INFISICAL_HOST: ${{ secrets.COMPAT_INFISICAL_HOST }}
+          INFISICAL_CLIENT_ID: ${{ secrets.COMPAT_INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.COMPAT_INFISICAL_CLIENT_SECRET }}
+          INFISICAL_ORG_ID: ${{ secrets.COMPAT_INFISICAL_ORG_ID }}
+          INFISICAL_USER_EMAIL: ${{ secrets.COMPAT_INFISICAL_USER_EMAIL }}
+          INFISICAL_GITHUB_CONNECTION_ID: ${{ secrets.COMPAT_INFISICAL_GITHUB_CONNECTION_ID }}
+          INFISICAL_GITHUB_REPO_OWNER: ${{ secrets.COMPAT_INFISICAL_GITHUB_REPO_OWNER }}
+          INFISICAL_GITHUB_REPO_NAME: ${{ secrets.COMPAT_INFISICAL_GITHUB_REPO_NAME }}
+        run: |
+          make compat-test \
+            CROSSPLANE_VERSION=${{ matrix.crossplane-version }} \
+            COMPAT_MODE=${{ matrix.mode }} \
+            COMPAT_PROVIDER_IMAGE="${COMPAT_PROVIDER_IMAGE}" \
+            COMPAT_PROVIDER_XPKG="${PWD}/compat-artifacts/provider.xpkg"

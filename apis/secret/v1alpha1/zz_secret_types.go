@@ -10,7 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
 type SecretInitParameters struct {
@@ -39,7 +39,7 @@ type SecretInitParameters struct {
 
 	// (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
 	// The value of the secret in plain text. This is required if `value_wo` is not set.
-	ValueSecretRef *v1.SecretKeySelector `json:"valueSecretRef,omitempty" tf:"-"`
+	ValueSecretRef *v2.SecretKeySelector `json:"valueSecretRef,omitempty" tf:"-"`
 
 	// only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
 	// The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if `value` is not set.11.0 or higher.
@@ -130,7 +130,7 @@ type SecretParameters struct {
 	// (String, Sensitive) The value of the secret in plain text. This is required if value_wo is not set.
 	// The value of the secret in plain text. This is required if `value_wo` is not set.
 	// +kubebuilder:validation:Optional
-	ValueSecretRef *v1.SecretKeySelector `json:"valueSecretRef,omitempty" tf:"-"`
+	ValueSecretRef *v2.SecretKeySelector `json:"valueSecretRef,omitempty" tf:"-"`
 
 	// only secret. If set, the secret value will not be stored in state. This is required if value is not set.11.0 or higher.
 	// The value of the secret in plain text as a write-only secret. If set, the secret value will not be stored in state. This is required if `value` is not set.11.0 or higher.
@@ -150,8 +150,8 @@ type SecretParameters struct {
 
 // SecretSpec defines the desired state of Secret
 type SecretSpec struct {
-	v1.ResourceSpec `json:",inline"`
-	ForProvider     SecretParameters `json:"forProvider"`
+	v2.ClusterManagedResourceSpec `json:",inline"`
+	ForProvider                   SecretParameters `json:"forProvider"`
 	// THIS IS A BETA FIELD. It will be honored
 	// unless the Management Policies feature flag is disabled.
 	// InitProvider holds the same fields as ForProvider, with the exception
@@ -167,8 +167,8 @@ type SecretSpec struct {
 
 // SecretStatus defines the observed state of Secret.
 type SecretStatus struct {
-	v1.ResourceStatus `json:",inline"`
-	AtProvider        SecretObservation `json:"atProvider,omitempty"`
+	v2.ManagedResourceStatus `json:",inline"`
+	AtProvider               SecretObservation `json:"atProvider,omitempty"`
 }
 
 // +kubebuilder:object:root=true
