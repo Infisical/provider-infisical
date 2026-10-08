@@ -1,0 +1,36 @@
+apiVersion: identity.crossplane.infisical.com/v1alpha2
+kind: UniversalAuth
+metadata:
+  annotations:
+    meta.upbound.io/example-id: identity/v1alpha2/universalauth
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    accessTokenMaxTtl: 2592000
+    accessTokenNumUsesLimit: 0
+    accessTokenTrustedIps:
+    - ipAddress: 0.0.0.0/0
+    accessTokenTtl: 2592000
+    clientSecretTrustedIps:
+    - ipAddress: 0.0.0.0/0
+    identityIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+
+---
+
+apiVersion: identity.crossplane.infisical.com/v1alpha2
+kind: Identity
+metadata:
+  annotations:
+    meta.upbound.io/example-id: identity/v1alpha2/universalauth
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    name: my-machine-identity
+    orgId: <your-org-id>
+    role: no-access
