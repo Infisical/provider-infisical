@@ -26,9 +26,10 @@ import (
 const conversionProviderConfig = "e2e-no-provider-config"
 
 // TestConversion tests the API conversion webhook between v1alpha1 and
-// v1alpha2 for every kind:
+// v1alpha2 for every kind that has both versions:
 //
-//   - every CRD serves both versions, stores v1alpha2 and uses the webhook;
+//   - the CRD of such a kind serves both versions, stores v1alpha2 and uses
+//     the webhook. The CRD of a kind that only has v1alpha2 has no webhook;
 //   - a v1alpha1 object reads as v1alpha2 with the converted fields, and back
 //     as v1alpha1 with exactly the fields that the client wrote;
 //   - a v1alpha2 object reads as v1alpha1 with the converted fields, and a
@@ -47,7 +48,7 @@ func TestConversion(t *testing.T) {
 	for _, version := range versions {
 		s := sets[version]
 		fixtures[version] = map[string]*unstructured.Unstructured{}
-		for _, o := range objects {
+		for _, o := range legacyObjects() {
 			u := s.render(t, o)
 			if err := unstructured.SetNestedField(u.Object, "Orphan", "spec", "deletionPolicy"); err != nil {
 				t.Fatal(err)
@@ -60,7 +61,7 @@ func TestConversion(t *testing.T) {
 	}
 	t.Cleanup(func() {
 		for _, version := range versions {
-			for _, o := range objects {
+			for _, o := range legacyObjects() {
 				u, err := sets[version].get(context.Background(), o, version)
 				if err == nil {
 					_ = kube.Delete(context.Background(), u)
@@ -71,7 +72,7 @@ func TestConversion(t *testing.T) {
 
 	t.Run("created-as-v1alpha1", func(t *testing.T) {
 		s := sets[v1alpha1]
-		for _, o := range objects {
+		for _, o := range legacyObjects() {
 			t.Run(o.testName(), func(t *testing.T) {
 				t.Parallel()
 				checkCreatedAsV1alpha1(t, s, o, fixtures[v1alpha1][o.file])
@@ -80,7 +81,7 @@ func TestConversion(t *testing.T) {
 	})
 	t.Run("created-as-v1alpha2", func(t *testing.T) {
 		s := sets[v1alpha2]
-		for _, o := range objects {
+		for _, o := range legacyObjects() {
 			t.Run(o.testName(), func(t *testing.T) {
 				t.Parallel()
 				checkCreatedAsV1alpha2(t, s, o, fixtures[v1alpha2][o.file])
@@ -100,7 +101,7 @@ func TestConversion(t *testing.T) {
 		restartProvider(t)
 		for _, version := range versions {
 			s := sets[version]
-			for _, o := range objects {
+			for _, o := range legacyObjects() {
 				t.Run(version+"/"+o.testName(), func(t *testing.T) {
 					for _, read := range versions {
 						if _, err := s.get(context.Background(), o, read); err != nil {
@@ -143,15 +144,26 @@ func testCRDs(t *testing.T) {
 					storage = name
 				}
 			}
+			if storage != v1alpha2 {
+				t.Errorf("the storage version is %q, want %s", storage, v1alpha2)
+			}
+			strategy, _, _ := unstructured.NestedString(crd, "spec", "conversion", "strategy")
+			if o.onlyV1alpha2 {
+				// A kind that was added after v1alpha1 was frozen.
+				if len(list) != 1 || !served[v1alpha2] {
+					t.Errorf("the CRD serves %v, want only %s", served, v1alpha2)
+				}
+				if strategy == "Webhook" {
+					t.Error("the conversion strategy is Webhook, but the kind has only one version")
+				}
+				return
+			}
 			for _, version := range versions {
 				if !served[version] {
 					t.Errorf("%s is not served", version)
 				}
 			}
-			if storage != v1alpha2 {
-				t.Errorf("the storage version is %q, want %s", storage, v1alpha2)
-			}
-			if strategy, _, _ := unstructured.NestedString(crd, "spec", "conversion", "strategy"); strategy != "Webhook" {
+			if strategy != "Webhook" {
 				t.Errorf("the conversion strategy is %q, want Webhook", strategy)
 			}
 			if ca, _, _ := unstructured.NestedString(crd, "spec", "conversion", "webhook", "clientConfig", "caBundle"); ca == "" {

@@ -25,8 +25,8 @@ const snapshotName = "e2e-upgrade-snapshot"
 // provider in place. run.sh runs it twice:
 //
 //   - E2E_UPGRADE_PHASE=before, with the released provider: create every
-//     kind as v1alpha1, wait until it is reconciled, and save the external
-//     names.
+//     kind that has v1alpha1 as v1alpha1, wait until it is reconciled, and
+//     save the external names.
 //   - E2E_UPGRADE_PHASE=after, after run.sh upgraded to the provider under
 //     test: every object must stay Ready with the same external name (so no
 //     resource was recreated), read correctly as v1alpha2, accept an update
@@ -48,7 +48,7 @@ func testBeforeUpgrade(t *testing.T, s *set) {
 		return
 	}
 	t.Run("reconcile", func(t *testing.T) {
-		for _, o := range objects {
+		for _, o := range s.objects() {
 			t.Run(o.testName(), func(t *testing.T) {
 				t.Parallel()
 				s.waitReconciled(t, o, providerReleased)
@@ -56,7 +56,7 @@ func testBeforeUpgrade(t *testing.T, s *set) {
 		}
 	})
 	snapshot := map[string]string{}
-	for _, o := range objects {
+	for _, o := range s.objects() {
 		u, err := s.get(context.Background(), o, v1alpha1)
 		if err != nil {
 			t.Fatalf("cannot read %s: %v", o.kind, err)
@@ -89,7 +89,7 @@ func testAfterUpgrade(t *testing.T, s *set) {
 	orphan := func(o object) bool { return o.onlySynced(createdBy(o)) != "" }
 
 	t.Run("reconcile", func(t *testing.T) {
-		for _, o := range objects {
+		for _, o := range s.objects() {
 			t.Run(o.testName(), func(t *testing.T) {
 				t.Parallel()
 				s.waitReconciled(t, o, createdBy(o))
@@ -109,7 +109,7 @@ func testAfterUpgrade(t *testing.T, s *set) {
 		}
 	})
 	t.Run("read-as-v1alpha2", func(t *testing.T) {
-		for _, o := range objects {
+		for _, o := range s.objects() {
 			t.Run(o.testName(), func(t *testing.T) {
 				t.Parallel()
 				checkOtherVersion(t, s, o)
@@ -119,7 +119,7 @@ func testAfterUpgrade(t *testing.T, s *set) {
 	// An update as v1alpha1 that reaches Infisical proves that the provider
 	// under test reconciles the existing objects.
 	t.Run("update-as-v1alpha1", func(t *testing.T) {
-		for _, o := range objects {
+		for _, o := range s.objects() {
 			t.Run(o.testName(), func(t *testing.T) {
 				t.Parallel()
 				if reason := o.onlySynced(createdBy(o)); reason != "" {

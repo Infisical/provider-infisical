@@ -16,7 +16,7 @@ import (
 //
 //   - create: the object becomes Ready and gets an external name;
 //   - read: the object can be read in the other API version, with the
-//     converted fields;
+//     converted fields, if its kind has both versions;
 //   - update: a change of the object reaches Infisical;
 //   - delete: the object and the Infisical resource are deleted.
 func TestLifecycle(t *testing.T) {
@@ -28,7 +28,7 @@ func TestLifecycle(t *testing.T) {
 
 			if t.Run("create", func(t *testing.T) { s.createAll(t, providerUnderTest) }) {
 				t.Run("reconcile", func(t *testing.T) {
-					for _, o := range objects {
+					for _, o := range s.objects() {
 						t.Run(o.testName(), func(t *testing.T) {
 							t.Parallel()
 							s.waitReconciled(t, o, providerUnderTest)
@@ -37,7 +37,10 @@ func TestLifecycle(t *testing.T) {
 					}
 				})
 				t.Run("read-as-"+otherVersion(version), func(t *testing.T) {
-					for _, o := range objects {
+					for _, o := range s.objects() {
+						if !o.hasVersion(otherVersion(version)) {
+							continue
+						}
 						t.Run(o.testName(), func(t *testing.T) {
 							t.Parallel()
 							checkOtherVersion(t, s, o)
@@ -45,7 +48,7 @@ func TestLifecycle(t *testing.T) {
 					}
 				})
 				t.Run("update", func(t *testing.T) {
-					for _, o := range objects {
+					for _, o := range s.objects() {
 						t.Run(o.testName(), func(t *testing.T) {
 							t.Parallel()
 							if reason := o.onlySynced(providerUnderTest); reason != "" {

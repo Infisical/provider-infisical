@@ -47,7 +47,7 @@ The example adds `infisical_secret_sync_aws_parameter_store`.
    ```
 
 6. **Add e2e tests** (optional): add a fixture to `test/e2e/testdata/v1alpha2/`
-   and an entry to `test/e2e/objects_test.go`. See `test/e2e/README.md`.
+   and an entry with `onlyV1alpha2: true` to `test/e2e/objects_test.go`.
 
 7. **Commit** the config changes and all the generated files.
 

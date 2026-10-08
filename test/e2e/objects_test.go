@@ -6,6 +6,12 @@ Copyright 2026 Infisical Inc.
 
 package e2e
 
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
 // provider is the provider that creates an object in Infisical.
 type provider int
 
@@ -29,6 +35,11 @@ type object struct {
 	// parent objects are created first and deleted last, because other
 	// objects reference them.
 	parent bool
+
+	// onlyV1alpha2 is true for kinds that were added after v1alpha1 was
+	// frozen. They only have a v1alpha2 API and fixture, and the conversion
+	// and upgrade tests skip them. All other kinds have both API versions.
+	onlyV1alpha2 bool
 
 	// notReady returns why the object cannot become ready in the test when
 	// the given provider creates it. nil means it always becomes ready.
@@ -223,6 +234,48 @@ var objects = []object{
 			v1alpha2: {set: `{"secretReminder":{"note":"updated by e2e"}}`, check: "status.atProvider.secretReminder.note", want: `"updated by e2e"`},
 		},
 	},
+}
+
+// hasVersion reports whether the kind of the object has the API version.
+func (o object) hasVersion(version string) bool {
+	return version == v1alpha2 || !o.onlyV1alpha2
+}
+
+// objectsIn returns the test objects whose kind has the API version.
+func objectsIn(version string) []object {
+	var out []object
+	for _, o := range objects {
+		if o.hasVersion(version) {
+			out = append(out, o)
+		}
+	}
+	return out
+}
+
+// legacyObjects returns the test objects whose kind has both API versions,
+// which are the kinds that the conversion and upgrade tests cover.
+func legacyObjects() []object {
+	return objectsIn(v1alpha1)
+}
+
+// checkFixtures returns the problems with the fixture files: every object
+// needs a v1alpha2 fixture, and a v1alpha1 fixture only when its kind has
+// v1alpha1.
+func checkFixtures() []string {
+	var problems []string
+	for _, o := range objects {
+		for _, version := range versions {
+			path := filepath.Join("testdata", version, o.file+".yaml")
+			_, err := os.Stat(path)
+			switch {
+			case o.hasVersion(version) && err != nil:
+				problems = append(problems, fmt.Sprintf("%s: %v", path, err))
+			case !o.hasVersion(version) && err == nil:
+				problems = append(problems, fmt.Sprintf("%s exists, but %s has onlyV1alpha2 set", path, o.kind))
+			}
+		}
+	}
+	return problems
 }
 
 // objectByFile returns the test object of the fixture file.

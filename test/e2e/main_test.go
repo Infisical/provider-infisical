@@ -82,6 +82,10 @@ func TestMain(m *testing.M) {
 		fmt.Fprintf(os.Stderr, "missing required environment variables: %s\n", strings.Join(missing, ", "))
 		os.Exit(1)
 	}
+	if problems := checkFixtures(); len(problems) > 0 {
+		fmt.Fprintf(os.Stderr, "the test fixtures do not match the test objects in objects_test.go:\n  %s\n", strings.Join(problems, "\n  "))
+		os.Exit(1)
+	}
 
 	cfg, err := ctrlconfig.GetConfig()
 	if err != nil {
@@ -156,6 +160,11 @@ func (s *set) renderJSON(t *testing.T, raw string) any {
 	return v
 }
 
+// objects returns the test objects whose kind has the API version of the set.
+func (s *set) objects() []object {
+	return objectsIn(s.version)
+}
+
 // name returns the Kubernetes name of the object in this set.
 func (s *set) name(o object) string {
 	return s.prefix + "-" + o.name
@@ -195,12 +204,12 @@ func (s *set) create(t *testing.T, o object) {
 // has an ID.
 func (s *set) createAll(t *testing.T, createdBy provider) {
 	t.Helper()
-	for _, o := range objects {
+	for _, o := range s.objects() {
 		if o.parent {
 			s.create(t, o)
 		}
 	}
-	for _, o := range objects {
+	for _, o := range s.objects() {
 		if o.parent {
 			s.waitReconciled(t, o, createdBy)
 		}
@@ -210,7 +219,7 @@ func (s *set) createAll(t *testing.T, createdBy provider) {
 		t.Fatalf("cannot get the Project: %v", err)
 	}
 	s.projectID, _ = fieldString(project, "status.atProvider.id")
-	for _, o := range objects {
+	for _, o := range s.objects() {
 		if !o.parent {
 			s.create(t, o)
 		}
@@ -315,7 +324,7 @@ func (s *set) deleteAll(t *testing.T, orphan func(object) bool) {
 	t.Helper()
 	for _, parents := range []bool{false, true} {
 		t.Run(map[bool]string{false: "children", true: "parents"}[parents], func(t *testing.T) {
-			for _, o := range objects {
+			for _, o := range s.objects() {
 				if o.parent != parents {
 					continue
 				}

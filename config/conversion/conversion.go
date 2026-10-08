@@ -108,10 +108,13 @@ func (c *pavedConversion) up(src, target *fieldpath.Paved, prefix string, stored
 			return err
 		}
 	}
-	// use the saved v1alpha2 values while they still give the current v1alpha1 values, so that values that v1alpha1 cannot show are kept
+	// use the saved v1alpha2 values while the v1alpha1 values still hold the same data, so that values that v1alpha1 cannot show are kept.
+	// compare as v1alpha2 values: the same data can be different JSON text in v1alpha1
 	if len(saved) > 0 {
-		if back, err := c.fields.Down(saved); err == nil && sameValues(back, in) {
-			out = saved
+		if back, err := c.fields.Down(saved); err == nil {
+			if forth, err := c.upOf(back); err == nil && sameStored(forth, out) {
+				out = saved
+			}
 		}
 	}
 	// keep the original v1alpha1 values for the way back
@@ -135,15 +138,27 @@ func (c *pavedConversion) down(src, target *fieldpath.Paved, prefix string, stor
 			return err
 		}
 	}
-	// use the saved original v1alpha1 values while they still give the current v1alpha2 values, so that a v1alpha1 client gets back exactly what it wrote
+	// use the saved original v1alpha1 values while they hold the data that v1alpha1 shows now, so that a v1alpha1 client gets back exactly what it wrote.
+	// compare only the data that v1alpha1 can show, because the saved text cannot hold v1alpha2-only values
 	if len(saved) > 0 {
-		if forth, err := c.fields.Up(saved); err == nil && sameValues(forth, in) {
-			out = saved
+		if forth, err := c.upOf(saved); err == nil {
+			if shown, err := c.upOf(out); err == nil && sameStored(forth, shown) {
+				out = saved
+			}
 		}
 	}
 	// keep the v1alpha2 values for the way back
 	putStored(stored, VersionV1alpha2, prefix, in)
 	return setFields(target, prefix, out)
+}
+
+// upOf returns the v1alpha2 values for the given v1alpha1 values. Up is only
+// called with values, because it expects the fields that it converts.
+func (c *pavedConversion) upOf(v1alpha1 map[string]any) (map[string]any, error) {
+	if len(v1alpha1) == 0 {
+		return map[string]any{}, nil
+	}
+	return c.fields.Up(v1alpha1)
 }
 
 // takeStored removes the saved values of the given version and fields from stored, and returns them keyed by field name
@@ -256,22 +271,24 @@ func setStoredFields(p *fieldpath.Paved, stored map[string]any) error {
 	return p.SetValue("metadata.annotations", annotations)
 }
 
-// sameValues reports whether two sets of field values are the same once they
-// are stored. omitempty drops empty values (null, "", [] and {}) when an object
-// is stored, so an empty value is the same as no value. A JSON string is
-// compared by its parsed value, so key order and spacing do not matter.
-func sameValues(a, b any) bool {
-	ja, err := prunedJSON(a)
+// sameStored reports whether two sets of v1alpha2 field values are the same
+// once they are stored. The v1alpha2 types drop null values and empty lists
+// (nil pointers and empty slices with omitempty), so these are the same as no
+// value. Empty strings and empty objects stay, because the types keep them.
+// Strings are compared as they are.
+func sameStored(a, b map[string]any) bool {
+	ja, err := storedJSON(a)
 	if err != nil {
 		return false
 	}
-	jb, err := prunedJSON(b)
+	jb, err := storedJSON(b)
 	return err == nil && ja == jb
 }
 
-// prunedJSON returns the JSON of v without its empty values.
-func prunedJSON(v any) (string, error) {
-	raw, err := json.Marshal(v)
+// storedJSON returns the JSON of the field values without the values that the
+// v1alpha2 types drop.
+func storedJSON(fields map[string]any) (string, error) {
+	raw, err := json.Marshal(fields)
 	if err != nil {
 		return "", err
 	}
@@ -279,43 +296,33 @@ func prunedJSON(v any) (string, error) {
 	if err := json.Unmarshal(raw, &generic); err != nil {
 		return "", err
 	}
-	raw, err = json.Marshal(pruneEmpty(generic))
+	out := dropOmitted(generic)
+	if out == nil {
+		out = map[string]any{}
+	}
+	raw, err = json.Marshal(out)
 	return string(raw), err
 }
 
-// pruneEmpty returns v without its empty values, or nil if v is empty. The
-// elements of a list are kept in place, because their position has a meaning.
-func pruneEmpty(v any) any {
+// dropOmitted removes the object keys whose value is null or an empty list.
+// The elements of a list are kept in place, because their position has a
+// meaning.
+func dropOmitted(v any) any {
 	switch t := v.(type) {
-	case string:
-		if t == "" {
-			return nil
-		}
-		var parsed any
-		if err := json.Unmarshal([]byte(t), &parsed); err == nil {
-			if _, ok := parsed.(string); !ok {
-				return pruneEmpty(parsed)
-			}
-		}
-		return t
 	case map[string]any:
-		out := map[string]any{}
+		out := make(map[string]any, len(t))
 		for k, val := range t {
-			if p := pruneEmpty(val); p != nil {
-				out[k] = p
+			val = dropOmitted(val)
+			if list, ok := val.([]any); val == nil || (ok && len(list) == 0) {
+				continue
 			}
-		}
-		if len(out) == 0 {
-			return nil
+			out[k] = val
 		}
 		return out
 	case []any:
-		if len(t) == 0 {
-			return nil
-		}
 		out := make([]any, len(t))
 		for i, val := range t {
-			out[i] = pruneEmpty(val)
+			out[i] = dropOmitted(val)
 		}
 		return out
 	default:
