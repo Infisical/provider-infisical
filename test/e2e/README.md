@@ -14,7 +14,7 @@ also in Infisical.
 
 | Suite | Go tests | What it checks |
 |---|---|---|
-| `install` | `TestConversion` | Every CRD serves both versions, stores `v1alpha2` and uses the conversion webhook. Every kind converts from `v1alpha1` to `v1alpha2` and back with exactly the fields that the client wrote (also the same JSON strings). A `v1alpha1` client can update a `v1alpha2` object without losing `v1alpha2`-only data. The webhook works again after the provider pod restarts. These tests do not call Infisical. |
+| `install` | `TestConversion` | Every CRD serves both versions, stores `v1alpha2` and uses the conversion webhook. Every kind converts from `v1alpha1` to `v1alpha2` and back with exactly the fields that the client wrote (also the same JSON strings). A `v1alpha1` client can update a `v1alpha2` object without losing `v1alpha2`-only data, also when the object uses a `v1alpha2`-only field (`projectId`, `environmentSlug`) instead of a field that `v1alpha1` required before. The webhook works again after the provider pod restarts. These tests do not call Infisical. |
 | `install` | `TestLifecycle` | Every kind, in both versions, with the provider of this commit: it becomes Ready and gets an external name, reads correctly in the other version, a change reaches Infisical, and delete works. |
 | `upgrade` | `TestUpgrade` | Existing users keep working. The released provider (`OLD_PROVIDER_PACKAGE`, default `v0.1.15`) creates every kind as `v1alpha1`. Then the provider is upgraded in place. Every object must stay Ready with the same external name (so no resource is recreated), read correctly as `v1alpha2`, accept an update as `v1alpha1`, and delete. |
 
