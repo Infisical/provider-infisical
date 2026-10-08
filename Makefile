@@ -13,13 +13,9 @@ TERRAFORM_VERSION_VALID := $(shell [ "$(TERRAFORM_VERSION)" = "`printf "$(TERRAF
 export TERRAFORM_PROVIDER_SOURCE ?= Infisical/infisical
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provider-infisical
 
-# DO NOT CHANGE. Version of the Crossplane-specific legacy Terraform build
-# ("crossplane-tf-provider/v*" tags). The frozen v1alpha1 API types in
-# apis/*/v1alpha1 were generated from its schema. Nothing in the build or the
-# provider image uses it any more.
-# Keep comments on their own line: make keeps the spaces before an inline
-# comment in the value.
-export TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION ?= 0.0.20
+# The frozen v1alpha1 API types in apis/*/v1alpha1 were generated from the
+# Crossplane-specific legacy Terraform build crossplane-tf-provider/v0.0.20.
+# They are never generated again / frozen in-place and are unaffected by running "make generate".
 
 # Version of the normal Terraform provider release (the "v*" tags). The v1alpha2
 # API is generated from its schema, and the provider image runs it for all

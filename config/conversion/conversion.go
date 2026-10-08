@@ -110,7 +110,7 @@ func (c *pavedConversion) up(src, target *fieldpath.Paved, prefix string, stored
 	}
 	// use the saved v1alpha2 values while they still give the current v1alpha1 values, so that values that v1alpha1 cannot show are kept
 	if len(saved) > 0 {
-		if back, err := c.fields.Down(saved); err == nil && sameJSON(back, in) {
+		if back, err := c.fields.Down(saved); err == nil && sameValues(back, in) {
 			out = saved
 		}
 	}
@@ -137,7 +137,7 @@ func (c *pavedConversion) down(src, target *fieldpath.Paved, prefix string, stor
 	}
 	// use the saved original v1alpha1 values while they still give the current v1alpha2 values, so that a v1alpha1 client gets back exactly what it wrote
 	if len(saved) > 0 {
-		if forth, err := c.fields.Up(saved); err == nil && sameJSON(forth, in) {
+		if forth, err := c.fields.Up(saved); err == nil && sameValues(forth, in) {
 			out = saved
 		}
 	}
@@ -252,25 +252,69 @@ func setStoredFields(p *fieldpath.Paved, stored map[string]any) error {
 	return p.SetValue("metadata.annotations", annotations)
 }
 
-// sameJSON reports whether two values have the same JSON representation.
-func sameJSON(a, b any) bool {
-	ja, err := normalize(a)
+// sameValues reports whether two sets of field values are the same once they
+// are stored. omitempty drops empty values (null, "", [] and {}) when an object
+// is stored, so an empty value is the same as no value. A JSON string is
+// compared by its parsed value, so key order and spacing do not matter.
+func sameValues(a, b any) bool {
+	ja, err := prunedJSON(a)
 	if err != nil {
 		return false
 	}
-	jb, err := normalize(b)
+	jb, err := prunedJSON(b)
 	return err == nil && ja == jb
 }
 
-func normalize(v any) (string, error) {
+// prunedJSON returns the JSON of v without its empty values.
+func prunedJSON(v any) (string, error) {
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return "", err
 	}
-	var out any
-	if err := json.Unmarshal(raw, &out); err != nil {
+	var generic any
+	if err := json.Unmarshal(raw, &generic); err != nil {
 		return "", err
 	}
-	raw, err = json.Marshal(out)
+	raw, err = json.Marshal(pruneEmpty(generic))
 	return string(raw), err
+}
+
+// pruneEmpty returns v without its empty values, or nil if v is empty. The
+// elements of a list are kept in place, because their position has a meaning.
+func pruneEmpty(v any) any {
+	switch t := v.(type) {
+	case string:
+		if t == "" {
+			return nil
+		}
+		var parsed any
+		if err := json.Unmarshal([]byte(t), &parsed); err == nil {
+			if _, ok := parsed.(string); !ok {
+				return pruneEmpty(parsed)
+			}
+		}
+		return t
+	case map[string]any:
+		out := map[string]any{}
+		for k, val := range t {
+			if p := pruneEmpty(val); p != nil {
+				out[k] = p
+			}
+		}
+		if len(out) == 0 {
+			return nil
+		}
+		return out
+	case []any:
+		if len(t) == 0 {
+			return nil
+		}
+		out := make([]any, len(t))
+		for i, val := range t {
+			out[i] = pruneEmpty(val)
+		}
+		return out
+	default:
+		return v
+	}
 }

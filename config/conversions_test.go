@@ -350,3 +350,123 @@ spec:
 		t.Errorf("v1alpha1 roles after a change in v1alpha2: want %s, got %v", want, got)
 	}
 }
+
+// stored returns the object after it is written as JSON and read back, the
+// same way the API server stores it. omitempty drops the empty values.
+func stored(t *testing.T, s *runtime.Scheme, obj resource.Terraformed) resource.Terraformed {
+	t.Helper()
+	raw, err := json.Marshal(obj)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := newObject(t, s, obj, obj.GetObjectKind().GroupVersionKind().Version)
+	if err := json.Unmarshal(raw, out); err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// TestEmptyValuesAreKept checks that a v1alpha1 client gets back the empty
+// JSON values that it wrote, after the object is stored as v1alpha2.
+func TestEmptyValuesAreKept(t *testing.T) {
+	s := setup(t)
+	cases := map[string]struct {
+		manifest string
+		fields   map[string]string
+	}{
+		"EmptyList": {
+			manifest: `
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectTemplate
+metadata: {name: pt}
+spec:
+  forProvider:
+    name: pt
+    roles: '[]'
+    environments: '[{"name":"Dev","slug":"dev","position":1}]'
+`,
+			fields: map[string]string{"roles": `[]`, "environments": `[{"name":"Dev","slug":"dev","position":1}]`},
+		},
+		"EmptyString": {
+			manifest: `
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectTemplate
+metadata: {name: pt}
+spec:
+  forProvider:
+    name: pt
+    roles: ''
+`,
+			fields: map[string]string{"roles": ``},
+		},
+		"EmptyObject": {
+			manifest: `
+apiVersion: secretsync.crossplane.infisical.com/v1alpha1
+kind: SecretSyncGithub
+metadata: {name: sg}
+spec:
+  forProvider:
+    name: sg
+    syncOptions: '{}'
+    destinationConfig: '{"scope":"repository","repository_owner":"o","repository_name":"r"}'
+`,
+			fields: map[string]string{"syncOptions": `{}`, "destinationConfig": `{"scope":"repository","repository_owner":"o","repository_name":"r"}`},
+		},
+		"EmptyListOfProjectIdentity": {
+			manifest: `
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectIdentity
+metadata: {name: pi}
+spec:
+  forProvider:
+    projectId: p
+    identityId: i
+    roles: '[]'
+`,
+			fields: map[string]string{"roles": `[]`},
+		},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			v1 := decode(t, s, c.manifest)
+			back := down(t, s, stored(t, s, up(t, s, v1)))
+			for field, want := range c.fields {
+				got := value(t, back, "spec.forProvider."+field)
+				if got != want {
+					t.Errorf("spec.forProvider.%s read back as v1alpha1: want %q, got %s", field, want, jsonOf(t, got))
+				}
+			}
+		})
+	}
+}
+
+// TestEmptyValueIsNotUsedAfterAChange checks that a saved empty value is not
+// used after a v1alpha2 client sets a value.
+func TestEmptyValueIsNotUsedAfterAChange(t *testing.T) {
+	s := setup(t)
+	v1 := decode(t, s, `
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectIdentity
+metadata: {name: pi}
+spec:
+  forProvider:
+    projectId: p
+    identityId: i
+    roles: '[]'
+`)
+	v2 := stored(t, s, up(t, s, v1))
+	u, err := runtime.DefaultUnstructuredConverter.ToUnstructured(v2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := fieldpath.Pave(u).SetValue("spec.forProvider.roles", []any{map[string]any{"roleSlug": "viewer"}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u, v2); err != nil {
+		t.Fatal(err)
+	}
+	got := value(t, down(t, s, stored(t, s, v2)), "spec.forProvider.roles")
+	if want := `[{"role_slug":"viewer"}]`; got != want {
+		t.Errorf("v1alpha1 roles after a change in v1alpha2: want %s, got %v", want, got)
+	}
+}

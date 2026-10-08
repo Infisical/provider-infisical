@@ -58,5 +58,4 @@ The example adds `infisical_secret_sync_aws_parameter_store`.
 3. Look at the changes in `package/crds/`. If a field of an existing kind is
    removed or changes its type, that is a breaking change for users.
 
-Never change `TERRAFORM_CROSSPLANE_SPECIFIC_LEGACY_VERSION` or the files in
-`apis/*/v1alpha1/`.
+Never change the files in `apis/*/v1alpha1/`.
