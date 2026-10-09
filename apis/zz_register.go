@@ -10,14 +10,16 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
+	v1alpha2 "github.com/infisical/provider-infisical/apis/appconnection/v1alpha2"
 	v1alpha1 "github.com/infisical/provider-infisical/apis/group/v1alpha1"
-	v1alpha2 "github.com/infisical/provider-infisical/apis/group/v1alpha2"
+	v1alpha2group "github.com/infisical/provider-infisical/apis/group/v1alpha2"
 	v1alpha1identity "github.com/infisical/provider-infisical/apis/identity/v1alpha1"
 	v1alpha2identity "github.com/infisical/provider-infisical/apis/identity/v1alpha2"
 	v1alpha1project "github.com/infisical/provider-infisical/apis/project/v1alpha1"
 	v1alpha2project "github.com/infisical/provider-infisical/apis/project/v1alpha2"
 	v1alpha1secret "github.com/infisical/provider-infisical/apis/secret/v1alpha1"
 	v1alpha2secret "github.com/infisical/provider-infisical/apis/secret/v1alpha2"
+	v1alpha2secretrotation "github.com/infisical/provider-infisical/apis/secretrotation/v1alpha2"
 	v1alpha1secretsync "github.com/infisical/provider-infisical/apis/secretsync/v1alpha1"
 	v1alpha2secretsync "github.com/infisical/provider-infisical/apis/secretsync/v1alpha2"
 	v1alpha1apis "github.com/infisical/provider-infisical/apis/v1alpha1"
@@ -27,14 +29,16 @@ import (
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
-		v1alpha1.SchemeBuilder.AddToScheme,
 		v1alpha2.SchemeBuilder.AddToScheme,
+		v1alpha1.SchemeBuilder.AddToScheme,
+		v1alpha2group.SchemeBuilder.AddToScheme,
 		v1alpha1identity.SchemeBuilder.AddToScheme,
 		v1alpha2identity.SchemeBuilder.AddToScheme,
 		v1alpha1project.SchemeBuilder.AddToScheme,
 		v1alpha2project.SchemeBuilder.AddToScheme,
 		v1alpha1secret.SchemeBuilder.AddToScheme,
 		v1alpha2secret.SchemeBuilder.AddToScheme,
+		v1alpha2secretrotation.SchemeBuilder.AddToScheme,
 		v1alpha1secretsync.SchemeBuilder.AddToScheme,
 		v1alpha2secretsync.SchemeBuilder.AddToScheme,
 		v1alpha1apis.SchemeBuilder.AddToScheme,
