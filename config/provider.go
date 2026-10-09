@@ -9,10 +9,12 @@ import (
 	_ "embed"
 
 	ujconfig "github.com/crossplane/upjet/v2/pkg/config"
+	"github.com/infisical/provider-infisical/config/appconnection"
 	"github.com/infisical/provider-infisical/config/group"
 	"github.com/infisical/provider-infisical/config/identity"
 	"github.com/infisical/provider-infisical/config/project"
 	"github.com/infisical/provider-infisical/config/secret"
+	"github.com/infisical/provider-infisical/config/secretrotation"
 	"github.com/infisical/provider-infisical/config/secretsync"
 )
 
@@ -45,6 +47,8 @@ func GetProvider() *ujconfig.Provider {
 		group.Configure,
 		secretsync.Configure,
 		secret.Configure,
+		secretrotation.Configure,
+		appconnection.Configure,
 	} {
 		configure(pc)
 	}
