@@ -9,6 +9,7 @@ import (
 
 	"github.com/crossplane/upjet/v2/pkg/controller"
 
+	appconnectionazureclientsecrets "github.com/infisical/provider-infisical/internal/controller/appconnection/appconnectionazureclientsecrets"
 	group "github.com/infisical/provider-infisical/internal/controller/group/group"
 	identity "github.com/infisical/provider-infisical/internal/controller/identity/identity"
 	kubernetesauth "github.com/infisical/provider-infisical/internal/controller/identity/kubernetesauth"
@@ -25,6 +26,7 @@ import (
 	providerconfig "github.com/infisical/provider-infisical/internal/controller/providerconfig"
 	secret "github.com/infisical/provider-infisical/internal/controller/secret/secret"
 	secretfolder "github.com/infisical/provider-infisical/internal/controller/secret/secretfolder"
+	secretrotationazureclientsecret "github.com/infisical/provider-infisical/internal/controller/secretrotation/secretrotationazureclientsecret"
 	secretsyncgithub "github.com/infisical/provider-infisical/internal/controller/secretsync/secretsyncgithub"
 )
 
@@ -32,6 +34,7 @@ import (
 // the supplied manager.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		appconnectionazureclientsecrets.Setup,
 		group.Setup,
 		identity.Setup,
 		kubernetesauth.Setup,
@@ -48,6 +51,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		providerconfig.Setup,
 		secret.Setup,
 		secretfolder.Setup,
+		secretrotationazureclientsecret.Setup,
 		secretsyncgithub.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {
@@ -61,6 +65,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 // the supplied manager gated.
 func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 	for _, setup := range []func(ctrl.Manager, controller.Options) error{
+		appconnectionazureclientsecrets.SetupGated,
 		group.SetupGated,
 		identity.SetupGated,
 		kubernetesauth.SetupGated,
@@ -77,6 +82,7 @@ func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 		providerconfig.SetupGated,
 		secret.SetupGated,
 		secretfolder.SetupGated,
+		secretrotationazureclientsecret.SetupGated,
 		secretsyncgithub.SetupGated,
 	} {
 		if err := setup(mgr, o); err != nil {
@@ -89,6 +95,7 @@ func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 // SetupWebhookWithManager registers conversion webhooks for all resource kinds in the group.
 func SetupWebhookWithManager(mgr ctrl.Manager) error {
 	for _, setup := range []func(ctrl.Manager) error{
+		appconnectionazureclientsecrets.SetupWebhookWithManager,
 		group.SetupWebhookWithManager,
 		identity.SetupWebhookWithManager,
 		kubernetesauth.SetupWebhookWithManager,
@@ -105,6 +112,7 @@ func SetupWebhookWithManager(mgr ctrl.Manager) error {
 		providerconfig.SetupWebhookWithManager,
 		secret.SetupWebhookWithManager,
 		secretfolder.SetupWebhookWithManager,
+		secretrotationazureclientsecret.SetupWebhookWithManager,
 		secretsyncgithub.SetupWebhookWithManager,
 	} {
 		if err := setup(mgr); err != nil {
