@@ -211,7 +211,6 @@ type SecretApprovalPolicyStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // SecretApprovalPolicy is the Schema for the SecretApprovalPolicys API. Create secret approval policy for your projects
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
@@ -222,7 +221,6 @@ type SecretApprovalPolicyStatus struct {
 type SecretApprovalPolicy struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.environmentSlugs) || (has(self.initProvider) && has(self.initProvider.environmentSlugs))",message="spec.forProvider.environmentSlugs is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.requiredApprovals) || (has(self.initProvider) && has(self.initProvider.requiredApprovals))",message="spec.forProvider.requiredApprovals is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.secretPath) || (has(self.initProvider) && has(self.initProvider.secretPath))",message="spec.forProvider.secretPath is a required parameter"
 	Spec   SecretApprovalPolicySpec   `json:"spec"`

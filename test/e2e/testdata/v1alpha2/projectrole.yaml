@@ -1,0 +1,18 @@
+apiVersion: project.crossplane.infisical.com/v1alpha2
+kind: ProjectRole
+metadata:
+  name: __PREFIX__-project-role
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    name: e2e-role
+    slug: e2e-role
+    projectSlug: __PREFIX__-__RUN_ID__
+    description: crossplane e2e test
+    permissionsV2:
+      - action: [read]
+        subject: secrets
+        conditions: '{"environment":{"$eq":"dev"},"secretPath":{"$eq":"/"}}'

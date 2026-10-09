@@ -1,0 +1,110 @@
+name: E2E Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+concurrency:
+  group: e2e-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  GO_VERSION: "1.26.8"
+
+jobs:
+  build:
+    name: Build the provider
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        with:
+          submodules: true
+
+      - name: Fetch History
+        run: git fetch --prune --unshallow
+
+      - name: Setup Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build the provider image and package
+        run: make build
+
+      - name: Export the image and package
+        run: |
+          image="$(docker images --format '{{.Repository}}' | grep '/provider-infisical-amd64$' | head -n 1)"
+          test -n "${image}"
+          mkdir -p e2e-build
+          docker save "${image}" -o e2e-build/image.tar
+          echo "${image}" > e2e-build/image-name
+          cp _output/xpkg/linux_amd64/*.xpkg e2e-build/provider.xpkg
+
+      - name: Upload the image and package
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
+        with:
+          name: e2e-build
+          path: e2e-build
+          retention-days: 1
+
+  e2e:
+    name: ${{ matrix.suite }} / Crossplane ${{ matrix.crossplane-version }}
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        crossplane-version: ["1.16.5", "2.4.2"]
+        suite: [install, upgrade]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+        with:
+          submodules: true
+
+      - name: Setup Go
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Download the image and package
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        with:
+          name: e2e-build
+          path: e2e-build
+
+      - name: Load the image
+        run: |
+          docker load -i e2e-build/image.tar
+          echo "E2E_PROVIDER_IMAGE=$(cat e2e-build/image-name)" >> "${GITHUB_ENV}"
+
+      - name: Run the e2e tests
+        env:
+          INFISICAL_HOST: ${{ secrets.E2E_INFISICAL_HOST }}
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          INFISICAL_ORG_ID: ${{ secrets.INFISICAL_ORG_ID }}
+          INFISICAL_USER_EMAIL: ${{ secrets.INFISICAL_USER_EMAIL }}
+          INFISICAL_GITHUB_CONNECTION_ID: ${{ secrets.INFISICAL_GITHUB_CONNECTION_ID }}
+          INFISICAL_GITHUB_REPO_OWNER: ${{ secrets.INFISICAL_GITHUB_REPO_OWNER }}
+          INFISICAL_GITHUB_REPO_NAME: ${{ secrets.INFISICAL_GITHUB_REPO_NAME }}
+          E2E_ARTIFACTS_DIR: ${{ github.workspace }}/_output/e2e
+        run: |
+          make test-e2e \
+            E2E_SUITE=${{ matrix.suite }} \
+            CROSSPLANE_VERSION=${{ matrix.crossplane-version }} \
+            E2E_PROVIDER_IMAGE="${E2E_PROVIDER_IMAGE}" \
+            E2E_PROVIDER_XPKG="${PWD}/e2e-build/provider.xpkg"
+
+      - name: Upload the test results and diagnostics
+        if: always()
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
+        with:
+          name: e2e-${{ matrix.suite }}-crossplane-${{ matrix.crossplane-version }}
+          path: _output/e2e
+          if-no-files-found: ignore
+          retention-days: 14

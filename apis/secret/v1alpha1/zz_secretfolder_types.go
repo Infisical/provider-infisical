@@ -154,7 +154,6 @@ type SecretFolderStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // SecretFolder is the Schema for the SecretFolders API. Create secret folder & save to Infisical.
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"

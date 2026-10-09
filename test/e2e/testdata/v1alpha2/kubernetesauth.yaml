@@ -1,0 +1,17 @@
+apiVersion: identity.crossplane.infisical.com/v1alpha2
+kind: KubernetesAuth
+metadata:
+  name: __PREFIX__-kubernetes-auth
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    identityIdRef:
+      name: __PREFIX__-identity-kubernetes
+    kubernetesHost: https://example.com
+    allowedNamespaces:
+      - e2e
+    tokenReviewerMode: api
+    tokenReviewerJwt: e2e-test-token

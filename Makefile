@@ -12,11 +12,19 @@ TERRAFORM_VERSION_VALID := $(shell [ "$(TERRAFORM_VERSION)" = "`printf "$(TERRAF
 
 export TERRAFORM_PROVIDER_SOURCE ?= Infisical/infisical
 export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provider-infisical
-export TERRAFORM_PROVIDER_VERSION ?= 0.0.20
-export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical-crossplane
+
+# The frozen v1alpha1 API types in apis/*/v1alpha1 were generated from the
+# Crossplane-specific legacy Terraform build crossplane-tf-provider/v0.0.20.
+# They are never generated again / frozen in-place and are unaffected by running "make generate".
+
+# Version of the normal Terraform provider release (the "v*" tags). The v1alpha2
+# API is generated from its schema, and the provider image runs it for all
+# resources.
+export TERRAFORM_PROVIDER_VERSION ?= 0.20.1
+export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical
 export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_PROVIDER_VERSION)
 export TERRAFORM_DOCS_PATH ?= docs/resources
-export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?= ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)
+export TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX ?= ${TERRAFORM_PROVIDER_REPO}/releases/download/v$(TERRAFORM_PROVIDER_VERSION)
 
 export TERRAFORM_LOCAL_PROVIDER_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/bin
 export TERRAFORM_LOCAL_PROVIDER_REPO_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
@@ -51,6 +59,9 @@ GO_REQUIRED_VERSION ?= 1.26
 GOLANGCILINT_VERSION ?= 2.13.0
 GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/provider $(GO_PROJECT)/cmd/generator
 GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.Version=$(VERSION)
+GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.TerraformVersion=$(TERRAFORM_VERSION)
+GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.TerraformProviderSource=$(TERRAFORM_PROVIDER_SOURCE)
+GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.TerraformProviderVersion=$(TERRAFORM_PROVIDER_VERSION)
 GO_SUBDIRS += cmd internal apis
 -include build/makelib/golang.mk
 
@@ -136,9 +147,9 @@ $(TERRAFORM_PROVIDER_SCHEMA): $(TERRAFORM) download-provider-binary
 
 download-provider-binary:
 	@$(INFO) downloading provider binary from GitHub releases
-	@echo "Downloading from: ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip"
+	@echo "Downloading from: ${TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX}/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip"
 	@mkdir -p $(WORK_DIR)
-	@curl -L -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip
+	@curl -fL -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip ${TERRAFORM_PROVIDER_DOWNLOAD_URL_PREFIX}/${TERRAFORM_PROVIDER_DOWNLOAD_NAME}_$(TERRAFORM_PROVIDER_VERSION)_$(HOSTOS)_$(SAFEHOSTARCH).zip
 	@unzip -o $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY).zip -d $(WORK_DIR)
 	@chmod +x $(WORK_DIR)/$(TERRAFORM_NATIVE_PROVIDER_BINARY)
 	@$(OK) downloaded provider binary from GitHub releases
@@ -147,12 +158,12 @@ download-provider-binary:
 
 pull-docs:
 	@echo "Pulling docs for version v$(TERRAFORM_PROVIDER_VERSION)"
-	@if [ ! -d "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" ]; then \
-		mkdir -p "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"; \
-	fi
-	@rm -f $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip
-	@curl -L -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip ${TERRAFORM_PROVIDER_REPO}/releases/download/crossplane-tf-provider/v$(TERRAFORM_PROVIDER_VERSION)/crossplane-tf-provider-docs.zip
-	@unzip -o $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)/crossplane-tf-provider-docs.zip -d $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
+	@# Start from an empty folder, so that docs of other versions do not leak
+	@# into config/provider-metadata.yaml.
+	@rm -rf "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"
+	@mkdir -p "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"
+	@git clone -q -c advice.detachedHead=false --depth 1 --filter=blob:none --branch "v$(TERRAFORM_PROVIDER_VERSION)" --sparse "$(TERRAFORM_PROVIDER_REPO)" "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)"
+	@git -C "$(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)" sparse-checkout set "$(TERRAFORM_DOCS_PATH)"
 
 # The upjet code generator runs goimports on the generated files. Install the
 # version pinned by the tool directive in go.mod and put it on the PATH.
@@ -237,22 +248,20 @@ local-deploy: build controlplane.up local.xpkg.deploy.provider.$(PROJECT_NAME)
 
 e2e: local-deploy uptest
 
-# Crossplane compatibility test. It creates a kind cluster, installs Crossplane
-# $(CROSSPLANE_VERSION) and tests the provider that "make build" produced.
-#   COMPAT_MODE=fresh    install the local provider package
-#   COMPAT_MODE=upgrade  install the released provider, then upgrade it in place
-# Set COMPAT_ENV_FILE to a file with INFISICAL_* variables to test against a
-# real Infisical instance. See cluster/test/compat.sh for details.
-COMPAT_MODE ?= fresh
-COMPAT_PROVIDER_IMAGE ?= $(BUILD_REGISTRY)/$(PROJECT_NAME)-$(ARCH)
-COMPAT_PROVIDER_XPKG ?= $(XPKG_OUTPUT_DIR)/linux_$(ARCH)/$(PROJECT_NAME)-$(VERSION).xpkg
-compat-test: $(KIND) $(HELM) $(KUBECTL) $(CROSSPLANE_CLI)
-	@$(INFO) running the Crossplane $(CROSSPLANE_VERSION) compatibility test, mode $(COMPAT_MODE)
+# End-to-end tests in test/e2e. Run "make build" first. The tests need the
+# INFISICAL_* environment variables, see test/e2e/README.md.
+#   E2E_SUITE=install  API conversion tests, and the lifecycle of every kind in
+#                      both API versions, with the provider under test
+#   E2E_SUITE=upgrade  in-place upgrade from the released provider
+E2E_SUITE ?= install
+E2E_PROVIDER_IMAGE ?= $(BUILD_REGISTRY)/$(PROJECT_NAME)-$(ARCH)
+E2E_PROVIDER_XPKG ?= $(XPKG_OUTPUT_DIR)/linux_$(ARCH)/$(PROJECT_NAME)-$(VERSION).xpkg
+test-e2e: $(KIND) $(HELM) $(KUBECTL) $(CROSSPLANE_CLI)
+	@$(INFO) running the e2e $(E2E_SUITE) tests with Crossplane $(CROSSPLANE_VERSION)
 	@CROSSPLANE_VERSION=$(CROSSPLANE_VERSION) KIND=$(KIND) HELM=$(HELM) KUBECTL=$(KUBECTL) CROSSPLANE_CLI=$(CROSSPLANE_CLI) \
-		KIND_CLUSTER_NAME=infisical-compat-$(subst .,-,$(CROSSPLANE_VERSION))-$(COMPAT_MODE) \
-		PROVIDER_IMAGE=$(COMPAT_PROVIDER_IMAGE) PROVIDER_XPKG=$(COMPAT_PROVIDER_XPKG) \
-		./cluster/test/compat.sh $(COMPAT_MODE) || $(FAIL)
-	@$(OK) running the Crossplane $(CROSSPLANE_VERSION) compatibility test, mode $(COMPAT_MODE)
+		PROVIDER_IMAGE=$(E2E_PROVIDER_IMAGE) PROVIDER_XPKG=$(E2E_PROVIDER_XPKG) \
+		./test/e2e/run.sh $(E2E_SUITE) || $(FAIL)
+	@$(OK) running the e2e $(E2E_SUITE) tests with Crossplane $(CROSSPLANE_VERSION)
 
 crddiff: $(UPTEST)
 	@$(INFO) Checking breaking CRD schema changes
@@ -273,7 +282,7 @@ crddiff: $(UPTEST)
 
 schema-version-diff:
 	@$(INFO) Checking for native state schema version changes
-	@export PREV_PROVIDER_VERSION=$$(git cat-file -p "${GITHUB_BASE_REF}:Makefile" | sed -nr 's/^export[[:space:]]*TERRAFORM_PROVIDER_VERSION[[:space:]]*:=[[:space:]]*(.+)/\1/p'); \
+	@export PREV_PROVIDER_VERSION=$$(git cat-file -p "${GITHUB_BASE_REF}:Makefile" | sed -nr 's/^export[[:space:]]*TERRAFORM_PROVIDER_VERSION[[:space:]]*\??=[[:space:]]*(.+)/\1/p'); \
 	echo Detected previous Terraform provider version: $${PREV_PROVIDER_VERSION}; \
 	echo Current Terraform provider version: $${TERRAFORM_PROVIDER_VERSION}; \
 	mkdir -p $(WORK_DIR); \
@@ -281,7 +290,7 @@ schema-version-diff:
 	./scripts/version_diff.py config/generated.lst "$(WORK_DIR)/schema.json.$${PREV_PROVIDER_VERSION}" config/schema.json
 	@$(OK) Checking for native state schema version changes
 
-.PHONY: cobertura submodules fallthrough run crds.clean compat-test
+.PHONY: cobertura submodules fallthrough run crds.clean test-e2e
 
 # ====================================================================================
 # Special Targets

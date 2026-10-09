@@ -127,7 +127,6 @@ type ProjectIdentityStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // ProjectIdentity is the Schema for the ProjectIdentitys API. Create project identities & save to Infisical. Only Machine Identity authentication is supported for this data source
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"

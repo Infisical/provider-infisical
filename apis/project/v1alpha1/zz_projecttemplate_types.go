@@ -115,7 +115,6 @@ type ProjectTemplateStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // ProjectTemplate is the Schema for the ProjectTemplates API. Create project templates & save to Infisical. Only Machine Identity authentication is supported for this resource.
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"

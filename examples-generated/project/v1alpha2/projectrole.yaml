@@ -1,0 +1,48 @@
+apiVersion: project.crossplane.infisical.com/v1alpha2
+kind: ProjectRole
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha2/projectrole
+  labels:
+    testing.upbound.io/example-name: biller
+  name: biller
+spec:
+  forProvider:
+    description: A test role
+    name: Tester
+    permissionsV2:
+    - action:
+      - read
+      - create
+      subject: integrations
+    - action:
+      - describeSecret
+      - readValue
+      - edit
+      conditions: |-
+        ${jsonencode({
+                environment = {
+                  "$eq" = "dev"
+                }
+                secretPath = {
+                  "$eq" = "/"
+                }
+              })}
+      subject: secrets
+    projectSlug: gcp-project
+    slug: tester
+
+---
+
+apiVersion: project.crossplane.infisical.com/v1alpha2
+kind: Project
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha2/projectrole
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    name: example
+    slug: example

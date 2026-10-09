@@ -1,0 +1,16 @@
+apiVersion: project.crossplane.infisical.com/v1alpha2
+kind: ProjectIdentity
+metadata:
+  name: __PREFIX__-project-identity
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    projectIdRef:
+      name: __PREFIX__-project
+    identityIdRef:
+      name: __PREFIX__-identity
+    roles:
+      - roleSlug: viewer

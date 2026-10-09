@@ -1,0 +1,17 @@
+apiVersion: identity.crossplane.infisical.com/v1alpha2
+kind: UniversalAuth
+metadata:
+  name: __PREFIX__-universal-auth
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    accessTokenTtl: 2592000
+    identityIdRef:
+      name: __PREFIX__-identity
+    accessTokenTrustedIps:
+      - ipAddress: 0.0.0.0/0
+    clientSecretTrustedIps:
+      - ipAddress: 0.0.0.0/0

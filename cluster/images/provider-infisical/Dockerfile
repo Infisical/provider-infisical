@@ -39,10 +39,8 @@ RUN unzip /tmp/terraform_${TERRAFORM_VERSION}_${TARGETOS}_${TARGETARCH}.zip -d /
   && chown -R ${USER_ID}:${USER_ID} /terraform
 # End of - Setup Terraform environment
 
-# Provider controller needs these environment variable at runtime
-ENV TERRAFORM_VERSION ${TERRAFORM_VERSION}
-ENV TERRAFORM_PROVIDER_SOURCE ${TERRAFORM_PROVIDER_SOURCE}
-ENV TERRAFORM_PROVIDER_VERSION ${TERRAFORM_PROVIDER_VERSION}
+# The build writes the Terraform version and provider source into the provider
+# binary. This path is only for the shared gRPC mode in cmd/provider/main.go.
 ENV TERRAFORM_NATIVE_PROVIDER_PATH ${PLUGIN_DIR}/${TERRAFORM_NATIVE_PROVIDER_BINARY}
 
 USER ${USER_ID}

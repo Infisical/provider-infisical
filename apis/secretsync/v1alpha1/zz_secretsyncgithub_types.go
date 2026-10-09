@@ -218,7 +218,6 @@ type SecretSyncGithubStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // SecretSyncGithub is the Schema for the SecretSyncGithubs API. Create and manage Github secret syncs
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
