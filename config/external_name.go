@@ -37,6 +37,12 @@ func withPlaceholderID(e config.ExternalName) config.ExternalName {
 // ExternalNameConfigs contains all external name configurations for this
 // provider.
 var ExternalNameConfigs = map[string]config.ExternalName{
+
+	"infisical_secret_rotation_azure_client_secret": withPlaceholderID(config.IdentifierFromProvider),
+	"infisical_app_connection_azure_client_secrets": withPlaceholderID(config.IdentifierFromProvider),
+
+	// all of the below are supported on both v1alpha1 and v1alpha2
+	// on v1alpha1, they are converted to v1alpha2 by the conversion webhook
 	"infisical_project":                  withPlaceholderID(config.IdentifierFromProvider),
 	"infisical_identity":                 config.IdentifierFromProvider,
 	"infisical_group":                    config.IdentifierFromProvider,
