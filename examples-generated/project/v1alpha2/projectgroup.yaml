@@ -1,0 +1,38 @@
+apiVersion: project.crossplane.infisical.com/v1alpha2
+kind: ProjectGroup
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha2/projectgroup
+  labels:
+    testing.upbound.io/example-name: group
+  name: group
+spec:
+  forProvider:
+    groupIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+    groupName: <>
+    projectIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+    roles:
+    - isTemporary: true
+      roleSlug: admin
+      temporaryAccessStartTime: "2024-09-19T12:43:13Z"
+      temporaryRange: 1y
+    - roleSlug: my-custom-role
+
+---
+
+apiVersion: project.crossplane.infisical.com/v1alpha2
+kind: Project
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha2/projectgroup
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    name: example
+    slug: example

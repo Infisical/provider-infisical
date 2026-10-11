@@ -1,0 +1,13 @@
+apiVersion: group.crossplane.infisical.com/v1alpha2
+kind: Group
+metadata:
+  name: __PREFIX__-group
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    name: __PREFIX__-__RUN_ID__
+    slug: __PREFIX__-__RUN_ID__
+    role: member

@@ -5,14 +5,12 @@ import "github.com/crossplane/upjet/v2/pkg/config"
 func Configure(p *config.Provider) {
 	p.AddResourceConfigurator("infisical_identity", func(r *config.Resource) {
 		r.Kind = "Identity"
-		r.ExternalName.OmittedFields = []string{"metadata"}
 		r.ShortGroup = "identity"
 	})
 
 	p.AddResourceConfigurator("infisical_identity_universal_auth", func(r *config.Resource) {
 		r.Kind = "UniversalAuth"
 		r.ShortGroup = "identity"
-		r.ExternalName.OmittedFields = []string{"access_token_trusted_ips", "client_secret_trusted_ips"}
 		r.References["identity_id"] = config.Reference{
 			TerraformName: "infisical_identity",
 		}
@@ -21,7 +19,6 @@ func Configure(p *config.Provider) {
 	p.AddResourceConfigurator("infisical_identity_kubernetes_auth", func(r *config.Resource) {
 		r.Kind = "KubernetesAuth"
 		r.ShortGroup = "identity"
-		r.ExternalName.OmittedFields = []string{"access_token_trusted_ips"}
 		r.References["identity_id"] = config.Reference{
 			TerraformName: "infisical_identity",
 		}

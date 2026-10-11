@@ -18,19 +18,23 @@ import (
 	"github.com/crossplane/crossplane-runtime/v2/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/v2/pkg/statemetrics"
 	tjcontroller "github.com/crossplane/upjet/v2/pkg/controller"
+	ujconversion "github.com/crossplane/upjet/v2/pkg/controller/conversion"
 	"github.com/crossplane/upjet/v2/pkg/terraform"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/infisical/provider-infisical/apis"
 	"github.com/infisical/provider-infisical/config"
 	"github.com/infisical/provider-infisical/internal/clients"
 	"github.com/infisical/provider-infisical/internal/controller"
 	"github.com/infisical/provider-infisical/internal/features"
+	"github.com/infisical/provider-infisical/internal/version"
 )
 
 func main() {
@@ -44,11 +48,12 @@ func main() {
 		maxReconcileRate        = app.Flag("max-reconcile-rate", "The global maximum rate per second at which resources may be checked for drift from the desired state.").Default("10").Int()
 		metricsAddr             = app.Flag("metrics-bind-address", "The address the metric endpoint binds to.").Default("").Envar("METRICS_BIND_ADDRESS").String()
 
-		terraformVersion = app.Flag("terraform-version", "Terraform version.").Required().Envar("TERRAFORM_VERSION").String()
-		providerSource   = app.Flag("terraform-provider-source", "Terraform provider source.").Required().Envar("TERRAFORM_PROVIDER_SOURCE").String()
-		providerVersion  = app.Flag("terraform-provider-version", "Terraform provider version.").Required().Envar("TERRAFORM_PROVIDER_VERSION").String()
-
 		enableManagementPolicies = app.Flag("enable-management-policies", "Enable support for Management Policies.").Default("true").Envar("ENABLE_MANAGEMENT_POLICIES").Bool()
+
+		healthProbeBindAddr = app.Flag("health-probe-bind-addr", "The address the health probe endpoints (/healthz, /readyz) listen on.").Default(":8081").Envar("HEALTH_PROBE_BIND_ADDRESS").String()
+
+		webhookPort = app.Flag("webhook-port", "The port the API conversion webhook listens on.").Default("9443").Envar("WEBHOOK_PORT").Int()
+		certsDir    = app.Flag("certs-dir", "The directory with the TLS certificate (tls.crt) and key (tls.key) of the API conversion webhook. Default: the directory that Crossplane mounts.").Envar("CERTS_DIR").String()
 
 		// External Secret Stores were removed in Crossplane v2. These flags
 		// are kept as hidden no-ops, so that existing deployments that still
@@ -59,6 +64,12 @@ func main() {
 	)
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	// The build sets the Terraform settings from the Makefile, so that they
+	// always match the Terraform CLI and provider binaries in the image.
+	if version.TerraformVersion == "" || version.TerraformProviderSource == "" || version.TerraformProviderVersion == "" {
+		kingpin.Fatalf("the Terraform settings are not set: build the provider with make")
+	}
 
 	zl := zap.New(zap.UseDevMode(*debug))
 	log := logging.NewLogrLogger(zl.WithName("provider-infisical"))
@@ -80,10 +91,19 @@ func main() {
 		Cache: cache.Options{
 			SyncPeriod: syncPeriod,
 		},
+		HealthProbeBindAddress:     *healthProbeBindAddr,
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 		LeaseDuration:              func() *time.Duration { d := 60 * time.Second; return &d }(),
 		RenewDeadline:              func() *time.Duration { d := 50 * time.Second; return &d }(),
 	}
+
+	// Crossplane mounts the TLS certificate of the provider and sets one of
+	// these variables. Older Crossplane versions use WEBHOOK_TLS_CERT_DIR.
+	webhookCertsDir := firstNonEmpty(*certsDir, os.Getenv("TLS_SERVER_CERTS_DIR"), os.Getenv("WEBHOOK_TLS_CERT_DIR"), "/tls/server")
+	controllerOpts.WebhookServer = webhook.NewServer(webhook.Options{
+		CertDir: webhookCertsDir,
+		Port:    *webhookPort,
+	})
 
 	if metricsAddr != nil && *metricsAddr != "" {
 		controllerOpts.Metrics = metricsserver.Options{
@@ -118,7 +138,7 @@ func main() {
 		// use the following WorkspaceStoreOption to enable the shared gRPC mode
 		// terraform.WithProviderRunner(terraform.NewSharedProvider(log, os.Getenv("TERRAFORM_NATIVE_PROVIDER_PATH"), terraform.WithNativeProviderArgs("-debuggable")))
 		WorkspaceStore: terraform.NewWorkspaceStore(log),
-		SetupFn:        clients.TerraformSetupBuilder(*terraformVersion, *providerSource, *providerVersion),
+		SetupFn:        clients.TerraformSetupBuilder(version.TerraformVersion, version.TerraformProviderSource, version.TerraformProviderVersion),
 	}
 
 	if *enableExternalSecretStores {
@@ -130,6 +150,27 @@ func main() {
 		log.Info("Beta feature enabled", "flag", features.EnableBetaManagementPolicies)
 	}
 
+	// the managed resources serve v1alpha1 and v1alpha2. The API server calls this webhook to convert between them
+	if _, err := os.Stat(filepath.Join(webhookCertsDir, "tls.crt")); err == nil {
+		kingpin.FatalIfError(ujconversion.RegisterConversions(o.Provider, nil, mgr.GetScheme()), "Cannot register the API conversions")
+		kingpin.FatalIfError(controller.SetupWebhookWithManager(mgr), "Cannot setup the API conversion webhook")
+		// The API server cannot read or write the managed resources while the conversion webhook is down, so the provider is only ready when the webhook server has started
+		kingpin.FatalIfError(mgr.AddReadyzCheck("webhook", mgr.GetWebhookServer().StartedChecker()), "Cannot add the webhook readiness check")
+	} else {
+		log.Info("No TLS certificate for the API conversion webhook, the webhook is not started. Only the storage version of the APIs can be used.", "certs-dir", webhookCertsDir)
+		kingpin.FatalIfError(mgr.AddReadyzCheck("ping", healthz.Ping), "Cannot add the readiness check")
+	}
+	kingpin.FatalIfError(mgr.AddHealthzCheck("ping", healthz.Ping), "Cannot add the health check")
+
 	kingpin.FatalIfError(controller.Setup(mgr, o), "Cannot setup Infisical controllers")
 	kingpin.FatalIfError(mgr.Start(ctrl.SetupSignalHandler()), "Cannot start controller manager")
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }

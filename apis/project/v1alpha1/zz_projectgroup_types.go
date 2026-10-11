@@ -141,7 +141,6 @@ type ProjectGroupStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // ProjectGroup is the Schema for the ProjectGroups API. Create project groups & save to Infisical. Only Machine Identity authentication is supported for this data source
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"

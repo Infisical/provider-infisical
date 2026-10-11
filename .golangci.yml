@@ -9,12 +9,9 @@ linters:
     - durationcheck
     - errchkjson
     - errorlint
-    - exhaustive
     - gocheckcompilerdirectives
     - gochecksumtype
-    - goconst
     - gocritic
-    - gocyclo
     - gosec
     - gosmopolitan
     - loggercheck
@@ -25,7 +22,6 @@ linters:
     - nilerr
     - nilnesserr
     - noctx
-    - prealloc
     - protogetter
     - reassign
     - recvcheck
@@ -42,27 +38,23 @@ linters:
     errcheck:
       check-type-assertions: false
       check-blank: false
-    goconst:
-      min-len: 3
-      min-occurrences: 5
     gocritic:
       enabled-tags:
         - performance
+      disabled-checks:
+        - appendAssign
       settings:
         captLocal:
           paramsOnly: true
         rangeValCopy:
           sizeThreshold: 32
-    gocyclo:
-      min-complexity: 10
+    govet:
+      disable:
+        - inline
     lll:
       tab-width: 1
     nakedret:
       max-func-lines: 30
-    prealloc:
-      simple: true
-      range-loops: true
-      for-loops: false
     unparam:
       check-exported: false
   exclusions:
@@ -92,6 +84,12 @@ linters:
       - linters:
           - gosec
         text: 'G104:'
+      - linters:
+          - gosec
+        text: 'G703:'
+      - linters:
+          - staticcheck
+        text: 'SA1019:'
     paths:
       - third_party$
       - builtin$

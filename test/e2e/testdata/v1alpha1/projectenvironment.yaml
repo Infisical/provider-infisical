@@ -1,0 +1,14 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: ProjectEnvironment
+metadata:
+  name: __PREFIX__-environment
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    name: e2e
+    slug: e2e
+    projectIdRef:
+      name: __PREFIX__-project

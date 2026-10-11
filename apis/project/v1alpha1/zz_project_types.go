@@ -170,7 +170,6 @@ type ProjectStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // Project is the Schema for the Projects API. Create projects & save to Infisical. Only Machine Identity authentication is supported for this data source.
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"

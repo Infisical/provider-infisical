@@ -1,0 +1,16 @@
+apiVersion: identity.crossplane.infisical.com/v1alpha2
+kind: Identity
+metadata:
+  name: __PREFIX__-identity
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    name: __PREFIX__-__RUN_ID__
+    orgId: __ORG_ID__
+    role: member
+    metadata:
+      - key: team
+        value: e2e

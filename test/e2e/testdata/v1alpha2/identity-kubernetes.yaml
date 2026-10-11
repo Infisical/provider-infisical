@@ -1,0 +1,13 @@
+apiVersion: identity.crossplane.infisical.com/v1alpha2
+kind: Identity
+metadata:
+  name: __PREFIX__-identity-kubernetes
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    name: __PREFIX__-k8s-__RUN_ID__
+    orgId: __ORG_ID__
+    role: member

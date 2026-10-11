@@ -1,0 +1,13 @@
+apiVersion: identity.crossplane.infisical.com/v1alpha1
+kind: UniversalAuth
+metadata:
+  name: __PREFIX__-universal-auth
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    accessTokenTtl: 2592000
+    identityIdRef:
+      name: __PREFIX__-identity

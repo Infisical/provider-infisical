@@ -1,0 +1,47 @@
+apiVersion: project.crossplane.infisical.com/v1alpha2
+kind: AccessApprovalPolicy
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha2/accessapprovalpolicy
+  labels:
+    testing.upbound.io/example-name: prod-policy
+  name: prod-policy
+spec:
+  forProvider:
+    allowSelfApproval: true
+    approvers:
+    - id: 7c13f73b-c09b-4752-aea6-9b691ba3eb45
+      type: group
+    - type: user
+      username: admin@infisical.com
+    bypassers:
+    - id: 7c13f73b-c09b-4752-aea6-9b691ba3eb45
+      type: group
+    - id: admin@infisical.com
+      type: user
+    enforcementLevel: soft
+    environmentSlugs:
+    - prod
+    maxTimePeriod: 24h
+    name: my-approval-policy
+    projectIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+    requestExpirationTime: 72h
+    requiredApprovals: 1
+    secretPath: /
+
+---
+
+apiVersion: project.crossplane.infisical.com/v1alpha2
+kind: Project
+metadata:
+  annotations:
+    meta.upbound.io/example-id: project/v1alpha2/accessapprovalpolicy
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+spec:
+  forProvider:
+    name: example
+    slug: example

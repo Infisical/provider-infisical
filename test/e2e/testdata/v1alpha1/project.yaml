@@ -1,0 +1,14 @@
+apiVersion: project.crossplane.infisical.com/v1alpha1
+kind: Project
+metadata:
+  name: __PREFIX__-project
+  labels:
+    e2e.infisical.com/run: __RUN_ID__
+spec:
+  providerConfigRef:
+    name: __PROVIDER_CONFIG__
+  forProvider:
+    name: __PREFIX__-__RUN_ID__
+    slug: __PREFIX__-__RUN_ID__
+    type: secret-manager
+    description: crossplane e2e test

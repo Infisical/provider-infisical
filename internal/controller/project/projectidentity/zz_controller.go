@@ -21,15 +21,15 @@ import (
 	"github.com/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	v1alpha1 "github.com/infisical/provider-infisical/apis/project/v1alpha1"
+	v1alpha2 "github.com/infisical/provider-infisical/apis/project/v1alpha2"
 	features "github.com/infisical/provider-infisical/internal/features"
 )
 
 // SetupWebhookWithManager registers the conversion webhook for ProjectIdentity.
 func SetupWebhookWithManager(mgr ctrl.Manager) error {
-	if err := ctrl.NewWebhookManagedBy(mgr, &v1alpha1.ProjectIdentity{}).
+	if err := ctrl.NewWebhookManagedBy(mgr, &v1alpha2.ProjectIdentity{}).
 		Complete(); err != nil {
-		return errors.Wrap(err, "cannot register webhook for the kind v1alpha1.ProjectIdentity")
+		return errors.Wrap(err, "cannot register webhook for the kind v1alpha2.ProjectIdentity")
 	}
 	return nil
 }
@@ -38,18 +38,18 @@ func SetupWebhookWithManager(mgr ctrl.Manager) error {
 func SetupGated(mgr ctrl.Manager, o tjcontroller.Options) error {
 	o.Options.Gate.Register(func() {
 		if err := Setup(mgr, o); err != nil {
-			mgr.GetLogger().Error(err, "unable to setup reconciler", "gvk", v1alpha1.ProjectIdentity_GroupVersionKind.String())
+			mgr.GetLogger().Error(err, "unable to setup reconciler", "gvk", v1alpha2.ProjectIdentity_GroupVersionKind.String())
 		}
-	}, v1alpha1.ProjectIdentity_GroupVersionKind)
+	}, v1alpha2.ProjectIdentity_GroupVersionKind)
 	return nil
 }
 
 // Setup adds a controller that reconciles ProjectIdentity managed resources.
 func Setup(mgr ctrl.Manager, o tjcontroller.Options) error {
-	name := managed.ControllerName(v1alpha1.ProjectIdentity_GroupVersionKind.String())
+	name := managed.ControllerName(v1alpha2.ProjectIdentity_GroupVersionKind.String())
 	var initializers managed.InitializerChain
-	eventHandler := handler.NewEventHandler(handler.WithLogger(o.Logger.WithValues("gvk", v1alpha1.ProjectIdentity_GroupVersionKind)))
-	ac := tjcontroller.NewAPICallbacks(mgr, xpresource.ManagedKind(v1alpha1.ProjectIdentity_GroupVersionKind), tjcontroller.WithEventHandler(eventHandler))
+	eventHandler := handler.NewEventHandler(handler.WithLogger(o.Logger.WithValues("gvk", v1alpha2.ProjectIdentity_GroupVersionKind)))
+	ac := tjcontroller.NewAPICallbacks(mgr, xpresource.ManagedKind(v1alpha2.ProjectIdentity_GroupVersionKind), tjcontroller.WithEventHandler(eventHandler))
 	opts := []managed.ReconcilerOption{
 		managed.WithExternalConnecter(tjcontroller.NewConnector(mgr.GetClient(), o.WorkspaceStore, o.SetupFn, o.Provider.Resources["infisical_project_identity"], tjcontroller.WithLogger(o.Logger), tjcontroller.WithConnectorEventHandler(eventHandler),
 			tjcontroller.WithCallbackProvider(ac),
@@ -73,10 +73,10 @@ func Setup(mgr ctrl.Manager, o tjcontroller.Options) error {
 
 	if o.MetricOptions != nil && o.MetricOptions.MRStateMetrics != nil {
 		stateMetricsRecorder := statemetrics.NewMRStateRecorder(
-			mgr.GetClient(), o.Logger, o.MetricOptions.MRStateMetrics, &v1alpha1.ProjectIdentityList{}, o.MetricOptions.PollStateMetricInterval,
+			mgr.GetClient(), o.Logger, o.MetricOptions.MRStateMetrics, &v1alpha2.ProjectIdentityList{}, o.MetricOptions.PollStateMetricInterval,
 		)
 		if err := mgr.Add(stateMetricsRecorder); err != nil {
-			return errors.Wrap(err, "cannot register MR state metrics recorder for kind v1alpha1.ProjectIdentityList")
+			return errors.Wrap(err, "cannot register MR state metrics recorder for kind v1alpha2.ProjectIdentityList")
 		}
 	}
 
@@ -84,12 +84,12 @@ func Setup(mgr ctrl.Manager, o tjcontroller.Options) error {
 		opts = append(opts, managed.WithChangeLogger(o.ChangeLogOptions.ChangeLogger))
 	}
 
-	r := managed.NewReconciler(mgr, xpresource.ManagedKind(v1alpha1.ProjectIdentity_GroupVersionKind), opts...)
+	r := managed.NewReconciler(mgr, xpresource.ManagedKind(v1alpha2.ProjectIdentity_GroupVersionKind), opts...)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
 		WithOptions(o.ForControllerRuntime()).
 		WithEventFilter(xpresource.DesiredStateChanged()).
-		Watches(&v1alpha1.ProjectIdentity{}, eventHandler).
+		Watches(&v1alpha2.ProjectIdentity{}, eventHandler).
 		Complete(ratelimiter.NewReconciler(name, r, o.GlobalRateLimiter))
 }

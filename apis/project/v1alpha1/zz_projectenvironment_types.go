@@ -120,7 +120,6 @@ type ProjectEnvironmentStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
 
 // ProjectEnvironment is the Schema for the ProjectEnvironments API. Create project environment
 // +kubebuilder:printcolumn:name="SYNCED",type="string",JSONPath=".status.conditions[?(@.type=='Synced')].status"
