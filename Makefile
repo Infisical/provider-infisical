@@ -20,7 +20,7 @@ export TERRAFORM_PROVIDER_REPO ?= https://github.com/Infisical/terraform-provide
 # Version of the normal Terraform provider release (the "v*" tags). The v1alpha2
 # API is generated from its schema, and the provider image runs it for all
 # resources.
-export TERRAFORM_PROVIDER_VERSION ?= 0.20.1
+export TERRAFORM_PROVIDER_VERSION ?= 0.20.3
 export TERRAFORM_PROVIDER_DOWNLOAD_NAME ?= terraform-provider-infisical
 export TERRAFORM_NATIVE_PROVIDER_BINARY ?= terraform-provider-infisical_v$(TERRAFORM_PROVIDER_VERSION)
 export TERRAFORM_DOCS_PATH ?= docs/resources
@@ -30,7 +30,14 @@ export TERRAFORM_LOCAL_PROVIDER_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 export TERRAFORM_LOCAL_PROVIDER_REPO_PATH ?= $(WORK_DIR)/$(TERRAFORM_PROVIDER_SOURCE)
 
 PLATFORMS ?= linux_amd64 linux_arm64
-VERSION ?= v0.1.15
+
+# Do not set VERSION here. Builds get their version from git, and a release
+# gets the name of its tag (see release.publish). A fixed version here made
+# every merge to main overwrite a released package.
+#
+# Packages are never published for a branch, only for a release tag. This
+# turns off the branch-based publishing of build/makelib.
+RELEASE_BRANCH_FILTER :=
 
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only
@@ -290,7 +297,40 @@ schema-version-diff:
 	./scripts/version_diff.py config/generated.lst "$(WORK_DIR)/schema.json.$${PREV_PROVIDER_VERSION}" config/schema.json
 	@$(OK) Checking for native state schema version changes
 
-.PHONY: cobertura submodules fallthrough run crds.clean test-e2e
+# ====================================================================================
+# Release
+
+# A package is only published for a release tag. The Publish workflow
+# (.github/workflows/publish.yml) runs `make release.publish RELEASE_TAG=<tag>`
+# for the tag that started it. release.check makes sure that:
+#   - RELEASE_TAG is a release version (vMAJOR.MINOR.PATCH, optionally -suffix);
+#   - the package version is the tag name;
+#   - the checked-out commit is the tagged commit;
+#   - the version is not in the registry yet, so a published package is never
+#     overwritten.
+RELEASE_TAG_REGEX := ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$$
+
+release.check: $(CROSSPLANE_CLI)
+	@[ -n "$(RELEASE_TAG)" ] || { echo "RELEASE_TAG is not set: packages are only published for a release tag" >&2; exit 1; }
+	@echo "$(RELEASE_TAG)" | grep -Eq '$(RELEASE_TAG_REGEX)' || { echo "$(RELEASE_TAG) is not a release tag (vMAJOR.MINOR.PATCH)" >&2; exit 1; }
+	@[ "$(VERSION)" = "$(RELEASE_TAG)" ] || { echo "VERSION $(VERSION) is not the release tag $(RELEASE_TAG)" >&2; exit 1; }
+	@git tag --points-at HEAD | grep -qxF "$(RELEASE_TAG)" || { echo "the checked-out commit is not the tag $(RELEASE_TAG)" >&2; exit 1; }
+	@for ref in $(foreach r,$(XPKG_REG_ORGS),$(foreach x,$(XPKGS),$(r)/$(x):$(RELEASE_TAG))); do \
+		out=$$($(CROSSPLANE_CLI) xpkg extract "$$ref" -o "$(WORK_DIR)/release-check.gz" 2>&1) && { echo "$$ref is already published: a published version is never overwritten" >&2; exit 1; }; \
+		echo "$$out" | grep -q MANIFEST_UNKNOWN || { echo "cannot check whether $$ref is published: $$out" >&2; exit 1; }; \
+	done
+	@rm -f "$(WORK_DIR)/release-check.gz"
+
+release.publish: release.check
+	@$(MAKE) $(foreach r,$(XPKG_REG_ORGS),$(foreach x,$(XPKGS),xpkg.release.publish.$(r).$(x)))
+
+# `make publish` is turned off: it published for branches.
+publish.init: publish.disabled
+publish.disabled:
+	@echo "make publish is turned off: packages are only published for a release tag, by the Publish workflow (make release.publish)" >&2
+	@exit 1
+
+.PHONY: cobertura submodules fallthrough run crds.clean test-e2e release.check release.publish publish.disabled
 
 # ====================================================================================
 # Special Targets

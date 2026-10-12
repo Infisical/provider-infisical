@@ -59,3 +59,18 @@ The example adds `infisical_secret_sync_aws_parameter_store`.
    removed or changes its type, that is a breaking change for users.
 
 Never change the files in `apis/*/v1alpha1/`.
+
+## Release
+
+Packages are only published for a release tag. Merges to `main` never publish.
+
+1. Create a release tag (for example `v0.2.0`): push it with
+   `git tag v0.2.0 && git push origin v0.2.0`, or create a new GitHub release
+   with a new tag.
+2. The **Publish** workflow starts for the new tag, builds the tagged commit,
+   and pushes it as that version. It cannot be started by hand.
+
+The version is always the tag name. Publish fails, and pushes nothing, when the
+tag is not `vMAJOR.MINOR.PATCH`, or when the version is already in the
+registry. A published version is never overwritten: to fix a release, publish
+a new version. `make publish` is turned off.
