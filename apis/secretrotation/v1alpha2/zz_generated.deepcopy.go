@@ -238,6 +238,16 @@ func (in *SecretRotationAzureClientSecretInitParameters) DeepCopyInto(out *Secre
 		*out = new(string)
 		**out = **in
 	}
+	if in.ProjectIDRef != nil {
+		in, out := &in.ProjectIDRef, &out.ProjectIDRef
+		*out = new(v2.Reference)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.ProjectIDSelector != nil {
+		in, out := &in.ProjectIDSelector, &out.ProjectIDSelector
+		*out = new(v2.Selector)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.RotateAtUtc != nil {
 		in, out := &in.RotateAtUtc, &out.RotateAtUtc
 		*out = new(RotateAtUtcInitParameters)
@@ -434,6 +444,16 @@ func (in *SecretRotationAzureClientSecretParameters) DeepCopyInto(out *SecretRot
 		in, out := &in.ProjectID, &out.ProjectID
 		*out = new(string)
 		**out = **in
+	}
+	if in.ProjectIDRef != nil {
+		in, out := &in.ProjectIDRef, &out.ProjectIDRef
+		*out = new(v2.Reference)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.ProjectIDSelector != nil {
+		in, out := &in.ProjectIDSelector, &out.ProjectIDSelector
+		*out = new(v2.Selector)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.RotateAtUtc != nil {
 		in, out := &in.RotateAtUtc, &out.RotateAtUtc

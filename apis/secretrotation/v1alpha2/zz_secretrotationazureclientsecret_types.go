@@ -119,7 +119,16 @@ type SecretRotationAzureClientSecretInitParameters struct {
 
 	// (String) The ID of the Infisical project to create the secret rotation in.
 	// The ID of the Infisical project to create the secret rotation in.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha2.Project
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
+
+	// Reference to a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
+
+	// Selector for a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
 	RotateAtUtc *RotateAtUtcInitParameters `json:"rotateAtUtc,omitempty" tf:"rotate_at_utc,omitempty"`
@@ -231,8 +240,17 @@ type SecretRotationAzureClientSecretParameters struct {
 
 	// (String) The ID of the Infisical project to create the secret rotation in.
 	// The ID of the Infisical project to create the secret rotation in.
+	// +crossplane:generate:reference:type=github.com/infisical/provider-infisical/apis/project/v1alpha2.Project
 	// +kubebuilder:validation:Optional
 	ProjectID *string `json:"projectId,omitempty" tf:"project_id,omitempty"`
+
+	// Reference to a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDRef *v2.Reference `json:"projectIdRef,omitempty" tf:"-"`
+
+	// Selector for a Project in project to populate projectId.
+	// +kubebuilder:validation:Optional
+	ProjectIDSelector *v2.Selector `json:"projectIdSelector,omitempty" tf:"-"`
 
 	// (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
 	// +kubebuilder:validation:Optional
@@ -340,7 +358,6 @@ type SecretRotationAzureClientSecret struct {
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.environment) || (has(self.initProvider) && has(self.initProvider.environment))",message="spec.forProvider.environment is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.name) || (has(self.initProvider) && has(self.initProvider.name))",message="spec.forProvider.name is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.parameters) || (has(self.initProvider) && has(self.initProvider.parameters))",message="spec.forProvider.parameters is a required parameter"
-	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.projectId) || (has(self.initProvider) && has(self.initProvider.projectId))",message="spec.forProvider.projectId is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.secretPath) || (has(self.initProvider) && has(self.initProvider.secretPath))",message="spec.forProvider.secretPath is a required parameter"
 	// +kubebuilder:validation:XValidation:rule="!('*' in self.managementPolicies || 'Create' in self.managementPolicies || 'Update' in self.managementPolicies) || has(self.forProvider.secretsMapping) || (has(self.initProvider) && has(self.initProvider.secretsMapping))",message="spec.forProvider.secretsMapping is a required parameter"
 	Spec   SecretRotationAzureClientSecretSpec   `json:"spec"`
