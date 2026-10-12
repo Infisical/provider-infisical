@@ -8,7 +8,6 @@ package v1alpha2
 
 import (
 	"context"
-
 	reference "github.com/crossplane/crossplane-runtime/v2/pkg/reference"
 	v1alpha2 "github.com/infisical/provider-infisical/apis/appconnection/v1alpha2"
 	v1alpha21 "github.com/infisical/provider-infisical/apis/project/v1alpha2"
