@@ -68,7 +68,7 @@ resources:
         importStatements: []
     infisical_alert:
         subCategory: Alerts
-        description: Create and manage alerts that notify you about a resource in Infisical. An alert watches one resource for one event, and a resource can only have one alert per event within a scope.
+        description: Create and manage alerts that notify you about a resource in Infisical. An alert watches one event, either on a single resource or across a whole scope, depending on its resource type. A resource can only have one alert per event within a scope.
         name: infisical_alert
         title: infisical_alert Resource - terraform-provider-infisical
         examples:
@@ -92,10 +92,11 @@ resources:
                       "name": "Security team"
                     }
                   },
-                  "description": "Rotate the CI machine identity client secret before it expires",
-                  "expiry": {
+                  "condition": {
                     "alert_before_days": 30
                   },
+                  "description": "Rotate the CI machine identity client secret before it expires",
+                  "event_type": "expiry",
                   "name": "CI identity credentials expiring",
                   "resource_id": "\u003cyour-machine-identity-id\u003e",
                   "resource_type": "identity.authentication"
@@ -125,35 +126,90 @@ resources:
                       }
                     }
                   },
-                  "expiry": {
+                  "condition": {
                     "alert_before_days": 7,
                     "daily_reminder": true
                   },
+                  "event_type": "expiry",
                   "name": "Deploy identity credentials expiring",
                   "project_id": "\u003cyour-project-id\u003e",
                   "resource_id": "\u003cyour-machine-identity-id\u003e",
                   "resource_type": "identity.authentication"
                 }
+            - name: ci_identity_auth_changes
+              manifest: |-
+                {
+                  "channels": {
+                    "security_team": {
+                      "email": {
+                        "recipients": [
+                          {
+                            "id": "\u003cyour-group-id\u003e",
+                            "type": "group"
+                          }
+                        ]
+                      },
+                      "name": "Security team"
+                    }
+                  },
+                  "event_type": "auth-method-changed",
+                  "name": "CI identity auth method changed",
+                  "resource_id": "\u003cyour-machine-identity-id\u003e",
+                  "resource_type": "identity.authentication"
+                }
+            - name: payments_certificates_expiring
+              manifest: |-
+                {
+                  "channels": {
+                    "payments_team": {
+                      "email": {
+                        "recipients": [
+                          {
+                            "id": "\u003cyour-user-id\u003e",
+                            "type": "user"
+                          },
+                          {
+                            "id": "payments-oncall@example.com",
+                            "type": "email"
+                          }
+                        ]
+                      },
+                      "name": "Payments team"
+                    }
+                  },
+                  "condition": {
+                    "alert_before_days": 60
+                  },
+                  "event_type": "certificate.expiry",
+                  "name": "Payments certificates expiring",
+                  "resource_id": "\u003cyour-certificate-manager-application-id\u003e",
+                  "resource_type": "cert-manager.application"
+                }
         argumentDocs:
-            alert_before_days: (Number) How many days before the watched resource expires the alert fires. Must be between 1 and 90.
+            alert_before_days: '(Number) How many days before expiry the alert fires. Required for these events, and not used by the others: identity.authentication.expiry, cert-manager.application.certificate.expiry, cert-manager.certificate.expiry, cert-manager.signer.certificate.expiry. Must be at least 1, and at most 90 for identity.authentication; 365 for cert-manager, cert-manager.application, cert-manager.signer.'
+            application_ids: '(Set of String) Only certificates in these Certificate Manager applications. Only for these events: cert-manager.certificate.expiry, cert-manager.certificate.issuance, cert-manager.certificate.renewal, cert-manager.certificate.revocation. Leave it out to cover all of them. At most 100.'
             channels: (Attributes Map) The channels the alert is delivered to, keyed by a name of your choosing. The key is what identifies a channel to Terraform and is never sent to Infisical, so renaming a channel updates it in place and it keeps the deliveries it has already made. Changing a key, on the other hand, deletes the channel and creates a new one, so the new channel notifies about everything that is still expiring, even if the old one already did. Each channel carries exactly one configuration block, and that block is what gives the channel its type. At least one and at most 10 channels are allowed. (see below for nested schema)
-            daily_reminder: (Boolean) Whether to keep notifying once a day until the watched resource expires, instead of notifying once. Defaults to false.
+            condition: (Attributes) The settings of the event the alert fires on. Which ones apply depends on event_type, and events without settings take no condition. (see below for nested schema)
+            daily_reminder: (Boolean) When true, sends a reminder every day until expiry. Defaults to false. Only for the events that take alert_before_days.
             description: (String) An optional description of the alert.
             email: (Attributes) Notifies principals of your organization or project by email. (see below for nested schema)
             enabled: (Boolean) Whether the alert is evaluated. Defaults to true.
-            expiry: '(Attributes) Fires before the watched resource expires. Only for alerts on these resource types: identity.authentication. (see below for nested schema)'
+            event_type: (String) The event the alert fires on, written in full, such as cert-manager.application.certificate.expiry, or without the resource_type prefix, such as certificate.expiry. See Event types for every event and the condition it takes. Changing the event creates a new alert.
+            expiry: '(Attributes, Deprecated) Fires before the watched resource expires. Only for identity.authentication alerts. Deprecated: use event_type and condition instead. (see below for nested schema)'
             id: (String) The ID of the alert.
             integration_key: '(String, Sensitive) The PagerDuty Events API v2 integration key incidents are created with, a 32 character hex string. Write-only: it is never returned by the API, so it cannot be imported.'
             name: (String) The name of the alert.
             org_id: (String) The ID of the organization the alert belongs to. Always set, whether the alert is scoped to the organization or to a project, so it is what tells you which organization a project level alert was created under.
             pagerduty: (Attributes) Creates PagerDuty incidents through the Events API v2. (see below for nested schema)
-            project_id: (String) The ID of the project the resource belongs to. Required for project level resources, and must be omitted for organization level ones.
+            profile_ids: '(Set of String) Only certificates issued from these certificate profiles. Only for these events: cert-manager.certificate.expiry, cert-manager.certificate.issuance, cert-manager.certificate.renewal, cert-manager.certificate.revocation. Leave it out to cover all of them. At most 100.'
+            project_id: '(String) The ID of the project the resource belongs to. Required for project level resources, and must be omitted for organization level ones. Not used by these resource types, so leave it out: cert-manager, cert-manager.application, cert-manager.signer.'
             recipients: (Attributes Set) The principals to notify. At least one and at most 20 are allowed. (see below for nested schema)
-            resource_id: (String) The ID of the resource to watch. For the identity.authentication resource type this is a machine identity's ID.
-            resource_type: '(String) The type of the resource to watch. Options: identity.authentication.'
+            resource_id: '(String) The ID of the resource to watch, of the kind resource_type names. Required, except for resource types that watch a whole scope, where it must be omitted: cert-manager, cert-manager.signer.'
+            resource_type: '(String) The type of the resource to watch. Options: cert-manager, cert-manager.application, cert-manager.signer, identity.authentication.'
             signing_secret: '(String, Sensitive) The secret used to sign the payload so the receiver can verify it. Write-only: it is never returned by the API, so an imported channel keeps the secret it was created with until one is set here.'
             slack: (Attributes) Posts notifications to a Slack channel through an incoming webhook. (see below for nested schema)
-            type: '(String) The type of the recipient. Options: user, group.'
+            sources: '(Set of String) Only certificates with these sources. Options: issued, discovered, imported. Leave it out to cover every source. Only for these events: cert-manager.certificate.expiry, cert-manager.certificate.issuance, cert-manager.certificate.renewal, cert-manager.certificate.revocation.'
+            type: '(String) The type of the recipient. Options: user, group, email. The email type is only for cert-manager, cert-manager.application, cert-manager.signer alerts.'
             url: (String) The HTTPS URL the CloudEvents payload is sent to.
             webhook: (Attributes) Sends notifications to an HTTPS endpoint as a CloudEvents payload. (see below for nested schema)
             webhook_url: '(String, Sensitive) The Slack incoming webhook URL notifications are posted to. Must be a https://hooks.slack.com URL. Write-only: it is never returned by the API, so it cannot be imported.'
@@ -170,6 +226,9 @@ resources:
               # Write-only channel secrets (a Slack webhook URL, a PagerDuty integration key, a webhook
               # signing secret) are never returned by the API, so the first plan after an import shows them
               # being set. A signing secret left out of the configuration keeps whatever is stored.
+              #
+              # An imported alert uses event_type and condition. Importing it into a configuration that still uses
+              # the deprecated expiry block shows one in-place update that changes nothing in Infisical.
     infisical_app_connection_1password:
         subCategory: App Connections
         description: Create and manage 1Password App Connection
@@ -400,6 +459,39 @@ resources:
             name: (String) The name of the Bitbucket App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
+    infisical_app_connection_chef:
+        subCategory: App Connections
+        description: Create and manage Chef App Connection
+        name: infisical_app_connection_chef
+        title: infisical_app_connection_chef Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-chef
+              manifest: |-
+                {
+                  "credentials": {
+                    "org_name": "\u003cchef-organization-name\u003e",
+                    "private_key": "\u003cchef-user-private-key-pem\u003e",
+                    "user_name": "\u003cchef-user-name\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "user-key",
+                  "name": "chef-app-connection"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the Chef App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Chef App Connection credentials
+            data_bag_secret: (String, Sensitive) The secret used to encrypt data bag items. Set it when certificate syncs should write encrypted data bag items.
+            description: (String) An optional description for the Chef App Connection.
+            gateway_id: (String) The Gateway ID to use for the app connection. If not specified, the Internet Gateway will be used.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Chef. Possible values are: user-key'
+            name: (String) The name of the Chef App Connection to create. Must be slug-friendly
+            org_name: (String) The name of the Chef organization to connect to.
+            private_key: (String, Sensitive) The PEM-encoded private key of the Chef user.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            server_url: (String) The URL of the Chef Server to connect to, e.g. https://chef.example.com, defaulting to the hosted Chef API when omitted.
+            user_name: (String) The name of the Chef user to authenticate as.
+        importStatements: []
     infisical_app_connection_circleci:
         subCategory: App Connections
         description: Create and manage CircleCI App Connection
@@ -542,6 +634,42 @@ resources:
             name: (String) The name of the DigiCert App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
             region: '(String) The DigiCert CertCentral region your account belongs to. Possible values are: us, eu'
+        importStatements: []
+    infisical_app_connection_f5_big_ip:
+        subCategory: App Connections
+        description: Create and manage F5 BIG-IP App Connection
+        name: infisical_app_connection_f5_big_ip
+        title: infisical_app_connection_f5_big_ip Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-f5-big-ip
+              manifest: |-
+                {
+                  "credentials": {
+                    "hostname": "bigip.example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 443,
+                    "ssl_reject_unauthorized": true,
+                    "username": "\u003cusername\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "basic-auth",
+                  "name": "f5-big-ip-app-connection"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the F5 BIG-IP App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the F5 BIG-IP App Connection credentials
+            description: (String) An optional description for the F5 BIG-IP App Connection.
+            gateway_id: (String) The Gateway ID to use for the app connection. If not specified, the Internet Gateway will be used.
+            hostname: (String) The hostname or IP address of the F5 BIG-IP management interface, without scheme, port or path.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with F5 BIG-IP. Possible values are: basic-auth'
+            name: (String) The name of the F5 BIG-IP App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to authenticate to F5 BIG-IP with.
+            port: (Number) The port of the F5 BIG-IP management interface.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            ssl_certificate: (String) The PEM-encoded CA certificate used to verify the F5 BIG-IP TLS certificate.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject untrusted TLS certificates presented by F5 BIG-IP.
+            username: (String) The username to authenticate to F5 BIG-IP with.
         importStatements: []
     infisical_app_connection_flyio:
         subCategory: App Connections
@@ -697,6 +825,42 @@ resources:
             role_id: (String, Sensitive) The AppRole role ID. Required for the app-role method.
             secret_id: (String, Sensitive) The AppRole secret ID. Required for the app-role method.
         importStatements: []
+    infisical_app_connection_kemp_loadmaster:
+        subCategory: App Connections
+        description: Create and manage Kemp LoadMaster App Connection
+        name: infisical_app_connection_kemp_loadmaster
+        title: infisical_app_connection_kemp_loadmaster Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-kemp-loadmaster
+              manifest: |-
+                {
+                  "credentials": {
+                    "hostname": "loadmaster.example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 8443,
+                    "ssl_reject_unauthorized": true,
+                    "username": "\u003cusername\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "basic-auth",
+                  "name": "kemp-loadmaster-app-connection"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the Kemp LoadMaster App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Kemp LoadMaster App Connection credentials
+            description: (String) An optional description for the Kemp LoadMaster App Connection.
+            gateway_id: (String) The Gateway ID to use for the app connection. If not specified, the Internet Gateway will be used.
+            hostname: (String) The hostname or IP address of the Kemp LoadMaster management interface, without scheme or path.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Kemp LoadMaster. Possible values are: basic-auth'
+            name: (String) The name of the Kemp LoadMaster App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to authenticate to Kemp LoadMaster with.
+            port: (Number) The port of the Kemp LoadMaster management interface.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            ssl_certificate: (String) The PEM-encoded CA certificate used to verify the Kemp LoadMaster TLS certificate.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject untrusted TLS certificates presented by Kemp LoadMaster.
+            username: (String) The username to authenticate to Kemp LoadMaster with.
+        importStatements: []
     infisical_app_connection_ldap:
         subCategory: App Connections
         description: Create and manage LDAP App Connection
@@ -746,6 +910,34 @@ resources:
             ssl_certificate: (String) The SSL certificate (PEM format) to use for secure connection when using ldaps:// with a self-signed certificate.
             ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates (true/false) when using ldaps://. Set to false only in test environments.
             url: (String) The LDAP server URL (e.g., 'ldap://example.com:389' or 'ldaps://example.com:636').
+        importStatements: []
+    infisical_app_connection_litellm:
+        subCategory: App Connections
+        description: Create and manage LiteLLM App Connection
+        name: infisical_app_connection_litellm
+        title: infisical_app_connection_litellm Resource - terraform-provider-infisical
+        examples:
+            - name: litellm-demo
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_key": "\u003cLITELLM_API_KEY\u003e",
+                    "instance_url": "https://litellm.example.com"
+                  },
+                  "description": "This is a demo LiteLLM connection.",
+                  "method": "api-key",
+                  "name": "litellm-demo"
+                }
+        argumentDocs:
+            api_key: (String, Sensitive) The LiteLLM API key used to authenticate with the LiteLLM instance. For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/litellm
+            credentials: (Attributes) The credentials for the LiteLLM App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the LiteLLM App Connection credentials
+            description: (String) An optional description for the LiteLLM App Connection.
+            id: (String) The ID of the app connection
+            instance_url: (String) The base URL of your LiteLLM instance (e.g. https://litellm.example.com). For more details, refer to the documentation here infisical.com/docs/integrations/app-connections/litellm
+            method: '(String) The method used to authenticate with LiteLLM. Possible values are: api-key'
+            name: (String) The name of the LiteLLM App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
     infisical_app_connection_mssql:
         subCategory: App Connections
@@ -822,6 +1014,92 @@ resources:
             ssl_enabled: (Boolean) Whether or not to use SSL when connecting to the database.
             ssl_reject_unauthorized: (Boolean) Whether or not to reject unauthorized SSL certificates.
             username: (String) The username to connect to the database with.
+        importStatements: []
+    infisical_app_connection_netscaler:
+        subCategory: App Connections
+        description: Create and manage NetScaler App Connection
+        name: infisical_app_connection_netscaler
+        title: infisical_app_connection_netscaler Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-netscaler
+              manifest: |-
+                {
+                  "credentials": {
+                    "hostname": "netscaler.example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 443,
+                    "ssl_reject_unauthorized": true,
+                    "username": "\u003cusername\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "basic-auth",
+                  "name": "netscaler-app-connection"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the NetScaler App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the NetScaler App Connection credentials
+            description: (String) An optional description for the NetScaler App Connection.
+            gateway_id: (String) The Gateway ID to use for the app connection. If not specified, the Internet Gateway will be used.
+            hostname: (String) The hostname or IP address of the NetScaler management interface, without scheme or path.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with NetScaler. Possible values are: basic-auth'
+            name: (String) The name of the NetScaler App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to authenticate to NetScaler with.
+            port: (Number) The port of the NetScaler management interface.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            ssl_certificate: (String) The PEM-encoded CA certificate used to verify the NetScaler TLS certificate.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject untrusted TLS certificates presented by NetScaler.
+            username: (String) The username to authenticate to NetScaler with.
+        importStatements: []
+    infisical_app_connection_nutanix_prism_central:
+        subCategory: App Connections
+        description: Create and manage Nutanix Prism Central App Connection
+        name: infisical_app_connection_nutanix_prism_central
+        title: infisical_app_connection_nutanix_prism_central Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-nutanix-api-key
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_key": "\u003c32-character-lowercase-hex-api-key\u003e",
+                    "hostname": "prism-central.example.com",
+                    "port": 9440,
+                    "ssl_reject_unauthorized": true
+                  },
+                  "description": "I am a test app connection",
+                  "method": "api-key",
+                  "name": "nutanix-api-key-app-connection"
+                }
+            - name: app-connection-nutanix-basic-auth
+              manifest: |-
+                {
+                  "credentials": {
+                    "hostname": "prism-central.example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 9440,
+                    "ssl_reject_unauthorized": true,
+                    "username": "\u003cusername\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "basic-auth",
+                  "name": "nutanix-basic-auth-app-connection"
+                }
+        argumentDocs:
+            api_key: (String, Sensitive) The 32-character lowercase hexadecimal Nutanix Prism Central API key, required for the api-key method.
+            credentials: (Attributes) The credentials for the Nutanix Prism Central App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Nutanix Prism Central App Connection credentials
+            description: (String) An optional description for the Nutanix Prism Central App Connection.
+            gateway_id: (String) The Gateway ID to use for the app connection. If not specified, the Internet Gateway will be used.
+            hostname: (String) The hostname or IP address of Nutanix Prism Central, without scheme, port or path.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Nutanix Prism Central. Possible values are: api-key, basic-auth'
+            name: (String) The name of the Nutanix Prism Central App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password to authenticate to Nutanix Prism Central with, required for the basic-auth method.
+            port: (Number) The port of Nutanix Prism Central.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            ssl_certificate: (String) The PEM-encoded CA certificate used to verify the Nutanix Prism Central TLS certificate.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject untrusted TLS certificates presented by Nutanix Prism Central.
+            username: (String) The username to authenticate to Nutanix Prism Central with, required for the basic-auth method.
         importStatements: []
     infisical_app_connection_oracledb:
         subCategory: App Connections
@@ -925,6 +1203,84 @@ resources:
             name: (String) The name of the Render App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
+    infisical_app_connection_spacelift:
+        subCategory: App Connections
+        description: Create and manage Spacelift App Connection
+        name: infisical_app_connection_spacelift
+        title: infisical_app_connection_spacelift Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "credentials": {
+                    "api_key_id": "\u003cyour-spacelift-api-key-id\u003e",
+                    "api_key_secret": "\u003cyour-spacelift-api-key-secret\u003e",
+                    "api_url": "https://\u003cyour-account\u003e.app.spacelift.io"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "api-key-secret",
+                  "name": "spacelift-connection"
+                }
+        argumentDocs:
+            api_key_id: (String) The API Key ID used to authenticate with Spacelift.
+            api_key_secret: (String, Sensitive) The API Key Secret used to authenticate with Spacelift.
+            api_url: (String) The Spacelift API URL to connect with (e.g., 'https://mycorp.app.spacelift.io').
+            credentials: (Attributes) The credentials for the Spacelift App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Spacelift App Connection credentials
+            description: (String) An optional description for the Spacelift App Connection.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Spacelift. Possible values are: api-key-secret'
+            name: (String) The name of the Spacelift App Connection to create. Must be slug-friendly
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+        importStatements: []
+    infisical_app_connection_ssh:
+        subCategory: App Connections
+        description: Create and manage SSH App Connection
+        name: infisical_app_connection_ssh
+        title: infisical_app_connection_ssh Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-ssh-password
+              manifest: |-
+                {
+                  "credentials": {
+                    "host": "server.example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 22,
+                    "username": "\u003cusername\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "password",
+                  "name": "ssh-password-app-connection"
+                }
+            - name: app-connection-ssh-key
+              manifest: |-
+                {
+                  "credentials": {
+                    "host": "server.example.com",
+                    "port": 22,
+                    "private_key": "\u003cssh-private-key-pem\u003e",
+                    "username": "\u003cusername\u003e"
+                  },
+                  "description": "I am a test app connection",
+                  "method": "ssh-key",
+                  "name": "ssh-key-app-connection"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the SSH App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the SSH App Connection credentials
+            description: (String) An optional description for the SSH App Connection.
+            gateway_id: (String) The Gateway ID to use for the app connection. If not specified, the Internet Gateway will be used.
+            host: (String) The hostname or IP address of the SSH server.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with SSH. Possible values are: password, ssh-key'
+            name: (String) The name of the SSH App Connection to create. Must be slug-friendly
+            passphrase: (String, Sensitive) The passphrase protecting the SSH private key, used only by the ssh-key method.
+            password: (String, Sensitive) The password to authenticate to the SSH server with, required for the password method.
+            port: (Number) The port of the SSH server.
+            private_key: (String, Sensitive) The PEM-encoded SSH private key to authenticate with, required for the ssh-key method.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            username: (String) The username to authenticate to the SSH server with.
+        importStatements: []
     infisical_app_connection_supabase:
         subCategory: App Connections
         description: Create and manage Supabase App Connection
@@ -953,6 +1309,45 @@ resources:
             name: (String) The name of the Supabase App Connection to create. Must be slug-friendly
             project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
         importStatements: []
+    infisical_app_connection_winrm:
+        subCategory: App Connections
+        description: Create and manage Windows (WinRM) App Connection
+        name: infisical_app_connection_winrm
+        title: infisical_app_connection_winrm Resource - terraform-provider-infisical
+        examples:
+            - name: app-connection-winrm
+              manifest: |-
+                {
+                  "credentials": {
+                    "host": "windows-host.example.com",
+                    "password": "\u003cpassword\u003e",
+                    "port": 5986,
+                    "ssl_enabled": true,
+                    "ssl_reject_unauthorized": true,
+                    "username": "EXAMPLE\\administrator"
+                  },
+                  "description": "I am a test app connection",
+                  "gateway_id": "\u003cgateway-id\u003e",
+                  "method": "username-password",
+                  "name": "winrm-app-connection"
+                }
+        argumentDocs:
+            credentials: (Attributes) The credentials for the Windows (WinRM) App Connection (see below for nested schema)
+            credentials_hash: (String) The hash of the Windows (WinRM) App Connection credentials
+            description: (String) An optional description for the Windows (WinRM) App Connection.
+            gateway_id: (String) The Gateway ID to use for the app connection. Windows (WinRM) connections can only reach the host through a gateway.
+            host: (String) The DNS name (FQDN) or IP address of the Windows host.
+            id: (String) The ID of the app connection
+            method: '(String) The method used to authenticate with Windows (WinRM). Possible values are: username-password'
+            name: (String) The name of the Windows (WinRM) App Connection to create. Must be slug-friendly
+            password: (String, Sensitive) The password of the Windows account.
+            port: (Number) The WinRM port, usually 5985 for HTTP and 5986 for HTTPS.
+            project_id: (String) The ID of the project to scope the app connection to. If not provided, the app connection will be scoped to the organization.
+            ssl_certificate: (String) The PEM-encoded CA certificate used to verify a self-signed WinRM HTTPS listener.
+            ssl_enabled: (Boolean) Whether or not to connect over HTTPS instead of HTTP with NTLM message encryption.
+            ssl_reject_unauthorized: (Boolean) Whether or not to reject untrusted TLS certificates presented by the WinRM HTTPS listener.
+            username: (String) The Windows account to authenticate as, in the form DOMAIN\user or user@domain.
+        importStatements: []
     infisical_cert_manager_application:
         subCategory: Certificate Management
         description: Create and manage Certificate Manager applications in Infisical. Only Machine Identity authentication is supported for this resource.
@@ -973,6 +1368,81 @@ resources:
             - |-
               # This will import the Certificate Manager application by its ID
               terraform import infisical_cert_manager_application.example <application_id>
+    infisical_cert_manager_application_approval_policy:
+        subCategory: Certificate Management
+        description: Create and manage a Certificate Manager application's approval policy for certificate requests. A certificate requested through the application from one of the policy's certificate profiles waits for the approvals the policy asks for before it is issued.
+        name: infisical_cert_manager_application_approval_policy
+        title: infisical_cert_manager_application_approval_policy Resource - terraform-provider-infisical
+        examples:
+            - name: payments_public_tls
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.payments.id}",
+                  "bypass_for_machine_identities": true,
+                  "max_request_ttl": "7d",
+                  "name": "Payments public TLS",
+                  "profile_names": [
+                    "public-tls"
+                  ],
+                  "steps": [
+                    {
+                      "approvers": [
+                        {
+                          "id": "${infisical_cert_manager_application_user.security_lead.user_id}",
+                          "type": "user"
+                        }
+                      ],
+                      "name": "Security review",
+                      "required_approvals": 1
+                    },
+                    {
+                      "approvers": [
+                        {
+                          "id": "${infisical_cert_manager_application_group.platform.group_id}",
+                          "type": "group"
+                        }
+                      ],
+                      "name": "Platform sign-off",
+                      "notify_approvers": false,
+                      "required_approvals": 1
+                    }
+                  ]
+                }
+              references:
+                application_id: infisical_cert_manager_application.payments.id
+              dependencies:
+                infisical_cert_manager_application.payments: |-
+                    {
+                      "name": "payments"
+                    }
+                infisical_cert_manager_application_group.platform: |-
+                    {
+                      "application_id": "${infisical_cert_manager_application.payments.id}",
+                      "group_id": "\u003cplatform-group-id\u003e",
+                      "role": "operator"
+                    }
+                infisical_cert_manager_application_user.security_lead: |-
+                    {
+                      "application_id": "${infisical_cert_manager_application.payments.id}",
+                      "email": "security-lead@example.com",
+                      "role": "admin"
+                    }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application the policy covers. Every approver must be a member of the application. Changing it creates a new policy.
+            approvers: (Attributes Set) The users and groups that can approve at this step. (see below for nested schema)
+            bypass_for_machine_identities: (Boolean) Whether certificates requested by machine identities skip the approval. Defaults to false.
+            id: (String) The ID of the approval policy.
+            max_request_ttl: (String) How long a certificate request can wait for approval before it expires, such as 7d or 12h. Must be between 1 hour and 30 days. Leave it out for requests that never expire.
+            name: (String) The name of the approval policy.
+            notify_approvers: (Boolean) Whether the step's approvers are notified when a request reaches it. Defaults to true.
+            profile_names: (Set of String) The names of the certificate profiles whose certificate requests need approval.
+            required_approvals: (Number) How many of the step's approvers must approve before the request moves on. Must be between 1 and 100.
+            steps: (Attributes List) The approval steps, in the order a request goes through them. A request moves to the next step once the current one has the approvals it requires. (see below for nested schema)
+            type: '(String) The type of the approver. Options: user, group.'
+        importStatements:
+            - |-
+              # Import a certificate request approval policy by its ID
+              terraform import infisical_cert_manager_application_approval_policy.example <policy_id>
     infisical_cert_manager_application_group:
         subCategory: Certificate Management
         description: Manage group memberships for a Certificate Manager application in Infisical. Only Machine Identity authentication is supported for this resource.
@@ -1518,6 +1988,7 @@ resources:
             locality: (String) The locality (L) for the certificate
             not_after: (String) The not-after (expiration) date of the certificate (RFC3339 format)
             not_before: (String) The not-before date of the certificate (RFC3339 format)
+            order_id: (String) The ID of the certificate order. A certificate and all of its renewals share one order, so use it to select this certificate in a certificate sync's certificate_filters.
             organization: (String) The organization (O) for the certificate
             ou: (String) The organizational unit (OU) for the certificate
             private_key: (String, Sensitive) The private key in PEM format (only available for direct field requests, not CSR-based).
@@ -2297,6 +2768,12 @@ resources:
               manifest: |-
                 {
                   "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.api.order_id}",
+                      "${infisical_cert_manager_certificate.www.order_id}"
+                    ]
+                  },
                   "connection_id": "\u003capp-connection-id\u003e",
                   "description": "Demo of AWS Certificate Manager certificate sync",
                   "destination_config": {
@@ -2314,23 +2791,215 @@ resources:
             application_id: (String) The ID of the Certificate Manager application to create the sync in.
             auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
             aws_region: (String) The AWS region to sync certificates to (e.g. us-east-1).
-            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from AWS Certificate Manager when they are no longer managed in Infisical.
-            certificate_name_schema: '(String) The naming scheme for synced certificates. Must include the {{certificateId}} or {{shortCertificateId}} placeholder. Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from AWS Certificate Manager when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The naming scheme for synced certificates. Must include the {{certificateId}} placeholder; {{shortCertificateId}} is not supported for this destination. Names may contain letters, digits, spaces, hyphens and underscores (1-256 characters). Other placeholders: {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
             connection_id: (String) The ID of the aws Connection to use for syncing.
             description: (String) An optional description for the AWS Certificate Manager sync.
             destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
             id: (String) The ID of the AWS Certificate Manager certificate sync
             include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain.
+            key: (String) The metadata key the certificate must carry.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
             name: (String) The name of the AWS Certificate Manager sync to create.
             preserve_arn: (Boolean) Whether to preserve the AWS Certificate Manager ARN when a certificate is renewed, reimporting into the existing certificate instead of creating a new one.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
             sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
         importStatements:
             - |-
               # This will import the AWS Certificate Manager certificate sync by its ID
               terraform import infisical_certificate_sync_aws_certificate_manager.example <certificate_sync_id>
+    infisical_certificate_sync_aws_elastic_load_balancer:
+        subCategory: Certificate Syncs
+        description: Create and manage AWS Elastic Load Balancer certificate syncs
+        name: infisical_certificate_sync_aws_elastic_load_balancer
+        title: infisical_certificate_sync_aws_elastic_load_balancer Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "default_certificate_order_id": "${infisical_cert_manager_certificate.example.order_id}",
+                  "description": "Demo of AWS Elastic Load Balancer certificate sync",
+                  "destination_config": {
+                    "aws_region": "us-east-1",
+                    "listeners": [
+                      {
+                        "listener_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:listener/app/my-load-balancer/50dc6c495c0c9188/f2f7dc8efc522ab2",
+                        "port": 443,
+                        "protocol": "HTTPS"
+                      }
+                    ],
+                    "load_balancer_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+                  },
+                  "name": "aws-elb-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": false,
+                    "certificate_name_schema": "Infisical-{{certificateId}}",
+                    "include_root_ca": false,
+                    "preserve_arn": true
+                  }
+                }
+              references:
+                default_certificate_order_id: infisical_cert_manager_certificate.example.order_id
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            aws_region: (String) The AWS region of the load balancer (e.g. us-east-1).
+            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from the load balancer when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to false.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: (String) The naming scheme for certificates imported into ACM for the listeners. When set, it must include the {{certificateId}} placeholder; {{shortCertificateId}} is not supported for this destination. Names may contain letters, digits, spaces, hyphens and underscores (1-256 characters). When unset, the sync holds only one certificate.
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the aws Connection to use for syncing.
+            default_certificate_order_id: (String) The certificate order whose newest certificate is the default certificate on every listener, from the order_id attribute of infisical_cert_manager_certificate. The load balancer serves it when a client's SNI matches no other certificate. It must be one of the orders the sync holds. Leave unset to leave the listeners' default unmanaged; removing it later stops managing the default without changing it.
+            description: (String) An optional description for the AWS Elastic Load Balancer sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            id: (String) The ID of the AWS Elastic Load Balancer certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain. Defaults to false.
+            key: (String) The metadata key the certificate must carry.
+            listener_arn: (String) The ARN of the listener.
+            listeners: (Attributes List) The HTTPS or TLS listeners on the load balancer to attach synced certificates to. At least one listener is required. (see below for nested schema)
+            load_balancer_arn: (String) The ARN of the load balancer to sync certificates to.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the AWS Elastic Load Balancer sync to create.
+            port: (Number) The port the listener serves on (e.g. 443).
+            preserve_arn: (Boolean) Whether to preserve the certificate ARN when a certificate is renewed, reimporting into the existing certificate instead of creating a new one. Defaults to true.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            protocol: (String) The protocol of the listener (e.g. HTTPS or TLS).
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+        importStatements:
+            - |-
+              # This will import the AWS Elastic Load Balancer certificate sync by its ID
+              terraform import infisical_certificate_sync_aws_elastic_load_balancer.example <certificate_sync_id>
+    infisical_certificate_sync_aws_secrets_manager:
+        subCategory: Certificate Syncs
+        description: Create and manage AWS Secrets Manager certificate syncs
+        name: infisical_certificate_sync_aws_secrets_manager
+        title: infisical_certificate_sync_aws_secrets_manager Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of AWS Secrets Manager certificate sync",
+                  "destination_config": {
+                    "aws_region": "us-east-1",
+                    "kms_key_id": "alias/my-secrets-key"
+                  },
+                  "name": "aws-secrets-manager-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "infisical-{{certificateId}}",
+                    "field_mappings": {
+                      "ca_certificate": "ca_certificate",
+                      "certificate": "certificate",
+                      "certificate_chain": "certificate_chain",
+                      "private_key": "private_key"
+                    },
+                    "include_root_ca": false,
+                    "preserve_secret_on_renewal": true
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            aws_region: (String) The AWS region to sync certificates to (e.g. us-east-1).
+            ca_certificate: (String) The field name for the CA certificate. Defaults to ca_certificate.
+            can_remove_certificates: (Boolean) Whether Infisical should remove secrets from AWS Secrets Manager when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to true.
+            certificate: (String) The field name for the certificate. Defaults to certificate.
+            certificate_chain: (String) The field name for the certificate chain. Defaults to certificate_chain.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The naming scheme for synced secrets. Must include the {{certificateId}} or {{shortCertificateId}} placeholder, and compiled names may contain only alphanumeric characters, underscores and hyphens (1-512 characters). Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the aws Connection to use for syncing.
+            description: (String) An optional description for the AWS Secrets Manager sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            field_mappings: (Attributes) The JSON field names used for each part of the certificate inside the secret. (see below for nested schema)
+            id: (String) The ID of the AWS Secrets Manager certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain. Defaults to false.
+            key: (String) The metadata key the certificate must carry.
+            kms_key_id: (String) The ID or ARN of the KMS key used to encrypt the secrets. Leave unset to use the AWS managed key.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the AWS Secrets Manager sync to create.
+            preserve_secret_on_renewal: (Boolean) Whether to update the existing secret when a certificate is renewed instead of creating a new one. Defaults to true.
+            private_key: (String) The field name for the private key. Defaults to private_key.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+        importStatements:
+            - |-
+              # This will import the AWS Secrets Manager certificate sync by its ID
+              terraform import infisical_certificate_sync_aws_secrets_manager.example <certificate_sync_id>
+    infisical_certificate_sync_azure_key_vault:
+        subCategory: Certificate Syncs
+        description: Create and manage Azure Key Vault certificate syncs
+        name: infisical_certificate_sync_azure_key_vault
+        title: infisical_certificate_sync_azure_key_vault Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of Azure Key Vault certificate sync",
+                  "destination_config": {
+                    "vault_base_url": "https://my-vault.vault.azure.net"
+                  },
+                  "name": "azure-key-vault-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "infisical-{{certificateId}}",
+                    "enable_versioning": true,
+                    "include_root_ca": false
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from Azure Key Vault when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to true.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The naming scheme for synced certificates. Must include the {{certificateId}} or {{shortCertificateId}} placeholder, and compiled names may contain only alphanumeric characters and hyphens (1-127 characters). Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the azure-key-vault Connection to use for syncing.
+            description: (String) An optional description for the Azure Key Vault sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            enable_versioning: (Boolean) Whether a renewed certificate is added as a new version of the existing Azure Key Vault certificate instead of a new certificate. Defaults to true.
+            id: (String) The ID of the Azure Key Vault certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain. Defaults to false.
+            key: (String) The metadata key the certificate must carry.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the Azure Key Vault sync to create.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+            vault_base_url: (String) The URL of the Azure Key Vault to sync certificates to (e.g. https://.vault.azure.net).
+        importStatements:
+            - |-
+              # This will import the Azure Key Vault certificate sync by its ID
+              terraform import infisical_certificate_sync_azure_key_vault.example <certificate_sync_id>
     infisical_certificate_sync_certificate:
         subCategory: Certificate Syncs
-        description: 'Attach a certificate to a certificate sync so it is synced to the destination. The certificate must belong to the same application as the certificate sync. Only a currently valid certificate can be synced: certificates that have been renewed, revoked, or expired are rejected. Because Infisical attaches the renewed certificate and drops the superseded one when a certificate is renewed, pinning a literal certificate ID will break at the next renewal. Reference the resource that issues or renews the certificate instead so the ID stays in step automatically.'
+        description: 'Attach a certificate to a certificate sync so it is synced to the destination. The certificate must belong to the same application as the certificate sync. The attachment follows the certificate across renewals. Deprecated: use certificate_filters.certificate_order_ids on the certificate sync resource instead.'
         name: infisical_certificate_sync_certificate
         title: infisical_certificate_sync_certificate Resource - terraform-provider-infisical
         examples:
@@ -2344,13 +3013,560 @@ resources:
                 certificate_id: infisical_cert_manager_certificate.example.id
                 certificate_sync_id: infisical_certificate_sync_aws_certificate_manager.example.id
         argumentDocs:
-            certificate_id: (String) The ID of the certificate to associate with the certificate sync.
+            certificate_id: (String) The ID of the certificate to associate with the certificate sync. Changing it to a renewal of the same certificate updates in place; any other change replaces the association.
             certificate_sync_id: (String) The ID of the certificate sync to associate the certificate with.
             id: (String) The ID of the certificate association.
         importStatements:
             - |-
               # This will import a certificate association using the composite ID "<certificate_sync_id>:<certificate_id>"
               terraform import infisical_certificate_sync_certificate.example <certificate_sync_id>:<certificate_id>
+    infisical_certificate_sync_chef:
+        subCategory: Certificate Syncs
+        description: Create and manage Chef certificate syncs
+        name: infisical_certificate_sync_chef
+        title: infisical_certificate_sync_chef Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of Chef certificate sync",
+                  "destination_config": {
+                    "data_bag_name": "ssl_certificates"
+                  },
+                  "name": "chef-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "Infisical-{{certificateId}}",
+                    "field_mappings": {
+                      "ca_certificate": "ca_certificate",
+                      "certificate": "certificate",
+                      "certificate_chain": "certificate_chain",
+                      "private_key": "private_key"
+                    },
+                    "include_root_ca": false,
+                    "preserve_item_on_renewal": true
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            ca_certificate: (String) The field name that holds the CA certificate. Defaults to ca_certificate.
+            can_remove_certificates: (Boolean) Whether Infisical should remove data bag items from Chef when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to true.
+            certificate: (String) The field name that holds the certificate. Defaults to certificate.
+            certificate_chain: (String) The field name that holds the certificate chain. Defaults to certificate_chain.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The naming scheme for the synced data bag items. Must include the {{certificateId}} or {{shortCertificateId}} placeholder and compile to 1-255 alphanumeric characters, underscores, or hyphens. Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the chef Connection to use for syncing.
+            data_bag_name: (String) The name of the Chef data bag to sync certificates to. May only contain alphanumeric characters, underscores, and hyphens.
+            description: (String) An optional description for the Chef sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            field_mappings: (Attributes) The data bag item field names that hold each part of the certificate. Defaults to certificate, private_key, certificate_chain, and ca_certificate. (see below for nested schema)
+            id: (String) The ID of the Chef certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain. Defaults to false.
+            key: (String) The metadata key the certificate must carry.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the Chef sync to create.
+            preserve_item_on_renewal: (Boolean) Whether a renewed certificate overwrites its existing data bag item instead of creating a new one. Defaults to true.
+            private_key: (String) The field name that holds the private key. Defaults to private_key.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+        importStatements:
+            - |-
+              # This will import the Chef certificate sync by its ID
+              terraform import infisical_certificate_sync_chef.example <certificate_sync_id>
+    infisical_certificate_sync_cloudflare_custom_certificate:
+        subCategory: Certificate Syncs
+        description: Create and manage Cloudflare Custom SSL Certificate certificate syncs
+        name: infisical_certificate_sync_cloudflare_custom_certificate
+        title: infisical_certificate_sync_cloudflare_custom_certificate Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of Cloudflare Custom SSL Certificate sync",
+                  "destination_config": {
+                    "zone_id": "023e105f4ecef8ad9ca31a8372d0c353"
+                  },
+                  "name": "cloudflare-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "infisical-{{certificateId}}"
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            can_remove_certificates: (Boolean) Whether Infisical should remove custom certificates from Cloudflare when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to true.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The naming scheme for synced certificates. Must include the {{certificateId}} or {{shortCertificateId}} placeholder, and compiled names may contain only alphanumeric characters, hyphens and underscores (1-255 characters). Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the cloudflare Connection to use for syncing.
+            description: (String) An optional description for the Cloudflare Custom SSL Certificate sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            id: (String) The ID of the Cloudflare Custom SSL Certificate certificate sync
+            key: (String) The metadata key the certificate must carry.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the Cloudflare Custom SSL Certificate sync to create.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+            zone_id: (String) The ID of the Cloudflare zone to upload custom SSL certificates to.
+        importStatements:
+            - |-
+              # This will import the Cloudflare Custom SSL Certificate certificate sync by its ID
+              terraform import infisical_certificate_sync_cloudflare_custom_certificate.example <certificate_sync_id>
+    infisical_certificate_sync_f5_big_ip:
+        subCategory: Certificate Syncs
+        description: Create and manage F5 BIG-IP certificate syncs
+        name: infisical_certificate_sync_f5_big_ip
+        title: infisical_certificate_sync_f5_big_ip Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of F5 BIG-IP certificate sync",
+                  "destination_config": {
+                    "create_profile_if_missing": true,
+                    "parent_profile": "/Common/clientssl",
+                    "partition": "Common",
+                    "profile_name": "infisical-clientssl",
+                    "profile_type": "client-ssl"
+                  },
+                  "name": "f5-big-ip-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "Infisical-{{certificateId}}",
+                    "include_root_ca": false,
+                    "preserve_item_on_renewal": true
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from F5 BIG-IP when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to true.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The naming scheme for synced certificates, which must compile to 1-255 alphanumeric characters, hyphens, underscores, or periods. Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}. A schema with no placeholder can be linked to only one certificate.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the f5-big-ip Connection to use for syncing.
+            create_profile_if_missing: (Boolean) Whether to create the SSL profile when it does not exist. Only applies when profile_type is client-ssl or server-ssl. Defaults to false.
+            description: (String) An optional description for the F5 BIG-IP sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            id: (String) The ID of the F5 BIG-IP certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain. Defaults to false.
+            key: (String) The metadata key the certificate must carry.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the F5 BIG-IP sync to create.
+            parent_profile: (String) The parent profile a newly created SSL profile inherits from. Only allowed when create_profile_if_missing is true.
+            partition: (String) The F5 BIG-IP partition to sync certificates to. Defaults to the Common partition when unset.
+            preserve_item_on_renewal: (Boolean) Whether a renewed certificate replaces its existing F5 BIG-IP certificate instead of creating a new one. Defaults to true.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            profile_name: (String) The name of the SSL profile to bind synced certificates to. Required when profile_type is client-ssl or server-ssl, and not allowed otherwise.
+            profile_type: '(String) The type of SSL profile to bind synced certificates to. Supported values: none, client-ssl, server-ssl. Leave unset or set to none to sync certificates without binding them to a profile.'
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+        importStatements:
+            - |-
+              # This will import the F5 BIG-IP certificate sync by its ID
+              terraform import infisical_certificate_sync_f5_big_ip.example <certificate_sync_id>
+    infisical_certificate_sync_gcp_certificate_manager:
+        subCategory: Certificate Syncs
+        description: Create and manage GCP Certificate Manager certificate syncs
+        name: infisical_certificate_sync_gcp_certificate_manager
+        title: infisical_certificate_sync_gcp_certificate_manager Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of GCP Certificate Manager certificate sync",
+                  "destination_config": {
+                    "certificate_map_binding": {
+                      "certificate_map": "my-certificate-map",
+                      "hostname": "www.example.com"
+                    },
+                    "gcp_project_id": "my-gcp-project",
+                    "location": "global",
+                    "scope": "default"
+                  },
+                  "name": "gcp-certificate-manager-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "infisical-{{certificateId}}",
+                    "include_root_ca": false,
+                    "labels": {
+                      "environment": "production"
+                    },
+                    "preserve_item_on_renewal": true
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from GCP Certificate Manager when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to true.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_map: (String) The name of the certificate map to add the certificates to.
+            certificate_map_binding: (Attributes) Adds the synced certificates to an entry in an existing certificate map. Requires the global location and the default scope. (see below for nested schema)
+            certificate_name_schema: '(String) The naming scheme for synced certificates. Must start with a lowercase letter and include the {{certificateId}} or {{shortCertificateId}} placeholder, and compiled names may contain only lowercase letters, digits and hyphens (1-63 characters). Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the gcp Connection to use for syncing.
+            description: (String) An optional description for the GCP Certificate Manager sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            gcp_project_id: (String) The ID of the GCP project to sync certificates to.
+            hostname: (String) The hostname of the certificate map entry, such as www.example.com or *.example.com. Leave unset to use the primary entry.
+            id: (String) The ID of the GCP Certificate Manager certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain. Defaults to false.
+            key: (String) The metadata key the certificate must carry.
+            labels: (Map of String) Labels to set on the synced GCP certificates, up to 62. The keys managed-by and infisical-certificate-id are reserved.
+            location: (String) The Certificate Manager location to create certificates in, either global or a region ID such as us-central1.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the GCP Certificate Manager sync to create.
+            preserve_item_on_renewal: (Boolean) Whether to update the existing GCP certificate when a certificate is renewed instead of creating a new one. Defaults to true.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            scope: '(String) The scope of the synced certificates: default, edge-cache, all-regions or client-auth. Defaults to default.'
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+        importStatements:
+            - |-
+              # This will import the GCP Certificate Manager certificate sync by its ID
+              terraform import infisical_certificate_sync_gcp_certificate_manager.example <certificate_sync_id>
+    infisical_certificate_sync_kemp_loadmaster:
+        subCategory: Certificate Syncs
+        description: Create and manage Kemp LoadMaster certificate syncs
+        name: infisical_certificate_sync_kemp_loadmaster
+        title: infisical_certificate_sync_kemp_loadmaster Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of Kemp LoadMaster certificate sync",
+                  "destination_config": {
+                    "virtual_service_id": "1"
+                  },
+                  "name": "kemp-loadmaster-certificate-sync-demo",
+                  "sync_options": {
+                    "ca_certificate_name_schema": "Infisical-ca-{{fingerprint}}",
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "Infisical-{{certificateId}}",
+                    "include_root_ca": false,
+                    "preserve_item_on_renewal": true
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            ca_certificate_name_schema: '(String) The naming scheme for synced CA certificates, which must compile to 1-251 alphanumeric characters, hyphens, underscores, or periods. Available placeholders: {{fingerprint}} (recommended so each CA gets a unique name) and {{commonName}}. Defaults to Infisical-ca-{{fingerprint}}.'
+            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from Kemp LoadMaster when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to true.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The naming scheme for synced certificates. Must include the {{certificateId}} or {{shortCertificateId}} placeholder and compile to 1-251 alphanumeric characters, hyphens, underscores, or periods. Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the kemp-loadmaster Connection to use for syncing.
+            description: (String) An optional description for the Kemp LoadMaster sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            id: (String) The ID of the Kemp LoadMaster certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain. Defaults to false.
+            key: (String) The metadata key the certificate must carry.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the Kemp LoadMaster sync to create.
+            preserve_item_on_renewal: (Boolean) Whether a renewed certificate replaces its existing Kemp LoadMaster certificate instead of creating a new one. Defaults to true.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+            virtual_service_id: (String) The numeric index of the Virtual Service to bind synced certificates to, as shown on the LoadMaster. Leave unset to sync certificates without binding them to a Virtual Service.
+        importStatements:
+            - |-
+              # This will import the Kemp LoadMaster certificate sync by its ID
+              terraform import infisical_certificate_sync_kemp_loadmaster.example <certificate_sync_id>
+    infisical_certificate_sync_linux_server:
+        subCategory: Certificate Syncs
+        description: Create and manage Linux Server certificate syncs
+        name: infisical_certificate_sync_linux_server
+        title: infisical_certificate_sync_linux_server Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003cssh-app-connection-id\u003e",
+                  "description": "Demo of Linux Server certificate sync",
+                  "destination_config": {
+                    "destination_path": "/etc/ssl/infisical"
+                  },
+                  "export_password_wo": "${var.keystore_password}",
+                  "export_password_wo_version": 1,
+                  "name": "linux-server-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "{{commonName}}-{{shortCertificateId}}",
+                    "export_format": "jks",
+                    "file_mode": "0644",
+                    "group": "tomcat",
+                    "include_truststore": true,
+                    "keystore_alias": "tomcat",
+                    "owner": "tomcat",
+                    "post_sync_command": "systemctl reload tomcat",
+                    "private_key_file_mode": "0600"
+                  }
+                }
+              references:
+                export_password_wo: var.keystore_password
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            can_remove_certificates: (Boolean) Whether Infisical should delete certificate files from the server when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to false.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The file base name for synced certificates. It must resolve to a single file name of 1-200 characters using only letters, digits, dots (.), dashes (-), and underscores (_). Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}. A schema with no placeholder can be linked to only one certificate.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            combine_certificate_chain: (Boolean) Whether to write the leaf certificate followed by the chain into a single PEM file instead of a separate chain file. Defaults to false.
+            connection_id: '(String) The ID of the App Connection to use for syncing. Supported connection types: ssh, ldap.'
+            description: (String) An optional description for the Linux Server sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            destination_path: (String) The absolute directory on the server to write certificate files to (e.g. /etc/ssl/infisical).
+            export_format: '(String) The file format to deliver certificates in. Supported values: pem, pkcs12, jks. Defaults to pem.'
+            export_password: (String, Sensitive) The password protecting the exported PKCS#12 or Java KeyStore file. Required when export_format is pkcs12 or jks, unless export_password_wo is set. Stored in state.
+            export_password_wo: (String, Sensitive) The keystore export password as a write-only value that is never stored in state. Requires Terraform 1.11 or higher.
+            export_password_wo_version: (Number) Used together with export_password_wo to trigger an update. Increment this value to send a new export_password_wo.
+            file_mode: (String) The octal file mode applied to delivered certificate files (e.g. 0644).
+            group: (String) The Linux group that should own the delivered files.
+            health_check_command: '(String) A command run on the server to check the health of the delivered certificates. Requires a gateway on the connection. Available variables: {{certificateFiles}}, {{certificateDirectory}}, {{certificatePath}}, {{commonName}}, {{exportPassword}}. Using {{certificatePath}} or {{commonName}} limits the sync to one certificate.'
+            host: (String) The hostname or IP address of the server to sync to. Required with an LDAP connection and not allowed with any other connection type.
+            id: (String) The ID of the Linux Server certificate sync
+            include_private_key: (Boolean) Whether to deliver the certificate's private key alongside the certificate. Defaults to true.
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the delivered certificate chain. Defaults to false.
+            include_truststore: (Boolean) Whether to also deliver a <name>.truststore.jks file holding the chain and root CA as trusted certificates. Only valid when export_format is jks.
+            key: (String) The metadata key the certificate must carry.
+            keystore_alias: (String) The alias of the private key entry in a PKCS#12 or JKS keystore, using only letters, digits, dots (.), dashes (-), and underscores (_). Only valid when export_format is pkcs12 or jks, and defaults to the certificate's file base name.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the Linux Server sync to create.
+            owner: (String) The Linux user that should own the delivered files.
+            pem_certificate_extension: '(String) The file extension of PEM certificate and chain files. Supported values: pem, crt. Defaults to pem.'
+            port: (Number) The SSH port to reach the server on. Only valid with an LDAP connection.
+            post_sync_command: '(String) A command run on the server after certificates are delivered, for example to reload a service. Requires a gateway on the connection. Available variables: {{certificateFiles}}, {{certificateDirectory}}, {{certificatePath}}, {{commonName}}, {{exportPassword}}. Using {{certificatePath}} or {{commonName}} limits the sync to one certificate.'
+            private_key_file_mode: (String) The octal file mode applied to delivered private key files (e.g. 0600).
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            ssh_host_keys: (String) The trusted SSH host keys of the server, as produced by ssh-keyscan <host>. The sync refuses to connect when the server presents a different key, and at least one RSA or ECDSA key must be included. Only valid with an LDAP connection.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+        importStatements:
+            - |-
+              # This will import the Linux Server certificate sync by its ID
+              terraform import infisical_certificate_sync_linux_server.example <certificate_sync_id>
+    infisical_certificate_sync_netscaler:
+        subCategory: Certificate Syncs
+        description: Create and manage NetScaler certificate syncs
+        name: infisical_certificate_sync_netscaler
+        title: infisical_certificate_sync_netscaler Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of NetScaler certificate sync",
+                  "destination_config": {
+                    "vserver_name": "\u003cssl-vserver-name\u003e"
+                  },
+                  "name": "netscaler-certificate-sync-demo",
+                  "sync_options": {
+                    "can_remove_certificates": true,
+                    "certificate_name_schema": "Infisical-{{shortCertificateId}}",
+                    "include_root_ca": false,
+                    "preserve_item_on_renewal": true
+                  }
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            can_remove_certificates: (Boolean) Whether Infisical should remove certificates from NetScaler when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to true.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The naming scheme for synced certkeys, which must compile to 1-63 alphanumeric characters, hyphens, underscores, or periods. Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}. A schema with no placeholder can be linked to only one certificate.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            connection_id: (String) The ID of the netscaler Connection to use for syncing.
+            description: (String) An optional description for the NetScaler sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            id: (String) The ID of the NetScaler certificate sync
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the synced certificate chain. Defaults to false.
+            key: (String) The metadata key the certificate must carry.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the NetScaler sync to create.
+            preserve_item_on_renewal: (Boolean) Whether a renewed certificate replaces its existing NetScaler certkey instead of creating a new one. Defaults to true.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+            vserver_name: (String) The name of the NetScaler SSL vServer to bind synced certificates to. Leave unset to sync certificates without binding them to a vServer.
+        importStatements:
+            - |-
+              # This will import the NetScaler certificate sync by its ID
+              terraform import infisical_certificate_sync_netscaler.example <certificate_sync_id>
+    infisical_certificate_sync_nutanix_prism_central:
+        subCategory: Certificate Syncs
+        description: Create and manage Nutanix Prism Central certificate syncs
+        name: infisical_certificate_sync_nutanix_prism_central
+        title: infisical_certificate_sync_nutanix_prism_central Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Demo of Nutanix Prism Central certificate sync",
+                  "destination_config": {
+                    "cluster_id": "\u003ccluster-id\u003e",
+                    "cluster_name": "\u003ccluster-name\u003e"
+                  },
+                  "name": "nutanix-prism-central-certificate-sync-demo"
+                }
+        argumentDocs:
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            cluster_id: (String) The ID of the Nutanix cluster to install the certificate on.
+            cluster_name: (String) The name of the Nutanix cluster to install the certificate on.
+            connection_id: (String) The ID of the nutanix-prism-central Connection to use for syncing.
+            description: (String) An optional description for the Nutanix Prism Central sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            id: (String) The ID of the Nutanix Prism Central certificate sync
+            key: (String) The metadata key the certificate must carry.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the Nutanix Prism Central sync to create.
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            value: (String) The value the key must have. Leave unset to match any value.
+        importStatements:
+            - |-
+              # This will import the Nutanix Prism Central certificate sync by its ID
+              terraform import infisical_certificate_sync_nutanix_prism_central.example <certificate_sync_id>
+    infisical_certificate_sync_windows_server:
+        subCategory: Certificate Syncs
+        description: Create and manage Windows Server certificate syncs
+        name: infisical_certificate_sync_windows_server
+        title: infisical_certificate_sync_windows_server Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "application_id": "\u003ccert-manager-application-id\u003e",
+                  "certificate_filters": {
+                    "certificate_order_ids": [
+                      "${infisical_cert_manager_certificate.example.order_id}"
+                    ]
+                  },
+                  "connection_id": "\u003cwinrm-app-connection-id\u003e",
+                  "description": "Demo of Windows Server certificate sync",
+                  "destination_config": {
+                    "destination_path": "C:\\certs"
+                  },
+                  "export_password": "${var.keystore_password}",
+                  "name": "windows-server-certificate-sync-demo",
+                  "sync_options": {
+                    "certificate_name_schema": "{{commonName}}-{{shortCertificateId}}",
+                    "export_format": "pkcs12",
+                    "file_access_rules": [
+                      {
+                        "access": "read",
+                        "identity": "CORP\\svc-iis"
+                      },
+                      {
+                        "access": "full-control",
+                        "identity": "BUILTIN\\Administrators"
+                      }
+                    ]
+                  }
+                }
+              references:
+                export_password: var.keystore_password
+        argumentDocs:
+            access: '(String) The access level to grant. Supported values: read, modify, full-control.'
+            application_id: (String) The ID of the Certificate Manager application to create the sync in.
+            auto_sync_enabled: (Boolean) Whether certificates should be automatically synced to the destination when they are added or renewed.
+            can_remove_certificates: (Boolean) Whether Infisical should delete certificate files from the server when their certificates leave this sync, for example when certificate_filters stops matching them. Destroying the sync leaves them in place. Defaults to false.
+            certificate_filters: '(Attributes) Which of the application''s certificates this sync holds. A certificate must match every field that is set: setting both certificate_order_ids and profile_ids selects only the certificates in both. Leave the block out to manage the certificates outside Terraform, for example in the Infisical UI. An empty block, or an empty certificate_order_ids, makes the sync hold no certificates. (see below for nested schema)'
+            certificate_name_schema: '(String) The file base name for synced certificates. It must resolve to a single file name of 1-200 characters using only letters, digits, dots (.), dashes (-), and underscores (_). Available placeholders: {{certificateId}}, {{shortCertificateId}}, {{profileId}}, {{applicationId}}, {{applicationName}}, {{commonName}}. A schema with no placeholder can be linked to only one certificate.'
+            certificate_order_ids: (Set of String) The certificate orders to sync, from the order_id attribute of infisical_cert_manager_certificate. A certificate and all of its renewals share one order, so the sync keeps holding the newest certificate of each order.
+            combine_certificate_chain: (Boolean) Whether to write the leaf certificate followed by the chain into a single PEM file instead of a separate chain file. Defaults to false.
+            connection_id: '(String) The ID of the App Connection to use for syncing. Supported connection types: winrm, ldap.'
+            description: (String) An optional description for the Windows Server sync.
+            destination_config: (Attributes) The destination configuration for the certificate sync. (see below for nested schema)
+            destination_path: (String) The absolute local drive directory on the server to write certificate files to (e.g. C:\certs), where UNC paths are not supported.
+            export_format: '(String) The file format to deliver certificates in. Supported values: pem, pkcs12, jks. Defaults to pkcs12.'
+            export_password: (String, Sensitive) The password protecting the exported PKCS#12 or Java KeyStore file. Required when export_format is pkcs12 or jks, unless export_password_wo is set. Stored in state.
+            export_password_wo: (String, Sensitive) The keystore export password as a write-only value that is never stored in state. Requires Terraform 1.11 or higher.
+            export_password_wo_version: (Number) Used together with export_password_wo to trigger an update. Increment this value to send a new export_password_wo.
+            file_access_rules: (Attributes List) Access rules granted on the delivered files to Windows users or groups, up to 20. (see below for nested schema)
+            health_check_command: '(String) A command run on the server to check the health of the delivered certificates. Requires a gateway on the connection. Available variables: {{certificateFiles}}, {{certificateDirectory}}, {{certificatePath}}, {{commonName}}, {{exportPassword}}. Using {{certificatePath}} or {{commonName}} limits the sync to one certificate.'
+            host: (String) The hostname or IP address of the server to sync to. Required with an LDAP connection and not allowed with any other connection type. The LDAP connection must have a gateway.
+            id: (String) The ID of the Windows Server certificate sync
+            identity: (String) The Windows user or group to grant access to (e.g. DOMAIN\svc-account or BUILTIN\Administrators).
+            include_private_key: (Boolean) Whether to deliver the certificate's private key alongside the certificate. Defaults to true.
+            include_root_ca: (Boolean) Whether to include the root CA certificate in the delivered certificate chain. Defaults to false.
+            include_truststore: (Boolean) Whether to also deliver a <name>.truststore.jks file holding the chain and root CA as trusted certificates. Only valid when export_format is jks.
+            key: (String) The metadata key the certificate must carry.
+            keystore_alias: (String) The alias of the private key entry in a PKCS#12 or JKS keystore, using only letters, digits, dots (.), dashes (-), and underscores (_). Only valid when export_format is pkcs12 or jks, and defaults to the certificate's file base name.
+            metadata: (Attributes Set) Sync certificates carrying every one of these metadata pairs. (see below for nested schema)
+            name: (String) The name of the Windows Server sync to create.
+            pem_certificate_extension: '(String) The file extension of PEM certificate and chain files. Supported values: pem, crt. Defaults to pem.'
+            port: (Number) The WinRM port to reach the server on. Only valid with an LDAP connection.
+            post_sync_command: '(String) A command run on the server after certificates are delivered, for example to reload a service. Requires a gateway on the connection. Available variables: {{certificateFiles}}, {{certificateDirectory}}, {{certificatePath}}, {{commonName}}, {{exportPassword}}. Using {{certificatePath}} or {{commonName}} limits the sync to one certificate.'
+            profile_ids: (Set of String) Sync certificates issued from any one of these certificate profiles.
+            ssl_certificate: (String) The PEM-encoded CA certificate used to verify a self-signed WinRM HTTPS listener. Only valid with an LDAP connection.
+            ssl_enabled: (Boolean) Whether to reach the server over HTTPS WinRM instead of HTTP with NTLM message encryption. Only valid with an LDAP connection.
+            ssl_reject_unauthorized: (Boolean) Whether to verify the server's WinRM certificate when using HTTPS. Only valid with an LDAP connection.
+            sync_options: (Attributes) Parameters to modify how certificates are synced. (see below for nested schema)
+            value: (String) The value the key must have. Leave unset to match any value.
+        importStatements:
+            - |-
+              # This will import the Windows Server certificate sync by its ID
+              terraform import infisical_certificate_sync_windows_server.example <certificate_sync_id>
     infisical_dynamic_secret_aws_iam:
         subCategory: Dynamic Secrets
         description: Create and manage AWS IAM Dynamic Secret
@@ -5254,6 +6470,56 @@ resources:
             temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
             uppercase: (Number) Minimum number of uppercase letters required in the password.
         importStatements: []
+    infisical_secret_rotation_litellm_api_key:
+        subCategory: Secret Rotations
+        description: Create and manage LiteLLM API Key Secret Rotations
+        name: infisical_secret_rotation_litellm_api_key
+        title: infisical_secret_rotation_litellm_api_key Resource - terraform-provider-infisical
+        examples:
+            - name: litellm-api-key
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "litellm-api-key-rotation-example",
+                  "parameters": {
+                    "additional_options": "${jsonencode({\n      max_budget = 100\n      tpm_limit  = 10000\n      metadata = {\n        owner = \"platform-team\"\n      }\n    })}",
+                    "models": [
+                      "gpt-4o",
+                      "gpt-4o-mini"
+                    ],
+                    "name": "\u003clitellm-api-key-name\u003e",
+                    "team_id": "\u003clitellm-team-id\u003e",
+                    "user_id": "\u003clitellm-user-id\u003e"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "api_key": "LITELLM_API_KEY"
+                  }
+                }
+        argumentDocs:
+            additional_options: (String) A JSON-encoded object of additional LiteLLM /key/generate options (e.g. max_budget, tpm_limit, metadata). Use jsonencode() to build it. Reserved fields (key_alias, auto_rotate, rotation_interval, duration, send_invite_email, key_type, user_id, team_id, models) and permission fields (allowed_routes, permission, object_permission) cannot be set here.
+            api_key: (String) The name of the secret that the rotated LiteLLM API key will be mapped to.
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            models: (List of String) The list of model names the generated key is allowed to access. An empty or omitted list allows all models.
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            team_id: (String) The ID of the LiteLLM team to associate the generated key with.
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+            user_id: (String) The ID of the LiteLLM user to associate the generated key with.
+        importStatements: []
     infisical_secret_rotation_mssql_credentials:
         subCategory: Secret Rotations
         description: Create and manage MsSQL Credentials Secret Rotations
@@ -6244,6 +7510,57 @@ resources:
             - |-
               # This will import the Render secret sync by its ID
               terraform import infisical_secret_sync_render.example <secret_sync_id>
+    infisical_secret_sync_spacelift:
+        subCategory: Secret Syncs
+        description: Create and manage Spacelift secret syncs
+        name: infisical_secret_sync_spacelift
+        title: infisical_secret_sync_spacelift Resource - terraform-provider-infisical
+        examples:
+            - name: example
+              manifest: |-
+                {
+                  "auto_sync_enabled": true,
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "description": "Sync secrets to a Spacelift context",
+                  "destination_config": {
+                    "config_type": "environment-variable",
+                    "context_id": "\u003cspacelift-context-id\u003e",
+                    "context_name": "\u003cspacelift-context-name\u003e"
+                  },
+                  "environment": "\u003cenv-slug\u003e",
+                  "name": "spacelift-secret-sync",
+                  "project_id": "\u003cyour-infisical-project-id\u003e",
+                  "secret_path": "\u003cinfisical-secret-path\u003e",
+                  "sync_options": {
+                    "disable_secret_deletion": false,
+                    "key_schema": "{{secretKey}}_{{environment}}",
+                    "write_only": true
+                  }
+                }
+        argumentDocs:
+            auto_sync_enabled: (Boolean) Whether secrets should be automatically synced when changes occur at the source location or not.
+            config_type: '(String) The type of config element to create in Spacelift. Supported options: environment-variable, file-mount'
+            connection_id: (String) The ID of the spacelift Connection to use for syncing.
+            context_id: (String) The ID of the Spacelift context to sync secrets to.
+            context_name: (String) The name of the Spacelift context to sync secrets to.
+            description: (String) An optional description for the Spacelift sync.
+            destination_config: (Attributes) The destination configuration for the secret sync. (see below for nested schema)
+            disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Spacelift. Enable this option if you intend to manage some secrets manually outside of Infisical.
+            environment: (String) The slug of the project environment to sync secrets from.
+            file_mount_format: '(String) The format for file mount config elements. Supported options: dot-env (default), secret-per-file'
+            id: (String) The ID of the Spacelift secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well.
+            key_schema: (String) The format to use for structuring secret keys in the Spacelift destination.
+            mount_path: (String) The file path for the mounted file relative to /mnt/workspace/. Required when config_type is 'file-mount' and file_mount_format is not 'secret-per-file'. When file_mount_format is 'secret-per-file', this is the directory path.
+            name: (String) The name of the Spacelift sync to create. Must be slug-friendly.
+            project_id: (String) The ID of the Infisical project to create the sync in.
+            secret_path: (String) The folder path to sync secrets from.
+            sync_options: (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
+            write_only: (Boolean) Whether secrets should be marked as secret in Spacelift. Secret values are only available to Runs and Tasks and are not accessible in the web GUI or through the API.
+        importStatements:
+            - |-
+              # This will import the Spacelift secret sync by its ID
+              terraform import infisical_secret_sync_spacelift.example <secret_sync_id>
     infisical_secret_sync_supabase:
         subCategory: Secret Syncs
         description: Create and manage Supabase secret syncs
