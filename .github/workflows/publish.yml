@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  GO_VERSION: "1.26.8"
+  GO_VERSION: "1.26.10"
   DOCKER_BUILDX_VERSION: "v0.8.2"
 
 jobs:
