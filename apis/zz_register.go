@@ -22,6 +22,7 @@ import (
 	v1alpha2secretrotation "github.com/infisical/provider-infisical/apis/secretrotation/v1alpha2"
 	v1alpha1secretsync "github.com/infisical/provider-infisical/apis/secretsync/v1alpha1"
 	v1alpha2secretsync "github.com/infisical/provider-infisical/apis/secretsync/v1alpha2"
+	v1alpha2secretvalidationrule "github.com/infisical/provider-infisical/apis/secretvalidationrule/v1alpha2"
 	v1alpha1apis "github.com/infisical/provider-infisical/apis/v1alpha1"
 	v1beta1 "github.com/infisical/provider-infisical/apis/v1beta1"
 )
@@ -41,6 +42,7 @@ func init() {
 		v1alpha2secretrotation.SchemeBuilder.AddToScheme,
 		v1alpha1secretsync.SchemeBuilder.AddToScheme,
 		v1alpha2secretsync.SchemeBuilder.AddToScheme,
+		v1alpha2secretvalidationrule.SchemeBuilder.AddToScheme,
 		v1alpha1apis.SchemeBuilder.AddToScheme,
 		v1beta1.SchemeBuilder.AddToScheme,
 	)
