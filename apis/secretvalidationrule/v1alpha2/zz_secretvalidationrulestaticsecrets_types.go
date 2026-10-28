@@ -44,73 +44,58 @@ type ConstraintsParameters struct {
 
 type KeyConstraintsInitParameters struct {
 
-	// (Number) The maximum number of characters the secret key may contain.
 	// The maximum number of characters the secret key may contain.
 	MaxLength *float64 `json:"maxLength,omitempty" tf:"max_length,omitempty"`
 
-	// (Number) The minimum number of characters the secret key must contain.
 	// The minimum number of characters the secret key must contain.
 	MinLength *float64 `json:"minLength,omitempty" tf:"min_length,omitempty"`
 
-	// (String) A regular expression the secret key must match.
 	// A regular expression the secret key must match.
 	RegexPattern *string `json:"regexPattern,omitempty" tf:"regex_pattern,omitempty"`
 
-	// (String) A string the secret key must start with.
 	// A string the secret key must start with.
 	RequiredPrefix *string `json:"requiredPrefix,omitempty" tf:"required_prefix,omitempty"`
 
-	// (String) A string the secret key must end with.
 	// A string the secret key must end with.
 	RequiredSuffix *string `json:"requiredSuffix,omitempty" tf:"required_suffix,omitempty"`
 }
 
 type KeyConstraintsObservation struct {
 
-	// (Number) The maximum number of characters the secret key may contain.
 	// The maximum number of characters the secret key may contain.
 	MaxLength *float64 `json:"maxLength,omitempty" tf:"max_length,omitempty"`
 
-	// (Number) The minimum number of characters the secret key must contain.
 	// The minimum number of characters the secret key must contain.
 	MinLength *float64 `json:"minLength,omitempty" tf:"min_length,omitempty"`
 
-	// (String) A regular expression the secret key must match.
 	// A regular expression the secret key must match.
 	RegexPattern *string `json:"regexPattern,omitempty" tf:"regex_pattern,omitempty"`
 
-	// (String) A string the secret key must start with.
 	// A string the secret key must start with.
 	RequiredPrefix *string `json:"requiredPrefix,omitempty" tf:"required_prefix,omitempty"`
 
-	// (String) A string the secret key must end with.
 	// A string the secret key must end with.
 	RequiredSuffix *string `json:"requiredSuffix,omitempty" tf:"required_suffix,omitempty"`
 }
 
 type KeyConstraintsParameters struct {
 
-	// (Number) The maximum number of characters the secret key may contain.
 	// The maximum number of characters the secret key may contain.
 	// +kubebuilder:validation:Optional
 	MaxLength *float64 `json:"maxLength,omitempty" tf:"max_length,omitempty"`
 
-	// (Number) The minimum number of characters the secret key must contain.
 	// The minimum number of characters the secret key must contain.
 	// +kubebuilder:validation:Optional
 	MinLength *float64 `json:"minLength,omitempty" tf:"min_length,omitempty"`
 
-	// (String) A regular expression the secret key must match.
 	// A regular expression the secret key must match.
 	// +kubebuilder:validation:Optional
 	RegexPattern *string `json:"regexPattern,omitempty" tf:"regex_pattern,omitempty"`
 
-	// (String) A string the secret key must start with.
 	// A string the secret key must start with.
 	// +kubebuilder:validation:Optional
 	RequiredPrefix *string `json:"requiredPrefix,omitempty" tf:"required_prefix,omitempty"`
 
-	// (String) A string the secret key must end with.
 	// A string the secret key must end with.
 	// +kubebuilder:validation:Optional
 	RequiredSuffix *string `json:"requiredSuffix,omitempty" tf:"required_suffix,omitempty"`
@@ -236,23 +221,18 @@ type SecretValidationRuleStaticSecretsParameters struct {
 
 type ValueConstraintsInitParameters struct {
 
-	// (Number) The maximum number of characters the secret key may contain.
 	// The maximum number of characters the secret value may contain.
 	MaxLength *float64 `json:"maxLength,omitempty" tf:"max_length,omitempty"`
 
-	// (Number) The minimum number of characters the secret key must contain.
 	// The minimum number of characters the secret value must contain.
 	MinLength *float64 `json:"minLength,omitempty" tf:"min_length,omitempty"`
 
-	// (String) A regular expression the secret key must match.
 	// A regular expression the secret value must match.
 	RegexPattern *string `json:"regexPattern,omitempty" tf:"regex_pattern,omitempty"`
 
-	// (String) A string the secret key must start with.
 	// A string the secret value must start with.
 	RequiredPrefix *string `json:"requiredPrefix,omitempty" tf:"required_prefix,omitempty"`
 
-	// (String) A string the secret key must end with.
 	// A string the secret value must end with.
 	RequiredSuffix *string `json:"requiredSuffix,omitempty" tf:"required_suffix,omitempty"`
 
@@ -267,23 +247,18 @@ type ValueConstraintsInitParameters struct {
 
 type ValueConstraintsObservation struct {
 
-	// (Number) The maximum number of characters the secret key may contain.
 	// The maximum number of characters the secret value may contain.
 	MaxLength *float64 `json:"maxLength,omitempty" tf:"max_length,omitempty"`
 
-	// (Number) The minimum number of characters the secret key must contain.
 	// The minimum number of characters the secret value must contain.
 	MinLength *float64 `json:"minLength,omitempty" tf:"min_length,omitempty"`
 
-	// (String) A regular expression the secret key must match.
 	// A regular expression the secret value must match.
 	RegexPattern *string `json:"regexPattern,omitempty" tf:"regex_pattern,omitempty"`
 
-	// (String) A string the secret key must start with.
 	// A string the secret value must start with.
 	RequiredPrefix *string `json:"requiredPrefix,omitempty" tf:"required_prefix,omitempty"`
 
-	// (String) A string the secret key must end with.
 	// A string the secret value must end with.
 	RequiredSuffix *string `json:"requiredSuffix,omitempty" tf:"required_suffix,omitempty"`
 
@@ -298,27 +273,22 @@ type ValueConstraintsObservation struct {
 
 type ValueConstraintsParameters struct {
 
-	// (Number) The maximum number of characters the secret key may contain.
 	// The maximum number of characters the secret value may contain.
 	// +kubebuilder:validation:Optional
 	MaxLength *float64 `json:"maxLength,omitempty" tf:"max_length,omitempty"`
 
-	// (Number) The minimum number of characters the secret key must contain.
 	// The minimum number of characters the secret value must contain.
 	// +kubebuilder:validation:Optional
 	MinLength *float64 `json:"minLength,omitempty" tf:"min_length,omitempty"`
 
-	// (String) A regular expression the secret key must match.
 	// A regular expression the secret value must match.
 	// +kubebuilder:validation:Optional
 	RegexPattern *string `json:"regexPattern,omitempty" tf:"regex_pattern,omitempty"`
 
-	// (String) A string the secret key must start with.
 	// A string the secret value must start with.
 	// +kubebuilder:validation:Optional
 	RequiredPrefix *string `json:"requiredPrefix,omitempty" tf:"required_prefix,omitempty"`
 
-	// (String) A string the secret key must end with.
 	// A string the secret value must end with.
 	// +kubebuilder:validation:Optional
 	RequiredSuffix *string `json:"requiredSuffix,omitempty" tf:"required_suffix,omitempty"`
