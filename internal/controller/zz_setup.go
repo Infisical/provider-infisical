@@ -28,6 +28,7 @@ import (
 	secretfolder "github.com/infisical/provider-infisical/internal/controller/secret/secretfolder"
 	secretrotationazureclientsecret "github.com/infisical/provider-infisical/internal/controller/secretrotation/secretrotationazureclientsecret"
 	secretsyncgithub "github.com/infisical/provider-infisical/internal/controller/secretsync/secretsyncgithub"
+	secretvalidationrulestaticsecrets "github.com/infisical/provider-infisical/internal/controller/secretvalidationrule/secretvalidationrulestaticsecrets"
 )
 
 // Setup creates all controllers with the supplied logger and adds them to
@@ -53,6 +54,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		secretfolder.Setup,
 		secretrotationazureclientsecret.Setup,
 		secretsyncgithub.Setup,
+		secretvalidationrulestaticsecrets.Setup,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err
@@ -84,6 +86,7 @@ func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 		secretfolder.SetupGated,
 		secretrotationazureclientsecret.SetupGated,
 		secretsyncgithub.SetupGated,
+		secretvalidationrulestaticsecrets.SetupGated,
 	} {
 		if err := setup(mgr, o); err != nil {
 			return err
@@ -114,6 +117,7 @@ func SetupWebhookWithManager(mgr ctrl.Manager) error {
 		secretfolder.SetupWebhookWithManager,
 		secretrotationazureclientsecret.SetupWebhookWithManager,
 		secretsyncgithub.SetupWebhookWithManager,
+		secretvalidationrulestaticsecrets.SetupWebhookWithManager,
 	} {
 		if err := setup(mgr); err != nil {
 			return err

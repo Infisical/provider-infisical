@@ -107,6 +107,8 @@ const (
 	secretGroup    = "secret.crossplane.infisical.com"
 	groupGroup     = "group.crossplane.infisical.com"
 	secretSyncAPIs = "secretsync.crossplane.infisical.com"
+
+	secretValidationRuleGroup = "secretvalidationrule.crossplane.infisical.com"
 )
 
 // objects are all test objects. Every kind of the provider has at least one.
@@ -133,6 +135,13 @@ var objects = []object{
 	{
 		file: "secretfolder", name: "folder", group: secretGroup, kind: "SecretFolder",
 		update: updateBoth(`{"description":"updated by e2e"}`, "status.atProvider.description", `"updated by e2e"`),
+	},
+	{
+		file: "secretvalidationrulestaticsecrets", name: "secret-validation-rule-static-secrets",
+		group: secretValidationRuleGroup, kind: "SecretValidationRuleStaticSecrets", onlyV1alpha2: true,
+		update: map[string]*update{
+			v1alpha2: {set: `{"description":"updated by e2e"}`, check: "status.atProvider.description", want: `"updated by e2e"`},
+		},
 	},
 	{
 		file: "universalauth", name: "universal-auth", group: identityGroup, kind: "UniversalAuth",

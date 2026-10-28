@@ -16,6 +16,7 @@ import (
 	"github.com/infisical/provider-infisical/config/secret"
 	"github.com/infisical/provider-infisical/config/secretrotation"
 	"github.com/infisical/provider-infisical/config/secretsync"
+	"github.com/infisical/provider-infisical/config/secretvalidationrule"
 )
 
 const (
@@ -49,6 +50,7 @@ func GetProvider() *ujconfig.Provider {
 		secret.Configure,
 		secretrotation.Configure,
 		appconnection.Configure,
+		secretvalidationrule.Configure,
 	} {
 		configure(pc)
 	}
