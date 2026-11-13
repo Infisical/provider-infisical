@@ -221,6 +221,11 @@ func (in *SecretSyncGithubInitParameters) DeepCopyInto(out *SecretSyncGithubInit
 		*out = new(string)
 		**out = **in
 	}
+	if in.IncludeAllSubFolders != nil {
+		in, out := &in.IncludeAllSubFolders, &out.IncludeAllSubFolders
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Name != nil {
 		in, out := &in.Name, &out.Name
 		*out = new(string)
@@ -328,6 +333,11 @@ func (in *SecretSyncGithubObservation) DeepCopyInto(out *SecretSyncGithubObserva
 		*out = new(string)
 		**out = **in
 	}
+	if in.IncludeAllSubFolders != nil {
+		in, out := &in.IncludeAllSubFolders, &out.IncludeAllSubFolders
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Name != nil {
 		in, out := &in.Name, &out.Name
 		*out = new(string)
@@ -386,6 +396,11 @@ func (in *SecretSyncGithubParameters) DeepCopyInto(out *SecretSyncGithubParamete
 	if in.Environment != nil {
 		in, out := &in.Environment, &out.Environment
 		*out = new(string)
+		**out = **in
+	}
+	if in.IncludeAllSubFolders != nil {
+		in, out := &in.IncludeAllSubFolders, &out.IncludeAllSubFolders
+		*out = new(bool)
 		**out = **in
 	}
 	if in.Name != nil {

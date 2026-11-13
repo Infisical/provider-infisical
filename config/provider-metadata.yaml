@@ -185,6 +185,27 @@ resources:
                   "resource_id": "\u003cyour-certificate-manager-application-id\u003e",
                   "resource_type": "cert-manager.application"
                 }
+            - name: rotation_failed
+              manifest: |-
+                {
+                  "channels": {
+                    "project_admins": {
+                      "email": {
+                        "recipients": [
+                          {
+                            "id": "\u003cyour-project-id\u003e",
+                            "type": "project-admins"
+                          }
+                        ]
+                      },
+                      "name": "Project admins"
+                    }
+                  },
+                  "event_type": "failed",
+                  "name": "Rotation failure alert",
+                  "resource_id": "\u003cyour-secret-rotation-id\u003e",
+                  "resource_type": "secret.rotation"
+                }
         argumentDocs:
             alert_before_days: '(Number) How many days before expiry the alert fires. Required for these events, and not used by the others: identity.authentication.expiry, cert-manager.application.certificate.expiry, cert-manager.certificate.expiry, cert-manager.signer.certificate.expiry. Must be at least 1, and at most 90 for identity.authentication; 365 for cert-manager, cert-manager.application, cert-manager.signer.'
             application_ids: '(Set of String) Only certificates in these Certificate Manager applications. Only for these events: cert-manager.certificate.expiry, cert-manager.certificate.issuance, cert-manager.certificate.renewal, cert-manager.certificate.revocation. Leave it out to cover all of them. At most 100.'
@@ -202,14 +223,15 @@ resources:
             org_id: (String) The ID of the organization the alert belongs to. Always set, whether the alert is scoped to the organization or to a project, so it is what tells you which organization a project level alert was created under.
             pagerduty: (Attributes) Creates PagerDuty incidents through the Events API v2. (see below for nested schema)
             profile_ids: '(Set of String) Only certificates issued from these certificate profiles. Only for these events: cert-manager.certificate.expiry, cert-manager.certificate.issuance, cert-manager.certificate.renewal, cert-manager.certificate.revocation. Leave it out to cover all of them. At most 100.'
-            project_id: '(String) The ID of the project the resource belongs to. Required for project level resources, and must be omitted for organization level ones. Not used by these resource types, so leave it out: cert-manager, cert-manager.application, cert-manager.signer.'
+            project_id: '(String) The ID of the project the resource belongs to. Required for project level resources, and must be omitted for organization level ones. Not used by these resource types, so leave it out: cert-manager, cert-manager.application, cert-manager.signer, secret.rotation.'
             recipients: (Attributes Set) The principals to notify. At least one and at most 20 are allowed. (see below for nested schema)
             resource_id: '(String) The ID of the resource to watch, of the kind resource_type names. Required, except for resource types that watch a whole scope, where it must be omitted: cert-manager, cert-manager.signer.'
-            resource_type: '(String) The type of the resource to watch. Options: cert-manager, cert-manager.application, cert-manager.signer, identity.authentication.'
+            resource_type: '(String) The type of the resource to watch. Options: cert-manager, cert-manager.application, cert-manager.signer, identity.authentication, secret.rotation.'
+            signer_ids: '(Set of String) Only certificates of these code signing signers, by ID. To get a signer''s ID, open it under Code Signing > Signers in Certificate Manager and select Options > Copy Signer ID. Only for these events: cert-manager.signer.certificate.expiry. Leave it out to cover all of them. At most 100.'
             signing_secret: '(String, Sensitive) The secret used to sign the payload so the receiver can verify it. Write-only: it is never returned by the API, so an imported channel keeps the secret it was created with until one is set here.'
             slack: (Attributes) Posts notifications to a Slack channel through an incoming webhook. (see below for nested schema)
             sources: '(Set of String) Only certificates with these sources. Options: issued, discovered, imported. Leave it out to cover every source. Only for these events: cert-manager.certificate.expiry, cert-manager.certificate.issuance, cert-manager.certificate.renewal, cert-manager.certificate.revocation.'
-            type: '(String) The type of the recipient. Options: user, group, email. The email type is only for cert-manager, cert-manager.application, cert-manager.signer alerts.'
+            type: '(String) The type of the recipient. Options: user, group, email, project-admins, project-members. The email type is only for cert-manager, cert-manager.application, cert-manager.signer alerts. The project-admins type notifies the members who have the admin role directly on the project, the project-members type notifies everyone in the project, directly or through a group, and both are only for secret.rotation alerts.'
             url: (String) The HTTPS URL the CloudEvents payload is sent to.
             webhook: (Attributes) Sends notifications to an HTTPS endpoint as a CloudEvents payload. (see below for nested schema)
             webhook_url: '(String, Sensitive) The Slack incoming webhook URL notifications are posted to. Must be a https://hooks.slack.com URL. Write-only: it is never returned by the API, so it cannot be imported.'
@@ -1904,7 +1926,7 @@ resources:
               terraform import infisical_cert_manager_ca_certificate.example <ca_id>:<cert_id>
     infisical_cert_manager_certificate:
         subCategory: Certificate Management
-        description: Request and manage certificates from Infisical certificate profiles. Supports both CSR-based and direct field requests. The resource will poll until the certificate is issued or a timeout is reached. Only Machine Identity authentication is supported for this resource.
+        description: Request and manage certificates from Infisical certificate profiles, either from a CSR or from subject fields. The resource polls until the certificate is issued or timeout_seconds is reached. Only Machine Identity authentication is supported. manual_renew_on_apply_within_days renews the certificate in place when you run terraform apply close to its expiry. Terraform only checks this during an apply, so if nobody applies before the certificate expires, it expires and can no longer be renewed this way; you then have to replace it with terraform apply -replace. Only use it if you apply on a schedule that runs more often than the renewal window. Otherwise, turn on auto_renew in the api_config of infisical_cert_manager_application_profile and Infisical renews the certificate for you. Changing csr also renews the certificate in place with the new CSR. The previous certificate stays valid until it expires. revoke_on_destroy and delete_on_destroy act when the resource is destroyed or replaced, using the values from the last apply. delete_on_destroy does not revoke, so set both to revoke and then delete. With revoke_on_destroy, add lifecycle { create_before_destroy = true } so the replacement exists before the old certificate is revoked.
         name: infisical_cert_manager_certificate
         title: infisical_cert_manager_certificate Resource - terraform-provider-infisical
         examples:
@@ -1971,6 +1993,46 @@ resources:
                       "description": "Certificates issued for the platform team",
                       "name": "platform"
                     }
+            - name: api_csr_renewed
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "csr": "${file(\"./my-certificate.csr\")}",
+                  "manual_renew_on_apply_within_days": 30,
+                  "profile_id": "\u003cprofile-id\u003e",
+                  "ttl": "90d"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "description": "Certificates issued for the platform team",
+                      "name": "platform"
+                    }
+            - name: api_revoked_on_destroy
+              manifest: |-
+                {
+                  "application_id": "${infisical_cert_manager_application.platform.id}",
+                  "common_name": "web.example.com",
+                  "lifecycle": [
+                    {
+                      "create_before_destroy": true
+                    }
+                  ],
+                  "profile_id": "\u003cprofile-id\u003e",
+                  "revocation_reason_on_destroy": "superseded",
+                  "revoke_on_destroy": true,
+                  "ttl": "90d"
+                }
+              references:
+                application_id: infisical_cert_manager_application.platform.id
+              dependencies:
+                infisical_cert_manager_application.platform: |-
+                    {
+                      "description": "Certificates issued for the platform team",
+                      "name": "platform"
+                    }
         argumentDocs:
             alt_names: (List of String) Subject alternative names (SANs) for the certificate
             application_id: (String) The ID of the Certificate Manager application to issue this certificate from
@@ -1979,24 +2041,28 @@ resources:
             certificate_request_id: (String) The ID of the certificate request
             common_name: (String) The common name (CN) for the certificate. Required when not using CSR
             country: (String) The country (C) for the certificate (2-letter code)
-            csr: (String) Certificate Signing Request (CSR) in PEM format. If provided, the certificate will be issued based on the CSR. Use Terraform's file() function to read from a file (e.g., file("./my-certificate.csr")).
+            csr: (String) Certificate Signing Request (CSR) in PEM format. If provided, the certificate will be issued based on the CSR. Use Terraform's file() function to read from a file (e.g., file("./my-certificate.csr")). Changing the CSR renews the certificate in place with the new CSR. Adding or removing the CSR replaces the certificate.
+            delete_on_destroy: (Boolean) Delete the certificate when the resource is destroyed or replaced. Every renewal creates a new certificate in Infisical and this resource follows all of them, so earlier and later renewals are deleted too and none are left behind in the inventory. Deleting does not revoke it. Set revoke_on_destroy as well to revoke it first. Uses the value from the last apply. Defaults to false.
             domain_components: (List of String) Domain components (DC) for the certificate. Multi-valued; each entry becomes a DC attribute in the subject.
             extended_key_usages: '(List of String) Extended key usages for the certificate. Supported: client_auth, server_auth, code_signing, email_protection, ocsp_signing, time_stamping'
-            id: (String) The ID of the certificate
+            id: (String) The ID of the certificate. Changes when the certificate is renewed.
             key_algorithm: '(String) The key algorithm for the certificate. Supported: RSA_2048, RSA_3072, RSA_4096, EC_prime256v1, EC_secp384r1, EC_secp521r1'
             key_usages: '(List of String) Key usages for the certificate. Supported: digital_signature, key_encipherment, non_repudiation, data_encipherment, key_agreement, key_cert_sign, crl_sign, encipher_only, decipher_only'
             locality: (String) The locality (L) for the certificate
+            manual_renew_on_apply_within_days: '(Number) Renew the certificate in place on terraform apply once it has fewer than this many days left before expiry. Nothing renews it between applies: if no apply runs before the certificate expires, it can no longer be renewed this way and has to be replaced. Only use it if you apply regularly; otherwise use auto_renew on the application profile. Must be at least 1 and smaller than the certificate lifetime. Not set by default.'
             not_after: (String) The not-after (expiration) date of the certificate (RFC3339 format)
             not_before: (String) The not-before date of the certificate (RFC3339 format)
             order_id: (String) The ID of the certificate order. A certificate and all of its renewals share one order, so use it to select this certificate in a certificate sync's certificate_filters.
             organization: (String) The organization (O) for the certificate
             ou: (String) The organizational unit (OU) for the certificate
             private_key: (String, Sensitive) The private key in PEM format (only available for direct field requests, not CSR-based).
-            profile_id: (String) The ID of the certificate profile to use for issuance
+            profile_id: (String) The ID of the certificate profile to use for issuance. Find it on the profile's page in Certificate Manager, or reference an infisical_cert_manager_certificate_profile resource.
             province: (String) The state/province (ST) for the certificate
+            revocation_reason_on_destroy: '(String) The reason sent when the certificate is revoked on destroy, used with revoke_on_destroy. Supported: unspecified, key_compromise, ca_compromise, affiliation_changed, superseded, cessation_of_operation, certificate_hold, privilege_withdrawn, aa_compromise. Defaults to unspecified.'
+            revoke_on_destroy: (Boolean) Revoke the certificate when the resource is destroyed or replaced. Every renewal creates a new certificate in Infisical and this resource follows all of them, so earlier and later renewals that are still valid are revoked too. Uses the value from the last apply; if the certificate was deleted in Infisical, apply the new value before destroying. Certificates from Azure AD CS or Venafi TPP cannot be revoked, so destroying them fails while this is set. Self-signed certificates are skipped with a warning. Defaults to false.
             serial_number: (String) The serial number of the issued certificate
             signature_algorithm: '(String) The signature algorithm for the certificate. Supported: RSA-SHA256, RSA-SHA384, RSA-SHA512, ECDSA-SHA256, ECDSA-SHA384, ECDSA-SHA512'
-            status: (String) The status of the certificate (pending, issued, failed)
+            status: '(String) The status of the certificate: active or revoked. It is renewed when the certificate was renewed outside Terraform and that renewal is no longer available, and deleted when it was deleted outside Terraform but still has to be revoked because revoke_on_destroy is set. Use not_after to tell whether it has expired.'
             timeout_seconds: (Number) Maximum time to wait for certificate issuance in seconds. Defaults to 3600 (1 hour)
             ttl: (String) Time to live for the certificate (e.g., '30d', '90d', '1y').
         importStatements:
@@ -4774,6 +4840,56 @@ resources:
                       "org_id": "\u003cyour-org-id\u003e",
                       "role": "admin"
                     }
+                infisical_identity.machine-identity-demo-wo: |-
+                    {
+                      "name": "machine-identity-demo-wo",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+            - name: kubernetes-auth-demo-wo
+              manifest: |-
+                {
+                  "allowed_namespaces": [
+                    "infisical-ns"
+                  ],
+                  "allowed_service_account_names": [
+                    "infisical-sa"
+                  ],
+                  "identity_id": "${infisical_identity.machine-identity-demo-wo.id}",
+                  "kubernetes_ca_certificate": "\u003cyour-kubernetes-ca-certificate\u003e",
+                  "kubernetes_host": "http://\u003cyour-kubernetes-host\u003e",
+                  "token_reviewer_jwt_wo": "${var.token_reviewer_jwt}",
+                  "token_reviewer_jwt_wo_version": 1,
+                  "token_reviewer_mode": "api"
+                }
+              references:
+                identity_id: infisical_identity.machine-identity-demo-wo.id
+                token_reviewer_jwt_wo: var.token_reviewer_jwt
+              dependencies:
+                infisical_identity.machine-identity-demo-1: |-
+                    {
+                      "name": "machine-identity-demo-1",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+                infisical_identity.machine-identity-demo-2: |-
+                    {
+                      "name": "machine-identity-demo-2",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+                infisical_identity.machine-identity-demo-3: |-
+                    {
+                      "name": "machine-identity-demo-3",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
+                infisical_identity.machine-identity-demo-wo: |-
+                    {
+                      "name": "machine-identity-demo-wo",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
             - name: kubernetes-auth-demo-2
               manifest: |-
                 {
@@ -4811,6 +4927,12 @@ resources:
                       "org_id": "\u003cyour-org-id\u003e",
                       "role": "admin"
                     }
+                infisical_identity.machine-identity-demo-wo: |-
+                    {
+                      "name": "machine-identity-demo-wo",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
             - name: kubernetes-auth-demo-3
               manifest: |-
                 {
@@ -4844,6 +4966,12 @@ resources:
                       "org_id": "\u003cyour-org-id\u003e",
                       "role": "admin"
                     }
+                infisical_identity.machine-identity-demo-wo: |-
+                    {
+                      "name": "machine-identity-demo-wo",
+                      "org_id": "\u003cyour-org-id\u003e",
+                      "role": "admin"
+                    }
         argumentDocs:
             access_token_max_ttl: '(Number) The maximum lifetime for an access token in seconds. This value will be referenced at renewal time. Default: 2592000'
             access_token_num_uses_limit: (Number) The maximum number of times that an access token can be used; a value of 0 implies infinite number of uses. Default:0
@@ -4853,14 +4981,17 @@ resources:
             allowed_namespaces: (List of String) List of trusted namespaces that service accounts must belong to authenticate with Infisical.
             allowed_service_account_names: (List of String) List of trusted service account names that are allowed to authenticate with Infisical.
             gateway_id: (String) Select a gateway for private cluster access. If not specified, the Internet Gateway will be used.
-            has_template_sourced_token_reviewer_jwt: (Boolean) Whether this identity holds a token reviewer JWT copied from an auth template. That JWT is write-only and reads back as empty, so this is the only sign it is there. It is kept after template_id is removed unless token_reviewer_jwt replaces it, or is set to "" to remove it.
+            has_template_sourced_token_reviewer_jwt: (Boolean) Whether this identity holds a token reviewer JWT copied from an auth template. That JWT is write-only and reads back as empty, so this is the only sign it is there. It is kept after template_id is removed unless token_reviewer_jwt or token_reviewer_jwt_wo replaces it, or token_reviewer_jwt is set to "" to remove it.
+            has_token_reviewer_jwt: (Boolean) Whether Infisical holds a token reviewer JWT for this identity. The JWT itself is write-only and never read back.
             id: (String) The ID of the kubernetes auth
             identity_id: (String) The ID of the identity to attach the configuration onto.
             ip_address: (String)
             kubernetes_ca_certificate: (String) The PEM-encoded CA cert for the Kubernetes API server. This is used by the TLS client for secure communication with the Kubernetes API server.
             kubernetes_host: (String) The host string, host:port pair, or URL to the base of the Kubernetes API server. This can usually be obtained by running kubectl cluster-info.
-            template_id: '(String) The ID of an infisical_identity_kubernetes_auth_template to take the Kubernetes connection settings from. When set, kubernetes_host, kubernetes_ca_certificate, token_reviewer_jwt, token_reviewer_mode, gateway_id and allowed_audience come from the template and must not be set here, and later edits to the template propagate to this identity. Removing it unlinks the template and applies the settings in this configuration instead: a connection setting the configuration leaves out is cleared, and the plan shows it. To unlink and keep the template''s settings, set them here to the template''s values (for example from the infisical_identity_kubernetes_auth_template data source); an unlink that changes nothing else then only needs the unlink-templates permission on auth templates, or edit-auth on the identity. A token reviewer JWT copied from the template is kept unless token_reviewer_jwt is set to a new value, or to "" to remove it.'
-            token_reviewer_jwt: (String) A long-lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5.
+            template_id: '(String) The ID of an infisical_identity_kubernetes_auth_template to take the Kubernetes connection settings from. When set, kubernetes_host, kubernetes_ca_certificate, token_reviewer_jwt (or token_reviewer_jwt_wo and token_reviewer_jwt_wo_version), token_reviewer_mode, gateway_id and allowed_audience come from the template and must not be set here, and later edits to the template propagate to this identity. Removing it unlinks the template and applies the settings in this configuration instead: a connection setting the configuration leaves out is cleared, and the plan shows it. To unlink and keep the template''s settings, set them here to the template''s values (for example from the infisical_identity_kubernetes_auth_template data source); an unlink that changes nothing else then only needs the unlink-templates permission on auth templates, or edit-auth on the identity. A token reviewer JWT copied from the template is kept unless token_reviewer_jwt or token_reviewer_jwt_wo supplies a new one, or token_reviewer_jwt is set to "" to remove it.'
+            token_reviewer_jwt: (String, Sensitive) A long-lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5. Infisical never returns it, so a change made outside Terraform is not detected; prefer token_reviewer_jwt_wo, which also keeps the JWT out of state. Set it to "", or leave both unset, to remove the stored JWT.
+            token_reviewer_jwt_wo: '(String, Sensitive) The token reviewer JWT as a write-only value: it is sent to Infisical but never stored in the plan or state. It is sent on every update, so it must stay set for as long as the JWT should be kept. Changing it alone is not detected, so increment token_reviewer_jwt_wo_version to rotate it. Requires Terraform 1.11.0 or higher.'
+            token_reviewer_jwt_wo_version: (Number) Used with token_reviewer_jwt_wo to roll out a new JWT. Increment it whenever token_reviewer_jwt_wo changes, and the next apply sends the new JWT in an update; the auth method is not recreated and issued access tokens stay valid.
             token_reviewer_mode: (String) Choose between Token ('api') or 'gateway' authentication. If using Gateway, the Gateway must be deployed in your Kubernetes cluster. Defaults to api, or to the linked template's mode when template_id is set.
         importStatements:
             - |-
@@ -5500,6 +5631,810 @@ resources:
             slug: (String) The slug for the new role
             subject: (String) Describe the entity the permission pertains to.
         importStatements: []
+    infisical_pam_account_group:
+        subCategory: PAM
+        description: Manage a group's membership in a PAM account, which grants its role on the account. The group must already be a PAM member. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_account_group
+        title: infisical_pam_account_group Resource - terraform-provider-infisical
+        examples:
+            - name: solengs_web01
+              manifest: |-
+                {
+                  "account_id": "${infisical_pam_account_ssh.web01.id}",
+                  "group_id": "${infisical_pam_group.solengs.group_id}",
+                  "role": "operator"
+                }
+              references:
+                account_id: infisical_pam_account_ssh.web01.id
+                group_id: infisical_pam_group.solengs.group_id
+              dependencies:
+                infisical_pam_account_ssh.web01: |-
+                    {
+                      "connection_details": {
+                        "host": "10.0.1.10",
+                        "port": 22
+                      },
+                      "credentials": {
+                        "auth_method": "public-key",
+                        "private_key": "${var.web01_private_key}",
+                        "username": "root"
+                      },
+                      "folder_id": "${infisical_pam_folder.linux_team.id}",
+                      "name": "web01-root",
+                      "template_id": "${infisical_pam_account_template.ssh.id}"
+                    }
+                infisical_pam_account_template.ssh: |-
+                    {
+                      "account_type": "ssh",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "ssh-default"
+                    }
+                infisical_pam_folder.linux_team: |-
+                    {
+                      "name": "linux-team"
+                    }
+                infisical_pam_group.solengs: |-
+                    {
+                      "group_id": "\u003cgroup-id\u003e",
+                      "role": "member"
+                    }
+        argumentDocs:
+            account_id: (String) The ID of the PAM account. Changing it creates a new membership.
+            group_id: (String) The ID of the group. Changing it creates a new membership.
+            id: (String) The ID of the membership.
+            role: '(String) The role on the account: admin, operator (sessions and credentials), connector (sessions only) or auditor (audit logs and recordings).'
+        importStatements:
+            - |-
+              # This will import the group's account membership by account ID and group ID
+              terraform import infisical_pam_account_group.example <account_id>:<group_id>
+    infisical_pam_account_identity:
+        subCategory: PAM
+        description: Manage a machine identity's membership in a PAM account, which grants its role on the account. The machine identity must already be a PAM member. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_account_identity
+        title: infisical_pam_account_identity Resource - terraform-provider-infisical
+        examples:
+            - name: ci_web01
+              manifest: |-
+                {
+                  "account_id": "${infisical_pam_account_ssh.web01.id}",
+                  "identity_id": "${infisical_pam_identity.ci.identity_id}",
+                  "role": "connector"
+                }
+              references:
+                account_id: infisical_pam_account_ssh.web01.id
+                identity_id: infisical_pam_identity.ci.identity_id
+              dependencies:
+                infisical_pam_account_ssh.web01: |-
+                    {
+                      "connection_details": {
+                        "host": "10.0.1.10",
+                        "port": 22
+                      },
+                      "credentials": {
+                        "auth_method": "public-key",
+                        "private_key": "${var.web01_private_key}",
+                        "username": "root"
+                      },
+                      "folder_id": "${infisical_pam_folder.linux_team.id}",
+                      "name": "web01-root",
+                      "template_id": "${infisical_pam_account_template.ssh.id}"
+                    }
+                infisical_pam_account_template.ssh: |-
+                    {
+                      "account_type": "ssh",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "ssh-default"
+                    }
+                infisical_pam_folder.linux_team: |-
+                    {
+                      "name": "linux-team"
+                    }
+                infisical_pam_identity.ci: |-
+                    {
+                      "identity_id": "\u003cidentity-id\u003e",
+                      "role": "member"
+                    }
+        argumentDocs:
+            account_id: (String) The ID of the PAM account. Changing it creates a new membership.
+            id: (String) The ID of the membership.
+            identity_id: (String) The ID of the machine identity. Changing it creates a new membership.
+            role: '(String) The role on the account: admin, operator (sessions and credentials), connector (sessions only) or auditor (audit logs and recordings).'
+        importStatements:
+            - |-
+              # This will import the machine identity's account membership by account ID and identity ID
+              terraform import infisical_pam_account_identity.example <account_id>:<identity_id>
+    infisical_pam_account_kubernetes:
+        subCategory: PAM
+        description: Create and manage Kubernetes accounts in Infisical PAM. The connection is tested when the account is created or its connection changes. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_account_kubernetes
+        title: infisical_pam_account_kubernetes Resource - terraform-provider-infisical
+        examples:
+            - name: prod
+              manifest: |-
+                {
+                  "connection_details": {
+                    "ssl_certificate": "${file(\"prod-ca.pem\")}",
+                    "url": "https://k8s.prod.internal:6443"
+                  },
+                  "credentials": {
+                    "auth_method": "gateway-kubernetes-auth",
+                    "namespace": "infisical",
+                    "service_account_name": "pam-admin"
+                  },
+                  "folder_id": "${infisical_pam_folder.devops_team.id}",
+                  "name": "prod-cluster-admin",
+                  "template_id": "${infisical_pam_account_template.kubernetes.id}"
+                }
+              references:
+                folder_id: infisical_pam_folder.devops_team.id
+                template_id: infisical_pam_account_template.kubernetes.id
+              dependencies:
+                infisical_pam_account_template.kubernetes: |-
+                    {
+                      "account_type": "kubernetes",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "kubernetes-admin"
+                    }
+                infisical_pam_folder.devops_team: |-
+                    {
+                      "name": "devops-team"
+                    }
+        argumentDocs:
+            auth_method: '(String) How the account authenticates: service-account-token with a stored token, or gateway-kubernetes-auth through the gateway as service_account_name in namespace.'
+            connection_details: (Attributes) How to reach the Kubernetes target. (see below for nested schema)
+            credentials: (Attributes) The credentials of the account. Secrets are never read back, so changes made outside of Terraform, such as rotation, aren't detected. (see below for nested schema)
+            description: (String) An optional description of the account.
+            folder_id: (String) The ID of the folder the account is in. Changing it moves the account.
+            gateway_id: (String) The ID of the gateway to connect through instead of the template's.
+            gateway_pool_id: (String) The ID of the gateway pool to connect through instead of the template's.
+            id: (String) The ID of the account.
+            name: (String) The name of the account, unique in its folder. Must be lowercase letters, numbers and hyphens, at most 64 characters.
+            namespace: (String) The namespace of the service account, for the gateway-kubernetes-auth auth method.
+            service_account_name: (String) The name of the service account, for the gateway-kubernetes-auth auth method.
+            service_account_token: (String, Sensitive) The service account token, for the service-account-token auth method.
+            ssl_certificate: (String) The PEM-encoded CA certificate to verify the API server with.
+            ssl_reject_unauthorized: (Boolean) Whether to reject an API server certificate that isn't trusted. Defaults to true.
+            template_id: (String) The ID of the account template the account uses, which must be a kubernetes template.
+            url: (String) The URL of the Kubernetes API server.
+        importStatements:
+            - |-
+              # This will import the Kubernetes PAM account by its ID.
+              # Secrets are never read back, so set the credentials in the configuration after importing.
+              terraform import infisical_pam_account_kubernetes.example <account_id>
+    infisical_pam_account_postgres:
+        subCategory: PAM
+        description: Create and manage PostgreSQL accounts in Infisical PAM. The connection is tested when the account is created or its connection changes. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_account_postgres
+        title: infisical_pam_account_postgres Resource - terraform-provider-infisical
+        examples:
+            - name: admin
+              manifest: |-
+                {
+                  "connection_details": {
+                    "database": "orders",
+                    "host": "orders.db.internal"
+                  },
+                  "credentials": {
+                    "password": "${var.orders_admin_password}",
+                    "username": "orders_admin"
+                  },
+                  "folder_id": "${infisical_pam_folder.dbas.id}",
+                  "name": "orders-admin",
+                  "rotation_account_id": "self",
+                  "template_id": "${infisical_pam_account_template.postgres.id}"
+                }
+              references:
+                folder_id: infisical_pam_folder.dbas.id
+                template_id: infisical_pam_account_template.postgres.id
+              dependencies:
+                infisical_pam_account_template.postgres: |-
+                    {
+                      "account_type": "postgres",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "postgres-rotated",
+                      "settings": {
+                        "rotation": {
+                          "enabled": true,
+                          "interval_seconds": 604800
+                        }
+                      }
+                    }
+                infisical_pam_folder.dbas: |-
+                    {
+                      "name": "dbas"
+                    }
+            - name: app
+              manifest: |-
+                {
+                  "connection_details": {
+                    "database": "orders",
+                    "host": "orders.db.internal"
+                  },
+                  "credentials": {
+                    "password": "${var.orders_app_password}",
+                    "username": "orders_app"
+                  },
+                  "folder_id": "${infisical_pam_folder.dbas.id}",
+                  "name": "orders-app",
+                  "rotation_account_id": "${infisical_pam_account_postgres.admin.id}",
+                  "template_id": "${infisical_pam_account_template.postgres.id}"
+                }
+              references:
+                folder_id: infisical_pam_folder.dbas.id
+                rotation_account_id: infisical_pam_account_postgres.admin.id
+                template_id: infisical_pam_account_template.postgres.id
+              dependencies:
+                infisical_pam_account_template.postgres: |-
+                    {
+                      "account_type": "postgres",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "postgres-rotated",
+                      "settings": {
+                        "rotation": {
+                          "enabled": true,
+                          "interval_seconds": 604800
+                        }
+                      }
+                    }
+                infisical_pam_folder.dbas: |-
+                    {
+                      "name": "dbas"
+                    }
+            - name: rds
+              manifest: |-
+                {
+                  "connection_details": {
+                    "database": "reporting",
+                    "host": "reporting.abc123.us-east-1.rds.amazonaws.com"
+                  },
+                  "credentials": {
+                    "auth_method": "aws-iam",
+                    "aws_region": "us-east-1",
+                    "role_arn": "arn:aws:iam::123456789012:role/infisical-pam-rds",
+                    "username": "reporting"
+                  },
+                  "folder_id": "${infisical_pam_folder.dbas.id}",
+                  "name": "reporting-iam",
+                  "template_id": "${infisical_pam_account_template.postgres.id}"
+                }
+              references:
+                folder_id: infisical_pam_folder.dbas.id
+                template_id: infisical_pam_account_template.postgres.id
+              dependencies:
+                infisical_pam_account_template.postgres: |-
+                    {
+                      "account_type": "postgres",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "postgres-rotated",
+                      "settings": {
+                        "rotation": {
+                          "enabled": true,
+                          "interval_seconds": 604800
+                        }
+                      }
+                    }
+                infisical_pam_folder.dbas: |-
+                    {
+                      "name": "dbas"
+                    }
+        argumentDocs:
+            auth_method: '(String) How the account authenticates: password, or aws-iam for RDS and Aurora IAM authentication. Defaults to password.'
+            aws_region: (String) The AWS region of the RDS or Aurora instance, for the aws-iam auth method.
+            connection_details: (Attributes) How to reach the PostgreSQL target. (see below for nested schema)
+            credentials: (Attributes) The credentials of the account. Secrets are never read back, so changes made outside of Terraform, such as rotation, aren't detected. (see below for nested schema)
+            database: (String) The name of the database to connect to.
+            description: (String) An optional description of the account.
+            folder_id: (String) The ID of the folder the account is in. Changing it moves the account.
+            gateway_id: (String) The ID of the gateway to connect through instead of the template's.
+            gateway_pool_id: (String) The ID of the gateway pool to connect through instead of the template's.
+            host: (String) The hostname or IP address of the database server.
+            id: (String) The ID of the account.
+            name: (String) The name of the account, unique in its folder. Must be lowercase letters, numbers and hyphens, at most 64 characters.
+            password: (String, Sensitive) The password, for the password auth method.
+            port: (Number) The port of the database server. Defaults to 5432.
+            role_arn: (String) The ARN of the IAM role Infisical assumes to generate the auth token, for the aws-iam auth method. It needs rds-db:connect and must trust Infisical with your organization ID as the external ID.
+            rotation_account_id: (String) The ID of another account of the same type and target that rotates this account's password, or self for the account to rotate its own. Rotation is enabled on the template.
+            ssl_certificate: (String) The PEM-encoded CA certificate to verify the server with.
+            ssl_enabled: (Boolean) Whether to connect over TLS. Must be true for the aws-iam auth method. Defaults to true.
+            ssl_reject_unauthorized: (Boolean) Whether to reject a server certificate that isn't trusted. Defaults to true.
+            template_id: (String) The ID of the account template the account uses, which must be a postgres template.
+            username: (String) The database user.
+        importStatements:
+            - |-
+              # This will import the PostgreSQL PAM account by its ID.
+              # Secrets are never read back, so set the credentials in the configuration after importing.
+              terraform import infisical_pam_account_postgres.example <account_id>
+    infisical_pam_account_ssh:
+        subCategory: PAM
+        description: Create and manage SSH accounts in Infisical PAM. The connection is tested when the account is created or its connection changes. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_account_ssh
+        title: infisical_pam_account_ssh Resource - terraform-provider-infisical
+        examples:
+            - name: web01
+              manifest: |-
+                {
+                  "connection_details": {
+                    "host": "10.0.1.10",
+                    "port": 22
+                  },
+                  "credentials": {
+                    "auth_method": "public-key",
+                    "private_key": "${var.web01_private_key}",
+                    "username": "root"
+                  },
+                  "folder_id": "${infisical_pam_folder.linux_team.id}",
+                  "name": "web01-root",
+                  "template_id": "${infisical_pam_account_template.ssh.id}"
+                }
+              references:
+                folder_id: infisical_pam_folder.linux_team.id
+                template_id: infisical_pam_account_template.ssh.id
+              dependencies:
+                infisical_pam_account_template.ssh: |-
+                    {
+                      "account_type": "ssh",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "ssh-default"
+                    }
+                infisical_pam_folder.linux_team: |-
+                    {
+                      "name": "linux-team"
+                    }
+        argumentDocs:
+            auth_method: '(String) How the account authenticates: password, public-key, or certificate. With certificate, the server must trust the account''s Infisical SSH CA: once the account exists, get its public key from GET /api/v1/pam/accounts/{id}/ssh-ca-public-key and add it to the server''s TrustedUserCAKeys. Creation doesn''t check this trust, so sessions fail until it is set up.'
+            connection_details: (Attributes) How to reach the SSH target. (see below for nested schema)
+            credentials: (Attributes) The credentials of the account. Secrets are never read back, so changes made outside of Terraform, such as rotation, aren't detected. (see below for nested schema)
+            description: (String) An optional description of the account.
+            folder_id: (String) The ID of the folder the account is in. Changing it moves the account.
+            gateway_id: (String) The ID of the gateway to connect through instead of the template's.
+            gateway_pool_id: (String) The ID of the gateway pool to connect through instead of the template's.
+            host: (String) The hostname or IP address of the SSH server.
+            id: (String) The ID of the account.
+            name: (String) The name of the account, unique in its folder. Must be lowercase letters, numbers and hyphens, at most 64 characters.
+            password: (String, Sensitive) The password, for the password auth method.
+            port: (Number) The port of the SSH server. Defaults to 22.
+            private_key: (String, Sensitive) The PEM-encoded private key, for the public-key auth method.
+            template_id: (String) The ID of the account template the account uses, which must be a ssh template.
+            username: (String) The username to log in as.
+        importStatements:
+            - |-
+              # This will import the SSH PAM account by its ID.
+              # Secrets are never read back, so set the credentials in the configuration after importing.
+              terraform import infisical_pam_account_ssh.example <account_id>
+    infisical_pam_account_template:
+        subCategory: PAM
+        description: Create and manage account templates in Infisical PAM. A template holds the account type, gateway, policies and settings shared by its accounts. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_account_template
+        title: infisical_pam_account_template Resource - terraform-provider-infisical
+        examples:
+            - name: ssh
+              manifest: |-
+                {
+                  "account_type": "ssh",
+                  "description": "Standard SSH access",
+                  "gateway_id": "${data.infisical_gateway.main.id}",
+                  "name": "ssh-default",
+                  "policies": {
+                    "allow_break_glass": true,
+                    "command_blocking": [
+                      "^rm -rf /",
+                      "^shutdown"
+                    ],
+                    "max_session_duration": 3600,
+                    "require_reason": true,
+                    "requires_approval": true
+                  },
+                  "settings": {
+                    "recording": {
+                      "connection_id": "\u003caws-app-connection-id\u003e",
+                      "s3": {
+                        "bucket": "acme-pam-recordings",
+                        "key_prefix": "ssh/",
+                        "region": "us-east-1"
+                      },
+                      "storage_backend": "aws-s3"
+                    },
+                    "session_log_masking": {
+                      "built_in_detection": true,
+                      "patterns": [
+                        "password=\\S+"
+                      ]
+                    }
+                  }
+                }
+              references:
+                gateway_id: data.infisical_gateway.main.id
+            - name: postgres
+              manifest: |-
+                {
+                  "account_type": "postgres",
+                  "gateway_id": "${data.infisical_gateway.main.id}",
+                  "name": "postgres-rotated",
+                  "settings": {
+                    "password_requirements": {
+                      "length": 32,
+                      "required": {
+                        "digits": 2,
+                        "lowercase": 2,
+                        "uppercase": 2
+                      }
+                    },
+                    "rotation": {
+                      "enabled": true,
+                      "interval_seconds": 604800
+                    }
+                  }
+                }
+              references:
+                gateway_id: data.infisical_gateway.main.id
+        argumentDocs:
+            account_type: '(String) The type of account the template applies to. Changing it creates a new template. Options: ssh, postgres, mysql, mssql, oracledb, mongodb, redis, snowflake, clickhouse, kubernetes, aws-iam, gcp-service-account, azure-cli, windows, windows-ad.'
+            allow_auto_approval: (Boolean) Whether requests that pass one of the folder's auto-approval rules are approved instantly. Has no effect unless requires_approval is true.
+            allow_break_glass: (Boolean) Whether the folder's break-glass users can grant themselves access in an emergency. Has no effect unless requires_approval is true.
+            allowed_symbols: (String) The symbols the password may contain, drawn from !@#$%^&*()-_=+[]{}|:,.<>/~.
+            bucket: (String) The name of the bucket.
+            built_in_detection: (Boolean) Whether common secrets are masked without a pattern. Defaults to true, except for windows, windows-ad and aws-iam templates.
+            command_blocking: (List of String) Regular expressions, one per command or statement to reject during a session. Only for ssh, snowflake, clickhouse templates.
+            connection_id: (String) The ID of the AWS or S3-Compatible Storage app connection used to store recordings.
+            description: (String) An optional description of the account template.
+            digits: (Number) The minimum number of digits in the password. Defaults to 0.
+            enabled: (Boolean) Whether credential health checking is on. Set interval_seconds as well to run it on a schedule.
+            gateway_id: (String) The ID of the gateway that accounts using the template connect through, unless an account sets its own.
+            gateway_pool_id: (String) The ID of the gateway pool that accounts using the template connect through, unless an account sets its own.
+            heartbeat: (Attributes) Scheduled checks that each account's stored credential still works. Defaults to a daily check. (see below for nested schema)
+            id: (String) The ID of the account template.
+            interval_seconds: (Number) How often credential health checking runs, in seconds, from 3600 to 31536000. Leave unset to run it only on demand.
+            key_prefix: (String) An optional prefix for the recording object keys.
+            length: (Number) The length of the password, from 1 to 250 (at most 30 for oracledb templates).
+            lowercase: (Number) The minimum number of lowercase letters in the password. Defaults to 0.
+            max_session_duration: (Number) The maximum session length in seconds, from 60 to 86400 (900 to 3600 for aws-iam templates).
+            name: (String) The name of the account template, unique in the organization. Must be lowercase letters, numbers and hyphens, at most 64 characters.
+            password_requirements: (Attributes) Requirements for the passwords rotation generates and for passwords set on accounts. Only for postgres, mysql, mssql, oracledb, windows, windows-ad templates. (see below for nested schema)
+            patterns: (List of String) Regular expressions whose matches are masked in session logs.
+            policies: (Attributes) Access policies applied to every account using the template. A policy left unset is off. (see below for nested schema)
+            recording: (Attributes) Session recording. Defaults to recording every session into Infisical's database. (see below for nested schema)
+            region: (String) The AWS region of the bucket. Leave unset for S3-Compatible Storage connections.
+            require_mfa: (Boolean) Whether users must re-authenticate with MFA before accessing an account.
+            require_reason: (Boolean) Whether users must give a reason before accessing an account.
+            required: (Attributes) The minimum number of each kind of character. At least one must be above 0, and together they can't exceed length. (see below for nested schema)
+            requires_approval: (Boolean) Whether users must request and receive approval before launching a session or viewing credentials.
+            rotation: (Attributes) Scheduled credential rotation. Only for postgres, mysql, mssql, oracledb, windows, windows-ad templates. (see below for nested schema)
+            s3: (Attributes) The bucket recordings are stored in when storage_backend is aws-s3. (see below for nested schema)
+            session_log_masking: (Attributes) Masking of sensitive values in session logs. (see below for nested schema)
+            settings: (Attributes) Session recording, log masking, health check and rotation settings. Unset values take their defaults. (see below for nested schema)
+            storage_backend: '(String) Where recordings are stored: postgres (Infisical''s database) or aws-s3, which needs connection_id and s3. Defaults to postgres.'
+            symbols: (Number) The minimum number of symbols in the password. Defaults to 0.
+            uppercase: (Number) The minimum number of uppercase letters in the password. Defaults to 0.
+        importStatements:
+            - |-
+              # This will import the PAM account template by its ID
+              terraform import infisical_pam_account_template.example <template_id>
+    infisical_pam_account_user:
+        subCategory: PAM
+        description: Manage a user's membership in a PAM account, which grants its role on the account. The user must already be a PAM member. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_account_user
+        title: infisical_pam_account_user Resource - terraform-provider-infisical
+        examples:
+            - name: alice_web01
+              manifest: |-
+                {
+                  "account_id": "${infisical_pam_account_ssh.web01.id}",
+                  "email": "${infisical_pam_user.alice.email}",
+                  "role": "connector"
+                }
+              references:
+                account_id: infisical_pam_account_ssh.web01.id
+                email: infisical_pam_user.alice.email
+              dependencies:
+                infisical_pam_account_ssh.web01: |-
+                    {
+                      "connection_details": {
+                        "host": "10.0.1.10",
+                        "port": 22
+                      },
+                      "credentials": {
+                        "auth_method": "public-key",
+                        "private_key": "${var.web01_private_key}",
+                        "username": "root"
+                      },
+                      "folder_id": "${infisical_pam_folder.linux_team.id}",
+                      "name": "web01-root",
+                      "template_id": "${infisical_pam_account_template.ssh.id}"
+                    }
+                infisical_pam_account_template.ssh: |-
+                    {
+                      "account_type": "ssh",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "ssh-default"
+                    }
+                infisical_pam_folder.linux_team: |-
+                    {
+                      "name": "linux-team"
+                    }
+                infisical_pam_user.alice: |-
+                    {
+                      "email": "alice@example.com",
+                      "role": "member"
+                    }
+        argumentDocs:
+            account_id: (String) The ID of the PAM account. Changing it creates a new membership.
+            email: (String) The email of the user, in lowercase. Changing it creates a new membership.
+            id: (String) The ID of the membership.
+            role: '(String) The role on the account: admin, operator (sessions and credentials), connector (sessions only) or auditor (audit logs and recordings).'
+            user_id: (String) The ID of the user.
+        importStatements:
+            - |-
+              # This will import the user's account membership by account ID and email
+              terraform import infisical_pam_account_user.example <account_id>:<email>
+    infisical_pam_account_windows_ad:
+        subCategory: PAM
+        description: 'Create and manage Windows Active Directory accounts in Infisical PAM. The connection is tested when the account is created or its connection changes. Sessions only launch if the template records to S3: settings.recording needs storage_backend = "aws-s3", connection_id and s3. Only Machine Identity authentication is supported for this resource.'
+        name: infisical_pam_account_windows_ad
+        title: infisical_pam_account_windows_ad Resource - terraform-provider-infisical
+        examples:
+            - name: pamadmin
+              manifest: |-
+                {
+                  "connection_details": {
+                    "dc_address": "dc01.corp.example.com",
+                    "domain": "corp.example.com",
+                    "hosts": [
+                      "ws01.corp.example.com",
+                      "ws02.corp.example.com"
+                    ]
+                  },
+                  "credentials": {
+                    "password": "${var.pamadmin_password}",
+                    "username": "CORP\\pamadmin"
+                  },
+                  "folder_id": "${infisical_pam_folder.windows_team.id}",
+                  "name": "corp-pamadmin",
+                  "rotation_account_id": "self",
+                  "template_id": "${infisical_pam_account_template.windows_ad.id}"
+                }
+              references:
+                folder_id: infisical_pam_folder.windows_team.id
+                template_id: infisical_pam_account_template.windows_ad.id
+              dependencies:
+                infisical_pam_account_template.windows_ad: |-
+                    {
+                      "account_type": "windows-ad",
+                      "gateway_id": "${data.infisical_gateway.main.id}",
+                      "name": "windows-ad-default",
+                      "settings": {
+                        "recording": {
+                          "connection_id": "\u003caws-app-connection-id\u003e",
+                          "s3": {
+                            "bucket": "acme-pam-recordings",
+                            "key_prefix": "windows/",
+                            "region": "us-east-1"
+                          },
+                          "storage_backend": "aws-s3"
+                        }
+                      }
+                    }
+                infisical_pam_folder.windows_team: |-
+                    {
+                      "name": "windows-team"
+                    }
+        argumentDocs:
+            connection_details: (Attributes) How to reach the Windows Active Directory target. (see below for nested schema)
+            credentials: (Attributes) The credentials of the account. Secrets are never read back, so changes made outside of Terraform, such as rotation, aren't detected. (see below for nested schema)
+            dc_address: (String) The hostname or IP address of a domain controller, used for LDAP connections.
+            description: (String) An optional description of the account.
+            domain: (String) The fully qualified domain name of the Active Directory domain, e.g. corp.example.com.
+            folder_id: (String) The ID of the folder the account is in. Changing it moves the account.
+            gateway_id: (String) The ID of the gateway to connect through instead of the template's.
+            gateway_pool_id: (String) The ID of the gateway pool to connect through instead of the template's.
+            hosts: (List of String) The hostnames or IP addresses the account may open sessions to.
+            id: (String) The ID of the account.
+            ldap_ca_cert: (String) The PEM-encoded CA certificate to verify the domain controller with over LDAPS.
+            ldap_port: (Number) The LDAP port of the domain controller. Defaults to 389.
+            ldap_reject_unauthorized: (Boolean) Whether to reject a domain controller certificate that isn't trusted. Defaults to true.
+            ldap_tls_server_name: (String) The server name to verify the domain controller's certificate against over LDAPS.
+            name: (String) The name of the account, unique in its folder. Must be lowercase letters, numbers and hyphens, at most 64 characters.
+            password: (String, Sensitive) The password of the domain user.
+            rdp_port: (Number) The RDP port of the hosts. Defaults to 3389.
+            rotation_account_id: (String) The ID of another account of the same type and target that rotates this account's password, or self for the account to rotate its own. Rotation is enabled on the template.
+            template_id: (String) The ID of the account template the account uses, which must be a windows-ad template.
+            use_ldaps: (Boolean) Whether to connect to the domain controller over LDAPS. Defaults to false.
+            use_winrm_https: (Boolean) Whether to use WinRM over HTTPS. Defaults to false.
+            username: (String) The domain user, in DOMAIN\username form (e.g. CORP\Administrator).
+            winrm_ca_cert: (String) The PEM-encoded CA certificate to verify WinRM over HTTPS with.
+            winrm_port: (Number) The WinRM port of the hosts, used for credential rotation. Defaults to 5985.
+            winrm_reject_unauthorized: (Boolean) Whether to reject a WinRM certificate that isn't trusted. Defaults to true.
+        importStatements:
+            - |-
+              # This will import the Windows Active Directory PAM account by its ID.
+              # Secrets are never read back, so set the credentials in the configuration after importing.
+              terraform import infisical_pam_account_windows_ad.example <account_id>
+    infisical_pam_folder:
+        subCategory: PAM
+        description: Create and manage folders in Infisical PAM. The machine identity that creates a folder becomes its admin. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_folder
+        title: infisical_pam_folder Resource - terraform-provider-infisical
+        examples:
+            - name: linux_team
+              manifest: |-
+                {
+                  "description": "Linux fleet",
+                  "name": "linux-team"
+                }
+        argumentDocs:
+            description: (String) An optional description of the folder.
+            id: (String) The ID of the folder.
+            name: (String) The name of the folder, unique in the organization. Must be lowercase letters, numbers and hyphens, at most 64 characters.
+        importStatements:
+            - |-
+              # This will import the PAM folder by its ID
+              terraform import infisical_pam_folder.example <folder_id>
+    infisical_pam_folder_group:
+        subCategory: PAM
+        description: Manage a group's membership in a PAM folder, which grants its role on every account in the folder. The group must already be a PAM member. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_folder_group
+        title: infisical_pam_folder_group Resource - terraform-provider-infisical
+        examples:
+            - name: solengs_linux
+              manifest: |-
+                {
+                  "folder_id": "${infisical_pam_folder.linux_team.id}",
+                  "group_id": "${infisical_pam_group.solengs.group_id}",
+                  "role": "connector"
+                }
+              references:
+                folder_id: infisical_pam_folder.linux_team.id
+                group_id: infisical_pam_group.solengs.group_id
+              dependencies:
+                infisical_pam_folder.linux_team: |-
+                    {
+                      "name": "linux-team"
+                    }
+                infisical_pam_group.solengs: |-
+                    {
+                      "group_id": "\u003cgroup-id\u003e",
+                      "role": "member"
+                    }
+        argumentDocs:
+            folder_id: (String) The ID of the PAM folder. Changing it creates a new membership.
+            group_id: (String) The ID of the group. Changing it creates a new membership.
+            id: (String) The ID of the membership.
+            role: '(String) The role on every account in the folder: admin, operator (sessions and credentials), connector (sessions only) or auditor (audit logs and recordings).'
+        importStatements:
+            - |-
+              # This will import the group's folder membership by folder ID and group ID
+              terraform import infisical_pam_folder_group.example <folder_id>:<group_id>
+    infisical_pam_folder_identity:
+        subCategory: PAM
+        description: Manage a machine identity's membership in a PAM folder, which grants its role on every account in the folder. The machine identity must already be a PAM member. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_folder_identity
+        title: infisical_pam_folder_identity Resource - terraform-provider-infisical
+        examples:
+            - name: ci_dbas
+              manifest: |-
+                {
+                  "folder_id": "${infisical_pam_folder.dbas.id}",
+                  "identity_id": "${infisical_pam_identity.ci.identity_id}",
+                  "role": "connector"
+                }
+              references:
+                folder_id: infisical_pam_folder.dbas.id
+                identity_id: infisical_pam_identity.ci.identity_id
+              dependencies:
+                infisical_pam_folder.dbas: |-
+                    {
+                      "name": "dbas"
+                    }
+                infisical_pam_identity.ci: |-
+                    {
+                      "identity_id": "\u003cidentity-id\u003e",
+                      "role": "member"
+                    }
+        argumentDocs:
+            folder_id: (String) The ID of the PAM folder. Changing it creates a new membership.
+            id: (String) The ID of the membership.
+            identity_id: (String) The ID of the machine identity. Changing it creates a new membership.
+            role: '(String) The role on every account in the folder: admin, operator (sessions and credentials), connector (sessions only) or auditor (audit logs and recordings).'
+        importStatements:
+            - |-
+              # This will import the machine identity's folder membership by folder ID and identity ID
+              terraform import infisical_pam_folder_identity.example <folder_id>:<identity_id>
+    infisical_pam_folder_user:
+        subCategory: PAM
+        description: Manage a user's membership in a PAM folder, which grants its role on every account in the folder. The user must already be a PAM member. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_folder_user
+        title: infisical_pam_folder_user Resource - terraform-provider-infisical
+        examples:
+            - name: alice_linux
+              manifest: |-
+                {
+                  "email": "${infisical_pam_user.alice.email}",
+                  "folder_id": "${infisical_pam_folder.linux_team.id}",
+                  "role": "operator"
+                }
+              references:
+                email: infisical_pam_user.alice.email
+                folder_id: infisical_pam_folder.linux_team.id
+              dependencies:
+                infisical_pam_folder.linux_team: |-
+                    {
+                      "name": "linux-team"
+                    }
+                infisical_pam_user.alice: |-
+                    {
+                      "email": "alice@example.com",
+                      "role": "member"
+                    }
+        argumentDocs:
+            email: (String) The email of the user, in lowercase. Changing it creates a new membership.
+            folder_id: (String) The ID of the PAM folder. Changing it creates a new membership.
+            id: (String) The ID of the membership.
+            role: '(String) The role on every account in the folder: admin, operator (sessions and credentials), connector (sessions only) or auditor (audit logs and recordings).'
+            user_id: (String) The ID of the user.
+        importStatements:
+            - |-
+              # This will import the user's folder membership by folder ID and email
+              terraform import infisical_pam_folder_user.example <folder_id>:<email>
+    infisical_pam_group:
+        subCategory: PAM
+        description: Manage a group's membership in Infisical PAM. A group must be a PAM member before it can be added to folders or accounts. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_group
+        title: infisical_pam_group Resource - terraform-provider-infisical
+        examples:
+            - name: solengs
+              manifest: |-
+                {
+                  "group_id": "${one([for group in data.infisical_groups.all.groups : group.id if group.slug == \"solengs\"])}",
+                  "role": "member"
+                }
+        argumentDocs:
+            group_id: (String) The ID of the group. Changing it creates a new membership.
+            id: (String) The ID of the membership.
+            role: '(String) The role in PAM: admin or member. Members only get the access their folder and account memberships grant.'
+        importStatements:
+            - |-
+              # This will import the group's PAM membership by the group ID
+              terraform import infisical_pam_group.example <group_id>
+    infisical_pam_identity:
+        subCategory: PAM
+        description: Manage a machine identity's membership in Infisical PAM. A machine identity must be a PAM member before it can be added to folders or accounts. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_identity
+        title: infisical_pam_identity Resource - terraform-provider-infisical
+        examples:
+            - name: ci
+              manifest: |-
+                {
+                  "identity_id": "\u003cidentity-id\u003e",
+                  "role": "member"
+                }
+        argumentDocs:
+            id: (String) The ID of the membership.
+            identity_id: (String) The ID of the machine identity. Changing it creates a new membership.
+            role: '(String) The role in PAM: admin or member. Members only get the access their folder and account memberships grant.'
+        importStatements:
+            - |-
+              # This will import the machine identity's PAM membership by the identity ID
+              terraform import infisical_pam_identity.example <identity_id>
+    infisical_pam_user:
+        subCategory: PAM
+        description: Manage a user's membership in Infisical PAM. A user must be a PAM member before it can be added to folders or accounts. Only Machine Identity authentication is supported for this resource.
+        name: infisical_pam_user
+        title: infisical_pam_user Resource - terraform-provider-infisical
+        examples:
+            - name: alice
+              manifest: |-
+                {
+                  "email": "alice@example.com",
+                  "role": "member"
+                }
+        argumentDocs:
+            email: (String) The email of the user, in lowercase. Changing it creates a new membership.
+            id: (String) The ID of the membership.
+            role: '(String) The role in PAM: admin or member. Members only get the access their folder and account memberships grant.'
+            user_id: (String) The ID of the user.
+        importStatements:
+            - |-
+              # This will import the user's PAM membership by their email
+              terraform import infisical_pam_user.example <email>
     infisical_project:
         subCategory: Projects
         description: Create projects & save to Infisical. Only Machine Identity authentication is supported for this data source.
@@ -6402,6 +7337,49 @@ resources:
             secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
             temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
         importStatements: []
+    infisical_secret_rotation_gcp_service_account_key:
+        subCategory: Secret Rotations
+        description: Create and manage GCP Service Account Key Secret Rotations
+        name: infisical_secret_rotation_gcp_service_account_key
+        title: infisical_secret_rotation_gcp_service_account_key Resource - terraform-provider-infisical
+        examples:
+            - name: gcp-service-account-key
+              manifest: |-
+                {
+                  "connection_id": "\u003capp-connection-id\u003e",
+                  "environment": "\u003cenvironment-slug\u003e",
+                  "name": "gcp-service-account-key-rotation-example",
+                  "parameters": {
+                    "service_account_email": "my-app@my-project.iam.gserviceaccount.com"
+                  },
+                  "project_id": "\u003cproject-id\u003e",
+                  "secret_path": "\u003csecret-path\u003e",
+                  "secrets_mapping": {
+                    "service_account_key": "GCP_SERVICE_ACCOUNT_KEY"
+                  }
+                }
+        argumentDocs:
+            auto_rotation_enabled: (Boolean) Whether secrets should be automatically rotated.
+            connection_id: (String) The ID of the connection to use for the secret rotation.
+            description: (String) The description of the secret rotation.
+            environment: (String) The slug of the project environment to rotate secrets from.
+            hours: (Number) The hour at which the rotation should occur (UTC).
+            id: (String) The ID of the secret rotation.
+            minutes: (Number) The minute at which the rotation should occur (UTC).
+            name: (String) The name of the secret rotation.
+            parameters: (Attributes) Parameters to modify how secrets are rotated. (see below for nested schema)
+            project_id: (String) The ID of the Infisical project to create the secret rotation in.
+            rotate_at_utc: (Attributes) At which UTC time the rotation should occur. (see below for nested schema)
+            rotation_interval: (Number) How many days to wait between each rotation.
+            secret_path: (String) The folder path to rotate secrets from.
+            secrets_mapping: (Attributes) Secret mappings to modify how secrets are rotated. (see below for nested schema)
+            service_account_email: (String) The email of the GCP service account whose keys will be rotated, e.g. my-app@my-project.iam.gserviceaccount.com. The connection's service account needs the Service Account Key Admin role (roles/iam.serviceAccountKeyAdmin) on it.
+            service_account_key: (String) The name of the secret that the rotated service account key (the JSON key file) will be mapped to.
+            temporary_parameters: (Attributes) Temporary parameters to modify how secrets are rotated. (see below for nested schema)
+        importStatements:
+            - |-
+              # This will import the GCP Service Account Key secret rotation by its ID
+              terraform import infisical_secret_rotation_gcp_service_account_key.example <secret_rotation_id>
     infisical_secret_rotation_ldap_password:
         subCategory: Secret Rotations
         description: Create and manage LDAP Password Secret Rotations
@@ -6712,6 +7690,7 @@ resources:
                     "vault_id": "\u003cvault-id\u003e"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "1password-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
@@ -6741,6 +7720,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from 1Password. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the 1Password secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key_schema: (String) The format to use for structuring secret keys in the 1Password destination.
             name: (String) The name of the 1Password sync to create. Must be slug-friendly.
@@ -6769,6 +7749,7 @@ resources:
                     "path": "/example/secrets/"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "aws-parameter-store-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
@@ -6798,6 +7779,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from AWS Parameter Store. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the AWS Parameter Store secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key: (String) The key of the tag
             key_schema: (String) The format to use for structuring secret keys in the AWS Parameter Store destination.
@@ -6830,6 +7812,7 @@ resources:
                     "mapping_behavior": "many-to-one"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "aws-secrets-manager-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
@@ -6860,6 +7843,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from AWS Secrets Manager. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the AWS Secrets Manager secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key: (String) The key of the tag
             key_schema: (String) The format to use for structuring secret keys in the AWS Secrets Manager destination.
@@ -6890,6 +7874,7 @@ resources:
                     "configuration_url": "\u003cazure-configuration-url\u003e"
                   },
                   "environment": "dev",
+                  "include_all_sub_folders": false,
                   "name": "demo-sync",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
@@ -6906,6 +7891,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure App Configuration. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure App Configuration secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key_schema: (String) The format to use for structuring secret keys in the Azure App Configuration destination.
             label: (String) The label to attach to secrets created in Azure App Configuration
@@ -6932,6 +7918,7 @@ resources:
                     "devops_project_id": "\u003cdevops-project-id\u003e"
                   },
                   "environment": "dev",
+                  "include_all_sub_folders": false,
                   "name": "demo-sync",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
@@ -6946,6 +7933,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure DevOps. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure DevOps secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well.
             key_schema: (String) The format to use for structuring secret keys in the Azure DevOps destination.
             name: (String) The name of the Azure DevOps sync to create. Must be slug-friendly.
             project_id: (String) The ID of the Infisical project to create the sync in.
@@ -6970,6 +7958,7 @@ resources:
                     "vault_base_url": "\u003cvault-base-url\u003e"
                   },
                   "environment": "dev",
+                  "include_all_sub_folders": false,
                   "name": "demo-sync",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
@@ -6985,6 +7974,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Azure Key Vault. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Azure Key Vault secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key_schema: (String) The format to use for structuring secret keys in the Azure Key Vault destination.
             name: (String) The name of the Azure Key Vault sync to create. Must be slug-friendly.
@@ -7014,6 +8004,7 @@ resources:
                     "workspace_slug": "\u003cbitbucket-workspace-slug\u003e"
                   },
                   "environment": "\u003cenv-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "bitbucket-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
@@ -7032,6 +8023,7 @@ resources:
             environment: (String) The slug of the project environment to sync secrets from.
             environment_id: (String) The Bitbucket deployment environment ID (optional).
             id: (String) The ID of the Bitbucket secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
             key_schema: (String) The format to use for structuring secret keys in the Bitbucket destination.
             name: (String) The name of the Bitbucket sync to create. Must be slug-friendly.
@@ -7062,6 +8054,7 @@ resources:
                     "project_name": "\u003ccircleci-project-name\u003e"
                   },
                   "environment": "\u003cenv-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "circleci-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
@@ -7079,6 +8072,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from CircleCI. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the CircleCI secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
             key_schema: (String) The format to use for structuring secret keys in the CircleCI destination.
             name: (String) The name of the CircleCI sync to create. Must be slug-friendly.
@@ -7107,6 +8101,7 @@ resources:
                     "project_name": "\u003ccloudflare-pages-project-name\u003e"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "cloudflare-pages-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
@@ -7124,6 +8119,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Cloudflare Pages. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Cloudflare Pages secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key_schema: (String) The format to use for structuring secret keys in the Cloudflare Pages destination.
             name: (String) The name of the Cloudflare Pages sync to create. Must be slug-friendly.
@@ -7150,6 +8146,7 @@ resources:
                     "script_id": "\u003ccloudflare-workers-script-id\u003e"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "cloudflare-workers-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
@@ -7167,6 +8164,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Cloudflare Workers. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Cloudflare Workers secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key_schema: (String) The format to use for structuring secret keys in the Cloudflare Workers destination.
             name: (String) The name of the Cloudflare Workers sync to create. Must be slug-friendly.
@@ -7194,6 +8192,7 @@ resources:
                     "scope": "\u003cdatabricks-secret-scope\u003e"
                   },
                   "environment": "\u003cenv-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "databricks-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
@@ -7211,6 +8210,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Databricks. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Databricks secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
             key_schema: (String) The format to use for structuring secret keys in the Databricks destination.
             name: (String) The name of the Databricks sync to create. Must be slug-friendly.
@@ -7238,6 +8238,7 @@ resources:
                     "app_id": "\u003cflyio-app-id\u003e"
                   },
                   "environment": "\u003cenv-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "flyio-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
@@ -7256,6 +8257,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Fly.io. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Fly.io secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
             key_schema: (String) The format to use for structuring secret keys in the Fly.io destination.
             name: (String) The name of the Fly.io sync to create. Must be slug-friendly.
@@ -7282,6 +8284,7 @@ resources:
                     "scope": "global"
                   },
                   "environment": "prod",
+                  "include_all_sub_folders": false,
                   "name": "gcp-sync-tests-automatic",
                   "project_id": "f4517f4c-8b61-4727-8aef-5ae2807126fb",
                   "secret_path": "/",
@@ -7309,6 +8312,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from GCP Secret Manager. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the GCP Secret Manager secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination, import-prioritize-source, import-prioritize-destination'
             key_schema: (String) The format to use for structuring secret keys in the GCP Secret Manager destination.
             location_id: (String) The GCP region to sync secrets to (e.g. us-east1). Required when scope is 'region' and must not be set when scope is 'global'.
@@ -7339,6 +8343,7 @@ resources:
                     "scope": "repository"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "github-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
@@ -7356,6 +8361,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Github secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
             key_schema: (String) The format to use for structuring secret keys in the Github destination.
             name: (String) The name of the Github sync to create. Must be slug-friendly.
@@ -7393,6 +8399,7 @@ resources:
                     "target_environment": "*"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "gitlab-project-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
@@ -7417,6 +8424,7 @@ resources:
                     "target_environment": "production"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "gitlab-group-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "/",
@@ -7436,6 +8444,7 @@ resources:
             group_id: (String) The GitLab Group ID to sync secrets to. Required when scope is 'group'.
             group_name: (String) The GitLab Group Name to sync secrets to. Optional when scope is 'group'.
             id: (String) The ID of the GitLab secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
             key_schema: (String) The format to use for structuring secret keys in the GitLab destination.
             name: (String) The name of the GitLab sync to create. Must be slug-friendly.
@@ -7469,6 +8478,7 @@ resources:
                     "type": "\u003ctype\u003e"
                   },
                   "environment": "\u003cenvironment-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "render-secret-sync-demo",
                   "project_id": "\u003cproject-id\u003e",
                   "secret_path": "\u003csecret-path\u003e",
@@ -7497,6 +8507,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Render. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Render secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
             key_schema: (String) The format to use for structuring secret keys in the Render destination.
             name: (String) The name of the Render sync to create. Must be slug-friendly.
@@ -7528,6 +8539,7 @@ resources:
                     "context_name": "\u003cspacelift-context-name\u003e"
                   },
                   "environment": "\u003cenv-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "spacelift-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
@@ -7578,6 +8590,7 @@ resources:
                     "project_name": "\u003csupabase-project-name\u003e"
                   },
                   "environment": "\u003cenv-slug\u003e",
+                  "include_all_sub_folders": false,
                   "name": "supabase-secret-sync",
                   "project_id": "\u003cyour-infisical-project-id\u003e",
                   "secret_path": "\u003cinfisical-secret-path\u003e",
@@ -7595,6 +8608,7 @@ resources:
             disable_secret_deletion: (Boolean) When set to true, Infisical will not remove secrets from Supabase. Enable this option if you intend to manage some secrets manually outside of Infisical.
             environment: (String) The slug of the project environment to sync secrets from.
             id: (String) The ID of the Supabase secret sync
+            include_all_sub_folders: (Boolean) Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
             initial_sync_behavior: '(String) Specify how Infisical should resolve the initial sync to the destination. Supported options: overwrite-destination'
             key_schema: (String) The format to use for structuring secret keys in the Supabase destination.
             name: (String) The name of the Supabase sync to create. Must be slug-friendly.
