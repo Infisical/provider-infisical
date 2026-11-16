@@ -21,7 +21,7 @@ func (mg *KubernetesAuth) GetTerraformResourceType() string {
 
 // GetConnectionDetailsMapping for this KubernetesAuth
 func (tr *KubernetesAuth) GetConnectionDetailsMapping() map[string]string {
-	return nil
+	return map[string]string{"token_reviewer_jwt": "tokenReviewerJwtSecretRef", "token_reviewer_jwt_wo": "tokenReviewerJwtWoSecretRef"}
 }
 
 // GetObservation of this KubernetesAuth

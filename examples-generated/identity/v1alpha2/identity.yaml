@@ -36,7 +36,10 @@ spec:
       matchLabels:
         testing.upbound.io/example-name: k8-auth
     kubernetesHost: http://example.com
-    tokenReviewerJwt: ey<example>
+    tokenReviewerJwtSecretRef:
+      key: example-key
+      name: example-secret
+      namespace: upbound-system
 
 ---
 

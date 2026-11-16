@@ -121,6 +121,10 @@ type SecretSyncGithubInitParameters struct {
 	// The slug of the project environment to sync secrets from.
 	Environment *string `json:"environment,omitempty" tf:"environment,omitempty"`
 
+	// destination'.
+	// Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
+	IncludeAllSubFolders *bool `json:"includeAllSubFolders,omitempty" tf:"include_all_sub_folders,omitempty"`
+
 	// friendly.
 	// The name of the Github sync to create. Must be slug-friendly.
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
@@ -170,6 +174,10 @@ type SecretSyncGithubObservation struct {
 	// (String) The ID of the Github secret sync
 	ID *string `json:"id,omitempty" tf:"id,omitempty"`
 
+	// destination'.
+	// Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
+	IncludeAllSubFolders *bool `json:"includeAllSubFolders,omitempty" tf:"include_all_sub_folders,omitempty"`
+
 	// friendly.
 	// The name of the Github sync to create. Must be slug-friendly.
 	Name *string `json:"name,omitempty" tf:"name,omitempty"`
@@ -211,6 +219,11 @@ type SecretSyncGithubParameters struct {
 	// The slug of the project environment to sync secrets from.
 	// +kubebuilder:validation:Optional
 	Environment *string `json:"environment,omitempty" tf:"environment,omitempty"`
+
+	// destination'.
+	// Whether to sync secrets from folders beneath the source path as well. Requires initial_sync_behavior to be 'overwrite-destination'.
+	// +kubebuilder:validation:Optional
+	IncludeAllSubFolders *bool `json:"includeAllSubFolders,omitempty" tf:"include_all_sub_folders,omitempty"`
 
 	// friendly.
 	// The name of the Github sync to create. Must be slug-friendly.

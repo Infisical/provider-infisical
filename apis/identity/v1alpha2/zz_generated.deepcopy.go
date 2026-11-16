@@ -483,9 +483,19 @@ func (in *KubernetesAuthInitParameters) DeepCopyInto(out *KubernetesAuthInitPara
 		*out = new(string)
 		**out = **in
 	}
-	if in.TokenReviewerJwt != nil {
-		in, out := &in.TokenReviewerJwt, &out.TokenReviewerJwt
-		*out = new(string)
+	if in.TokenReviewerJwtSecretRef != nil {
+		in, out := &in.TokenReviewerJwtSecretRef, &out.TokenReviewerJwtSecretRef
+		*out = new(v2.SecretKeySelector)
+		**out = **in
+	}
+	if in.TokenReviewerJwtWoSecretRef != nil {
+		in, out := &in.TokenReviewerJwtWoSecretRef, &out.TokenReviewerJwtWoSecretRef
+		*out = new(v2.SecretKeySelector)
+		**out = **in
+	}
+	if in.TokenReviewerJwtWoVersion != nil {
+		in, out := &in.TokenReviewerJwtWoVersion, &out.TokenReviewerJwtWoVersion
+		*out = new(float64)
 		**out = **in
 	}
 	if in.TokenReviewerMode != nil {
@@ -599,6 +609,11 @@ func (in *KubernetesAuthObservation) DeepCopyInto(out *KubernetesAuthObservation
 		*out = new(bool)
 		**out = **in
 	}
+	if in.HasTokenReviewerJwt != nil {
+		in, out := &in.HasTokenReviewerJwt, &out.HasTokenReviewerJwt
+		*out = new(bool)
+		**out = **in
+	}
 	if in.ID != nil {
 		in, out := &in.ID, &out.ID
 		*out = new(string)
@@ -624,9 +639,9 @@ func (in *KubernetesAuthObservation) DeepCopyInto(out *KubernetesAuthObservation
 		*out = new(string)
 		**out = **in
 	}
-	if in.TokenReviewerJwt != nil {
-		in, out := &in.TokenReviewerJwt, &out.TokenReviewerJwt
-		*out = new(string)
+	if in.TokenReviewerJwtWoVersion != nil {
+		in, out := &in.TokenReviewerJwtWoVersion, &out.TokenReviewerJwtWoVersion
+		*out = new(float64)
 		**out = **in
 	}
 	if in.TokenReviewerMode != nil {
@@ -733,9 +748,19 @@ func (in *KubernetesAuthParameters) DeepCopyInto(out *KubernetesAuthParameters) 
 		*out = new(string)
 		**out = **in
 	}
-	if in.TokenReviewerJwt != nil {
-		in, out := &in.TokenReviewerJwt, &out.TokenReviewerJwt
-		*out = new(string)
+	if in.TokenReviewerJwtSecretRef != nil {
+		in, out := &in.TokenReviewerJwtSecretRef, &out.TokenReviewerJwtSecretRef
+		*out = new(v2.SecretKeySelector)
+		**out = **in
+	}
+	if in.TokenReviewerJwtWoSecretRef != nil {
+		in, out := &in.TokenReviewerJwtWoSecretRef, &out.TokenReviewerJwtWoSecretRef
+		*out = new(v2.SecretKeySelector)
+		**out = **in
+	}
+	if in.TokenReviewerJwtWoVersion != nil {
+		in, out := &in.TokenReviewerJwtWoVersion, &out.TokenReviewerJwtWoVersion
+		*out = new(float64)
 		**out = **in
 	}
 	if in.TokenReviewerMode != nil {

@@ -20,7 +20,10 @@ spec:
         testing.upbound.io/example-name: machine-identity-demo-1
     kubernetesCaCertificate: <your-kubernetes-ca-certificate>
     kubernetesHost: http://<your-kubernetes-host>
-    tokenReviewerJwt: ey<example>
+    tokenReviewerJwtSecretRef:
+      key: example-key
+      name: example-secret
+      namespace: upbound-system
     tokenReviewerMode: api
 
 ---
@@ -68,5 +71,21 @@ metadata:
 spec:
   forProvider:
     name: machine-identity-demo-3
+    orgId: <your-org-id>
+    role: admin
+
+---
+
+apiVersion: identity.crossplane.infisical.com/v1alpha2
+kind: Identity
+metadata:
+  annotations:
+    meta.upbound.io/example-id: identity/v1alpha2/kubernetesauth
+  labels:
+    testing.upbound.io/example-name: machine-identity-demo-wo
+  name: machine-identity-demo-wo
+spec:
+  forProvider:
+    name: machine-identity-demo-wo
     orgId: <your-org-id>
     role: admin
