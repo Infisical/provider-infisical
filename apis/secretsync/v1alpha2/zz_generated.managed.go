@@ -8,6 +8,56 @@ package v1alpha2
 
 import xpv2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 
+// GetCondition of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) GetCondition(ct xpv2.ConditionType) xpv2.Condition {
+	return mg.Status.GetCondition(ct)
+}
+
+// GetDeletionPolicy of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) GetDeletionPolicy() xpv2.DeletionPolicy {
+	return mg.Spec.DeletionPolicy
+}
+
+// GetManagementPolicies of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) GetManagementPolicies() xpv2.ManagementPolicies {
+	return mg.Spec.ManagementPolicies
+}
+
+// GetProviderConfigReference of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) GetProviderConfigReference() *xpv2.Reference {
+	return mg.Spec.ProviderConfigReference
+}
+
+// GetWriteConnectionSecretToReference of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) GetWriteConnectionSecretToReference() *xpv2.SecretReference {
+	return mg.Spec.WriteConnectionSecretToReference
+}
+
+// SetConditions of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) SetConditions(c ...xpv2.Condition) {
+	mg.Status.SetConditions(c...)
+}
+
+// SetDeletionPolicy of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) SetDeletionPolicy(r xpv2.DeletionPolicy) {
+	mg.Spec.DeletionPolicy = r
+}
+
+// SetManagementPolicies of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) SetManagementPolicies(r xpv2.ManagementPolicies) {
+	mg.Spec.ManagementPolicies = r
+}
+
+// SetProviderConfigReference of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) SetProviderConfigReference(r *xpv2.Reference) {
+	mg.Spec.ProviderConfigReference = r
+}
+
+// SetWriteConnectionSecretToReference of this SecretSyncAwsSecretsManager.
+func (mg *SecretSyncAwsSecretsManager) SetWriteConnectionSecretToReference(r *xpv2.SecretReference) {
+	mg.Spec.WriteConnectionSecretToReference = r
+}
+
 // GetCondition of this SecretSyncGithub.
 func (mg *SecretSyncGithub) GetCondition(ct xpv2.ConditionType) xpv2.Condition {
 	return mg.Status.GetCondition(ct)

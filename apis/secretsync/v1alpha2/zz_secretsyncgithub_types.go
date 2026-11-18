@@ -13,7 +13,7 @@ import (
 	v2 "github.com/crossplane/crossplane/apis/v2/core/v2"
 )
 
-type DestinationConfigInitParameters struct {
+type SecretSyncGithubDestinationConfigInitParameters struct {
 
 	// environment
 	// The environment to sync the secrets to, required if scope is `repository-environment`
@@ -40,7 +40,7 @@ type DestinationConfigInitParameters struct {
 	Visibility *string `json:"visibility,omitempty" tf:"visibility,omitempty"`
 }
 
-type DestinationConfigObservation struct {
+type SecretSyncGithubDestinationConfigObservation struct {
 
 	// environment
 	// The environment to sync the secrets to, required if scope is `repository-environment`
@@ -67,7 +67,7 @@ type DestinationConfigObservation struct {
 	Visibility *string `json:"visibility,omitempty" tf:"visibility,omitempty"`
 }
 
-type DestinationConfigParameters struct {
+type SecretSyncGithubDestinationConfigParameters struct {
 
 	// environment
 	// The environment to sync the secrets to, required if scope is `repository-environment`
@@ -115,7 +115,7 @@ type SecretSyncGithubInitParameters struct {
 	Description *string `json:"description,omitempty" tf:"description,omitempty"`
 
 	// (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-	DestinationConfig *DestinationConfigInitParameters `json:"destinationConfig,omitempty" tf:"destination_config,omitempty"`
+	DestinationConfig *SecretSyncGithubDestinationConfigInitParameters `json:"destinationConfig,omitempty" tf:"destination_config,omitempty"`
 
 	// (String) The slug of the project environment to sync secrets from.
 	// The slug of the project environment to sync secrets from.
@@ -147,7 +147,7 @@ type SecretSyncGithubInitParameters struct {
 	SecretPath *string `json:"secretPath,omitempty" tf:"secret_path,omitempty"`
 
 	// (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-	SyncOptions *SyncOptionsInitParameters `json:"syncOptions,omitempty" tf:"sync_options,omitempty"`
+	SyncOptions *SecretSyncGithubSyncOptionsInitParameters `json:"syncOptions,omitempty" tf:"sync_options,omitempty"`
 }
 
 type SecretSyncGithubObservation struct {
@@ -165,7 +165,7 @@ type SecretSyncGithubObservation struct {
 	Description *string `json:"description,omitempty" tf:"description,omitempty"`
 
 	// (Attributes) The destination configuration for the secret sync. (see below for nested schema)
-	DestinationConfig *DestinationConfigObservation `json:"destinationConfig,omitempty" tf:"destination_config,omitempty"`
+	DestinationConfig *SecretSyncGithubDestinationConfigObservation `json:"destinationConfig,omitempty" tf:"destination_config,omitempty"`
 
 	// (String) The slug of the project environment to sync secrets from.
 	// The slug of the project environment to sync secrets from.
@@ -191,7 +191,7 @@ type SecretSyncGithubObservation struct {
 	SecretPath *string `json:"secretPath,omitempty" tf:"secret_path,omitempty"`
 
 	// (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
-	SyncOptions *SyncOptionsObservation `json:"syncOptions,omitempty" tf:"sync_options,omitempty"`
+	SyncOptions *SecretSyncGithubSyncOptionsObservation `json:"syncOptions,omitempty" tf:"sync_options,omitempty"`
 }
 
 type SecretSyncGithubParameters struct {
@@ -213,7 +213,7 @@ type SecretSyncGithubParameters struct {
 
 	// (Attributes) The destination configuration for the secret sync. (see below for nested schema)
 	// +kubebuilder:validation:Optional
-	DestinationConfig *DestinationConfigParameters `json:"destinationConfig,omitempty" tf:"destination_config,omitempty"`
+	DestinationConfig *SecretSyncGithubDestinationConfigParameters `json:"destinationConfig,omitempty" tf:"destination_config,omitempty"`
 
 	// (String) The slug of the project environment to sync secrets from.
 	// The slug of the project environment to sync secrets from.
@@ -251,10 +251,10 @@ type SecretSyncGithubParameters struct {
 
 	// (Attributes) Parameters to modify how secrets are synced. (see below for nested schema)
 	// +kubebuilder:validation:Optional
-	SyncOptions *SyncOptionsParameters `json:"syncOptions,omitempty" tf:"sync_options,omitempty"`
+	SyncOptions *SecretSyncGithubSyncOptionsParameters `json:"syncOptions,omitempty" tf:"sync_options,omitempty"`
 }
 
-type SyncOptionsInitParameters struct {
+type SecretSyncGithubSyncOptionsInitParameters struct {
 
 	// (Boolean) When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.
 	// When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.
@@ -269,7 +269,7 @@ type SyncOptionsInitParameters struct {
 	KeySchema *string `json:"keySchema,omitempty" tf:"key_schema,omitempty"`
 }
 
-type SyncOptionsObservation struct {
+type SecretSyncGithubSyncOptionsObservation struct {
 
 	// (Boolean) When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.
 	// When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.
@@ -284,7 +284,7 @@ type SyncOptionsObservation struct {
 	KeySchema *string `json:"keySchema,omitempty" tf:"key_schema,omitempty"`
 }
 
-type SyncOptionsParameters struct {
+type SecretSyncGithubSyncOptionsParameters struct {
 
 	// (Boolean) When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.
 	// When set to true, Infisical will not remove secrets from Github. Enable this option if you intend to manage some secrets manually outside of Infisical.

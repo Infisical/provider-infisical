@@ -27,6 +27,7 @@ import (
 	secret "github.com/infisical/provider-infisical/internal/controller/secret/secret"
 	secretfolder "github.com/infisical/provider-infisical/internal/controller/secret/secretfolder"
 	secretrotationazureclientsecret "github.com/infisical/provider-infisical/internal/controller/secretrotation/secretrotationazureclientsecret"
+	secretsyncawssecretsmanager "github.com/infisical/provider-infisical/internal/controller/secretsync/secretsyncawssecretsmanager"
 	secretsyncgithub "github.com/infisical/provider-infisical/internal/controller/secretsync/secretsyncgithub"
 	secretvalidationrulestaticsecrets "github.com/infisical/provider-infisical/internal/controller/secretvalidationrule/secretvalidationrulestaticsecrets"
 )
@@ -53,6 +54,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 		secret.Setup,
 		secretfolder.Setup,
 		secretrotationazureclientsecret.Setup,
+		secretsyncawssecretsmanager.Setup,
 		secretsyncgithub.Setup,
 		secretvalidationrulestaticsecrets.Setup,
 	} {
@@ -85,6 +87,7 @@ func SetupGated(mgr ctrl.Manager, o controller.Options) error {
 		secret.SetupGated,
 		secretfolder.SetupGated,
 		secretrotationazureclientsecret.SetupGated,
+		secretsyncawssecretsmanager.SetupGated,
 		secretsyncgithub.SetupGated,
 		secretvalidationrulestaticsecrets.SetupGated,
 	} {
@@ -116,6 +119,7 @@ func SetupWebhookWithManager(mgr ctrl.Manager) error {
 		secret.SetupWebhookWithManager,
 		secretfolder.SetupWebhookWithManager,
 		secretrotationazureclientsecret.SetupWebhookWithManager,
+		secretsyncawssecretsmanager.SetupWebhookWithManager,
 		secretsyncgithub.SetupWebhookWithManager,
 		secretvalidationrulestaticsecrets.SetupWebhookWithManager,
 	} {
