@@ -14,7 +14,4 @@ spec:
     allowedNamespaces:
       - e2e
     tokenReviewerMode: api
-    tokenReviewerJwtSecretRef:
-      name: __PREFIX__-kubernetes-auth-jwt
-      namespace: crossplane-system
-      key: token
+    tokenReviewerJwt: e2e-test-token

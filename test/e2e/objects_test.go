@@ -66,7 +66,7 @@ type update struct {
 
 // check is a value at a field path. want is JSON with the placeholders of the
 // fixtures. A v1alpha1 field that holds a JSON string matches when the string
-// holds the wanted data. An empty want means that the field must not be set.
+// holds the wanted data.
 type check struct {
 	path string
 	want string
@@ -150,12 +150,6 @@ var objects = []object{
 	{
 		file: "kubernetesauth", name: "kubernetes-auth", group: identityGroup, kind: "KubernetesAuth",
 		notReady: func(provider) string { return reasonKubernetesAuth },
-		// The token reviewer JWT is sensitive since Terraform provider 0.20.14,
-		// so v1alpha2 takes it from a Kubernetes Secret. The plain v1alpha1
-		// value cannot move into a Secret reference, and the other way round,
-		// so neither version gets the JWT of the other.
-		up:   []check{{"spec.forProvider.tokenReviewerJwt", ""}, {"spec.forProvider.tokenReviewerJwtSecretRef", ""}},
-		down: []check{{"spec.forProvider.tokenReviewerJwt", ""}},
 	},
 	{
 		file: "projectidentity", name: "project-identity", group: projectGroup, kind: "ProjectIdentity",

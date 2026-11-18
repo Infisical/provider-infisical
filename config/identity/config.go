@@ -22,5 +22,9 @@ func Configure(p *config.Provider) {
 		r.References["identity_id"] = config.Reference{
 			TerraformName: "infisical_identity",
 		}
+		// The Terraform provider marks token_reviewer_jwt as sensitive since
+		// 0.20.14, which would turn tokenReviewerJwt into a Secret reference
+		// and break existing v1alpha2 resources. Keep it a plain string.
+		r.TerraformResource.Schema["token_reviewer_jwt"].Sensitive = false
 	})
 }

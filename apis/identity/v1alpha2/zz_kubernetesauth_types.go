@@ -92,7 +92,7 @@ type KubernetesAuthInitParameters struct {
 
 	// lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5. Set it to "", or leave both unset, to remove the stored JWT.
 	// A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5. Set it to `""`, or leave both unset, to remove the stored JWT.
-	TokenReviewerJwtSecretRef *v2.SecretKeySelector `json:"tokenReviewerJwtSecretRef,omitempty" tf:"-"`
+	TokenReviewerJwt *string `json:"tokenReviewerJwt,omitempty" tf:"token_reviewer_jwt,omitempty"`
 
 	// only value: it is sent to Infisical but never stored in the plan or state. It is sent on every update, so it must stay set for as long as the JWT should be kept. Changing it alone is not detected, so increment token_reviewer_jwt_wo_version to rotate it.11.0 or higher.
 	// The token reviewer JWT as a [write-only](https://developer.hashicorp. It is sent on every update, so it must stay set for as long as the JWT should be kept. Changing it alone is not detected, so increment `token_reviewer_jwt_wo_version` to rotate it.11.0 or higher.
@@ -166,6 +166,10 @@ type KubernetesAuthObservation struct {
 	// templates permission on auth templates, or edit-auth on the identity. A token reviewer JWT copied from the template is kept unless token_reviewer_jwt or token_reviewer_jwt_wo supplies a new one, or token_reviewer_jwt is set to "" to remove it.
 	// The ID of an `infisical_identity_kubernetes_auth_template` to take the Kubernetes connection settings from. When set, `kubernetes_host`, `kubernetes_ca_certificate`, `token_reviewer_jwt` (or `token_reviewer_jwt_wo` and `token_reviewer_jwt_wo_version`), `token_reviewer_mode`, `gateway_id` and `allowed_audience` come from the template and must not be set here, and later edits to the template propagate to this identity. Removing it unlinks the template and applies the settings in this configuration instead: a connection setting the configuration leaves out is cleared, and the plan shows it. To unlink and keep the template's settings, set them here to the template's values (for example from the `infisical_identity_kubernetes_auth_template` data source); an unlink that changes nothing else then only needs the `unlink-templates` permission on auth templates, or `edit-auth` on the identity. A token reviewer JWT copied from the template is kept unless `token_reviewer_jwt` or `token_reviewer_jwt_wo` supplies a new one, or `token_reviewer_jwt` is set to `""` to remove it.
 	TemplateID *string `json:"templateId,omitempty" tf:"template_id,omitempty"`
+
+	// lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5. Set it to "", or leave both unset, to remove the stored JWT.
+	// A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5. Set it to `""`, or leave both unset, to remove the stored JWT.
+	TokenReviewerJwt *string `json:"tokenReviewerJwt,omitempty" tf:"token_reviewer_jwt,omitempty"`
 
 	// (Number) Used with token_reviewer_jwt_wo to roll out a new JWT. Increment it whenever token_reviewer_jwt_wo changes, and the next apply sends the new JWT in an update; the auth method is not recreated and issued access tokens stay valid.
 	// Used with `token_reviewer_jwt_wo` to roll out a new JWT. Increment it whenever `token_reviewer_jwt_wo` changes, and the next apply sends the new JWT in an update; the auth method is not recreated and issued access tokens stay valid.
@@ -249,7 +253,7 @@ type KubernetesAuthParameters struct {
 	// lived service account JWT token for Infisical to access the TokenReview API to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5. Set it to "", or leave both unset, to remove the stored JWT.
 	// A long-lived service account JWT token for Infisical to access the [TokenReview API](https://kubernetes.io/docs/reference/kubernetes-api/authentication-resources/token-review-v1/) to validate other service account JWT tokens submitted by applications/pods. This is the JWT token obtained from step 1.5. Set it to `""`, or leave both unset, to remove the stored JWT.
 	// +kubebuilder:validation:Optional
-	TokenReviewerJwtSecretRef *v2.SecretKeySelector `json:"tokenReviewerJwtSecretRef,omitempty" tf:"-"`
+	TokenReviewerJwt *string `json:"tokenReviewerJwt,omitempty" tf:"token_reviewer_jwt,omitempty"`
 
 	// only value: it is sent to Infisical but never stored in the plan or state. It is sent on every update, so it must stay set for as long as the JWT should be kept. Changing it alone is not detected, so increment token_reviewer_jwt_wo_version to rotate it.11.0 or higher.
 	// The token reviewer JWT as a [write-only](https://developer.hashicorp. It is sent on every update, so it must stay set for as long as the JWT should be kept. Changing it alone is not detected, so increment `token_reviewer_jwt_wo_version` to rotate it.11.0 or higher.

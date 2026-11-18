@@ -20,10 +20,7 @@ spec:
         testing.upbound.io/example-name: machine-identity-demo-1
     kubernetesCaCertificate: <your-kubernetes-ca-certificate>
     kubernetesHost: http://<your-kubernetes-host>
-    tokenReviewerJwtSecretRef:
-      key: example-key
-      name: example-secret
-      namespace: upbound-system
+    tokenReviewerJwt: ey<example>
     tokenReviewerMode: api
 
 ---

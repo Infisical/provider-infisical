@@ -178,36 +178,25 @@ func (s *set) get(ctx context.Context, o object, version string) (*unstructured.
 	return u, err
 }
 
-// create creates the object and the Kubernetes Secret that its fixture
-// references: the value of a Secret, or the token reviewer JWT of a v1alpha2
-// KubernetesAuth.
+// create creates the object and, for a Secret, the Kubernetes Secret with
+// its value.
 func (s *set) create(t *testing.T, o object) {
 	t.Helper()
 	ctx := context.Background()
-	switch {
-	case o.kind == "Secret":
-		s.createKubernetesSecret(t, s.prefix+"-secret-value", "value", "e2e-value")
-	case o.kind == "KubernetesAuth" && s.version == v1alpha2:
-		s.createKubernetesSecret(t, s.prefix+"-kubernetes-auth-jwt", "token", "e2e-test-token")
+	if o.kind == "Secret" {
+		value := &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: s.prefix + "-secret-value", Namespace: providerNamespace, Labels: map[string]string{runLabel: settings.runID}},
+			StringData: map[string]string{"value": "e2e-value"},
+		}
+		if err := kube.Create(ctx, value); err != nil && !apierrors.IsAlreadyExists(err) {
+			t.Fatalf("cannot create the value of the Secret: %v", err)
+		}
 	}
 	u := s.render(t, o)
 	if err := kube.Create(ctx, u); err != nil {
 		t.Fatalf("cannot create %s %s as %s: %v", o.kind, s.name(o), s.version, err)
 	}
 	t.Logf("created %s %s as %s", o.kind, s.name(o), s.version)
-}
-
-// createKubernetesSecret creates a Kubernetes Secret with one key that a
-// fixture references.
-func (s *set) createKubernetesSecret(t *testing.T, name, key, value string) {
-	t.Helper()
-	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: providerNamespace, Labels: map[string]string{runLabel: settings.runID}},
-		StringData: map[string]string{key: value},
-	}
-	if err := kube.Create(context.Background(), secret); err != nil && !apierrors.IsAlreadyExists(err) {
-		t.Fatalf("cannot create the Kubernetes Secret %s: %v", name, err)
-	}
 }
 
 // createAll creates all objects: first the parents, then the others. The

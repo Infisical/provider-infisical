@@ -294,12 +294,6 @@ func checkValues(t *testing.T, s *set, u *unstructured.Unstructured, checks []ch
 	p := pave(u)
 	for _, c := range checks {
 		got, err := p.GetValue(c.path)
-		if c.want == "" {
-			if err == nil {
-				t.Errorf("%s, %s is %s, want no value", context, c.path, jsonString(got))
-			}
-			continue
-		}
 		if err != nil {
 			t.Errorf("%s, %s: %v", context, c.path, err)
 			continue
