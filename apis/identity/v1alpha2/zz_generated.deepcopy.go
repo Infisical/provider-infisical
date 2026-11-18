@@ -488,6 +488,16 @@ func (in *KubernetesAuthInitParameters) DeepCopyInto(out *KubernetesAuthInitPara
 		*out = new(string)
 		**out = **in
 	}
+	if in.TokenReviewerJwtWoSecretRef != nil {
+		in, out := &in.TokenReviewerJwtWoSecretRef, &out.TokenReviewerJwtWoSecretRef
+		*out = new(v2.SecretKeySelector)
+		**out = **in
+	}
+	if in.TokenReviewerJwtWoVersion != nil {
+		in, out := &in.TokenReviewerJwtWoVersion, &out.TokenReviewerJwtWoVersion
+		*out = new(float64)
+		**out = **in
+	}
 	if in.TokenReviewerMode != nil {
 		in, out := &in.TokenReviewerMode, &out.TokenReviewerMode
 		*out = new(string)
@@ -599,6 +609,11 @@ func (in *KubernetesAuthObservation) DeepCopyInto(out *KubernetesAuthObservation
 		*out = new(bool)
 		**out = **in
 	}
+	if in.HasTokenReviewerJwt != nil {
+		in, out := &in.HasTokenReviewerJwt, &out.HasTokenReviewerJwt
+		*out = new(bool)
+		**out = **in
+	}
 	if in.ID != nil {
 		in, out := &in.ID, &out.ID
 		*out = new(string)
@@ -627,6 +642,11 @@ func (in *KubernetesAuthObservation) DeepCopyInto(out *KubernetesAuthObservation
 	if in.TokenReviewerJwt != nil {
 		in, out := &in.TokenReviewerJwt, &out.TokenReviewerJwt
 		*out = new(string)
+		**out = **in
+	}
+	if in.TokenReviewerJwtWoVersion != nil {
+		in, out := &in.TokenReviewerJwtWoVersion, &out.TokenReviewerJwtWoVersion
+		*out = new(float64)
 		**out = **in
 	}
 	if in.TokenReviewerMode != nil {
@@ -736,6 +756,16 @@ func (in *KubernetesAuthParameters) DeepCopyInto(out *KubernetesAuthParameters) 
 	if in.TokenReviewerJwt != nil {
 		in, out := &in.TokenReviewerJwt, &out.TokenReviewerJwt
 		*out = new(string)
+		**out = **in
+	}
+	if in.TokenReviewerJwtWoSecretRef != nil {
+		in, out := &in.TokenReviewerJwtWoSecretRef, &out.TokenReviewerJwtWoSecretRef
+		*out = new(v2.SecretKeySelector)
+		**out = **in
+	}
+	if in.TokenReviewerJwtWoVersion != nil {
+		in, out := &in.TokenReviewerJwtWoVersion, &out.TokenReviewerJwtWoVersion
+		*out = new(float64)
 		**out = **in
 	}
 	if in.TokenReviewerMode != nil {

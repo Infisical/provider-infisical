@@ -70,3 +70,19 @@ spec:
     name: machine-identity-demo-3
     orgId: <your-org-id>
     role: admin
+
+---
+
+apiVersion: identity.crossplane.infisical.com/v1alpha2
+kind: Identity
+metadata:
+  annotations:
+    meta.upbound.io/example-id: identity/v1alpha2/kubernetesauth
+  labels:
+    testing.upbound.io/example-name: machine-identity-demo-wo
+  name: machine-identity-demo-wo
+spec:
+  forProvider:
+    name: machine-identity-demo-wo
+    orgId: <your-org-id>
+    role: admin
